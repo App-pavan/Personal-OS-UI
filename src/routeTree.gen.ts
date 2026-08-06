@@ -11,7 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistantRouteImport } from './routes/assistant'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as FinanceRouteImport } from './routes/finance'
+import { Route as NotesRouteImport } from './routes/notes'
+import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as TasksRouteImport } from './routes/tasks'
 
 const IndexRoute = IndexRouteImport.update({
@@ -24,9 +28,29 @@ const AssistantRoute = AssistantRouteImport.update({
   path: '/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FinanceRoute = FinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TasksRoute = TasksRouteImport.update({
@@ -38,34 +62,75 @@ const TasksRoute = TasksRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
+  '/calendar': typeof CalendarRoute
+  '/documents': typeof DocumentsRoute
   '/finance': typeof FinanceRoute
+  '/notes': typeof NotesRoute
+  '/projects': typeof ProjectsRoute
   '/tasks': typeof TasksRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
+  '/calendar': typeof CalendarRoute
+  '/documents': typeof DocumentsRoute
   '/finance': typeof FinanceRoute
+  '/notes': typeof NotesRoute
+  '/projects': typeof ProjectsRoute
   '/tasks': typeof TasksRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
+  '/calendar': typeof CalendarRoute
+  '/documents': typeof DocumentsRoute
   '/finance': typeof FinanceRoute
+  '/notes': typeof NotesRoute
+  '/projects': typeof ProjectsRoute
   '/tasks': typeof TasksRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/assistant' | '/finance' | '/tasks'
+  fullPaths:
+    | '/'
+    | '/assistant'
+    | '/calendar'
+    | '/documents'
+    | '/finance'
+    | '/notes'
+    | '/projects'
+    | '/tasks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/assistant' | '/finance' | '/tasks'
-  id: '__root__' | '/' | '/assistant' | '/finance' | '/tasks'
+  to:
+    | '/'
+    | '/assistant'
+    | '/calendar'
+    | '/documents'
+    | '/finance'
+    | '/notes'
+    | '/projects'
+    | '/tasks'
+  id:
+    | '__root__'
+    | '/'
+    | '/assistant'
+    | '/calendar'
+    | '/documents'
+    | '/finance'
+    | '/notes'
+    | '/projects'
+    | '/tasks'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssistantRoute: typeof AssistantRoute
+  CalendarRoute: typeof CalendarRoute
+  DocumentsRoute: typeof DocumentsRoute
   FinanceRoute: typeof FinanceRoute
+  NotesRoute: typeof NotesRoute
+  ProjectsRoute: typeof ProjectsRoute
   TasksRoute: typeof TasksRoute
 }
 
@@ -85,11 +150,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/finance': {
       id: '/finance'
       path: '/finance'
       fullPath: '/finance'
       preLoaderRoute: typeof FinanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tasks': {
@@ -105,7 +198,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistantRoute: AssistantRoute,
+  CalendarRoute: CalendarRoute,
+  DocumentsRoute: DocumentsRoute,
   FinanceRoute: FinanceRoute,
+  NotesRoute: NotesRoute,
+  ProjectsRoute: ProjectsRoute,
   TasksRoute: TasksRoute,
 }
 export const routeTree = rootRouteImport
