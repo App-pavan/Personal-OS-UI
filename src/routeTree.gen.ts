@@ -10,33 +10,271 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AssistantRouteImport } from './routes/assistant'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as FamilyRouteImport } from './routes/family'
+import { Route as FinanceRouteImport } from './routes/finance'
+import { Route as HealthRouteImport } from './routes/health'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as MediaRouteImport } from './routes/media'
+import { Route as NasRouteImport } from './routes/nas'
+import { Route as NotesRouteImport } from './routes/notes'
+import { Route as PasswordsRouteImport } from './routes/passwords'
+import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as RecipesRouteImport } from './routes/recipes'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as TravelRouteImport } from './routes/travel'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssistantRoute = AssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FamilyRoute = FamilyRouteImport.update({
+  id: '/family',
+  path: '/family',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceRoute = FinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KnowledgeRoute = KnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MediaRoute = MediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NasRoute = NasRouteImport.update({
+  id: '/nas',
+  path: '/nas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PasswordsRoute = PasswordsRouteImport.update({
+  id: '/passwords',
+  path: '/passwords',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipesRoute = RecipesRouteImport.update({
+  id: '/recipes',
+  path: '/recipes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShoppingRoute = ShoppingRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TravelRoute = TravelRouteImport.update({
+  id: '/travel',
+  path: '/travel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/calendar': typeof CalendarRoute
+  '/documents': typeof DocumentsRoute
+  '/family': typeof FamilyRoute
+  '/finance': typeof FinanceRoute
+  '/health': typeof HealthRoute
+  '/home': typeof HomeRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/media': typeof MediaRoute
+  '/nas': typeof NasRoute
+  '/notes': typeof NotesRoute
+  '/passwords': typeof PasswordsRoute
+  '/projects': typeof ProjectsRoute
+  '/recipes': typeof RecipesRoute
+  '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/tasks': typeof TasksRoute
+  '/travel': typeof TravelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/calendar': typeof CalendarRoute
+  '/documents': typeof DocumentsRoute
+  '/family': typeof FamilyRoute
+  '/finance': typeof FinanceRoute
+  '/health': typeof HealthRoute
+  '/home': typeof HomeRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/media': typeof MediaRoute
+  '/nas': typeof NasRoute
+  '/notes': typeof NotesRoute
+  '/passwords': typeof PasswordsRoute
+  '/projects': typeof ProjectsRoute
+  '/recipes': typeof RecipesRoute
+  '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/tasks': typeof TasksRoute
+  '/travel': typeof TravelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/calendar': typeof CalendarRoute
+  '/documents': typeof DocumentsRoute
+  '/family': typeof FamilyRoute
+  '/finance': typeof FinanceRoute
+  '/health': typeof HealthRoute
+  '/home': typeof HomeRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/media': typeof MediaRoute
+  '/nas': typeof NasRoute
+  '/notes': typeof NotesRoute
+  '/passwords': typeof PasswordsRoute
+  '/projects': typeof ProjectsRoute
+  '/recipes': typeof RecipesRoute
+  '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/tasks': typeof TasksRoute
+  '/travel': typeof TravelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/assistant'
+    | '/calendar'
+    | '/documents'
+    | '/family'
+    | '/finance'
+    | '/health'
+    | '/home'
+    | '/knowledge'
+    | '/media'
+    | '/nas'
+    | '/notes'
+    | '/passwords'
+    | '/projects'
+    | '/recipes'
+    | '/settings'
+    | '/shopping'
+    | '/tasks'
+    | '/travel'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/assistant'
+    | '/calendar'
+    | '/documents'
+    | '/family'
+    | '/finance'
+    | '/health'
+    | '/home'
+    | '/knowledge'
+    | '/media'
+    | '/nas'
+    | '/notes'
+    | '/passwords'
+    | '/projects'
+    | '/recipes'
+    | '/settings'
+    | '/shopping'
+    | '/tasks'
+    | '/travel'
+  id:
+    | '__root__'
+    | '/'
+    | '/assistant'
+    | '/calendar'
+    | '/documents'
+    | '/family'
+    | '/finance'
+    | '/health'
+    | '/home'
+    | '/knowledge'
+    | '/media'
+    | '/nas'
+    | '/notes'
+    | '/passwords'
+    | '/projects'
+    | '/recipes'
+    | '/settings'
+    | '/shopping'
+    | '/tasks'
+    | '/travel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistantRoute: typeof AssistantRoute
+  CalendarRoute: typeof CalendarRoute
+  DocumentsRoute: typeof DocumentsRoute
+  FamilyRoute: typeof FamilyRoute
+  FinanceRoute: typeof FinanceRoute
+  HealthRoute: typeof HealthRoute
+  HomeRoute: typeof HomeRoute
+  KnowledgeRoute: typeof KnowledgeRoute
+  MediaRoute: typeof MediaRoute
+  NasRoute: typeof NasRoute
+  NotesRoute: typeof NotesRoute
+  PasswordsRoute: typeof PasswordsRoute
+  ProjectsRoute: typeof ProjectsRoute
+  RecipesRoute: typeof RecipesRoute
+  SettingsRoute: typeof SettingsRoute
+  ShoppingRoute: typeof ShoppingRoute
+  TasksRoute: typeof TasksRoute
+  TravelRoute: typeof TravelRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +286,156 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assistant': {
+      id: '/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/family': {
+      id: '/family'
+      path: '/family'
+      fullPath: '/family'
+      preLoaderRoute: typeof FamilyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/finance': {
+      id: '/finance'
+      path: '/finance'
+      fullPath: '/finance'
+      preLoaderRoute: typeof FinanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/knowledge': {
+      id: '/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof KnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/media': {
+      id: '/media'
+      path: '/media'
+      fullPath: '/media'
+      preLoaderRoute: typeof MediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nas': {
+      id: '/nas'
+      path: '/nas'
+      fullPath: '/nas'
+      preLoaderRoute: typeof NasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/passwords': {
+      id: '/passwords'
+      path: '/passwords'
+      fullPath: '/passwords'
+      preLoaderRoute: typeof PasswordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipes': {
+      id: '/recipes'
+      path: '/recipes'
+      fullPath: '/recipes'
+      preLoaderRoute: typeof RecipesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/travel': {
+      id: '/travel'
+      path: '/travel'
+      fullPath: '/travel'
+      preLoaderRoute: typeof TravelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistantRoute: AssistantRoute,
+  CalendarRoute: CalendarRoute,
+  DocumentsRoute: DocumentsRoute,
+  FamilyRoute: FamilyRoute,
+  FinanceRoute: FinanceRoute,
+  HealthRoute: HealthRoute,
+  HomeRoute: HomeRoute,
+  KnowledgeRoute: KnowledgeRoute,
+  MediaRoute: MediaRoute,
+  NasRoute: NasRoute,
+  NotesRoute: NotesRoute,
+  PasswordsRoute: PasswordsRoute,
+  ProjectsRoute: ProjectsRoute,
+  RecipesRoute: RecipesRoute,
+  SettingsRoute: SettingsRoute,
+  ShoppingRoute: ShoppingRoute,
+  TasksRoute: TasksRoute,
+  TravelRoute: TravelRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
