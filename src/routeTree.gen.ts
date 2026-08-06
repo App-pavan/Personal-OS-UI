@@ -13,8 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as FamilyRouteImport } from './routes/family'
 import { Route as FinanceRouteImport } from './routes/finance'
+import { Route as HealthRouteImport } from './routes/health'
+import { Route as NasRouteImport } from './routes/nas'
 import { Route as NotesRouteImport } from './routes/notes'
+import { Route as PasswordsRouteImport } from './routes/passwords'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as TasksRouteImport } from './routes/tasks'
 
@@ -38,14 +42,34 @@ const DocumentsRoute = DocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FamilyRoute = FamilyRouteImport.update({
+  id: '/family',
+  path: '/family',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FinanceRoute = FinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NasRoute = NasRouteImport.update({
+  id: '/nas',
+  path: '/nas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NotesRoute = NotesRouteImport.update({
   id: '/notes',
   path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PasswordsRoute = PasswordsRouteImport.update({
+  id: '/passwords',
+  path: '/passwords',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -64,8 +88,12 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AssistantRoute
   '/calendar': typeof CalendarRoute
   '/documents': typeof DocumentsRoute
+  '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
+  '/health': typeof HealthRoute
+  '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
+  '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
   '/tasks': typeof TasksRoute
 }
@@ -74,8 +102,12 @@ export interface FileRoutesByTo {
   '/assistant': typeof AssistantRoute
   '/calendar': typeof CalendarRoute
   '/documents': typeof DocumentsRoute
+  '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
+  '/health': typeof HealthRoute
+  '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
+  '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
   '/tasks': typeof TasksRoute
 }
@@ -85,8 +117,12 @@ export interface FileRoutesById {
   '/assistant': typeof AssistantRoute
   '/calendar': typeof CalendarRoute
   '/documents': typeof DocumentsRoute
+  '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
+  '/health': typeof HealthRoute
+  '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
+  '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
   '/tasks': typeof TasksRoute
 }
@@ -97,8 +133,12 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/calendar'
     | '/documents'
+    | '/family'
     | '/finance'
+    | '/health'
+    | '/nas'
     | '/notes'
+    | '/passwords'
     | '/projects'
     | '/tasks'
   fileRoutesByTo: FileRoutesByTo
@@ -107,8 +147,12 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/calendar'
     | '/documents'
+    | '/family'
     | '/finance'
+    | '/health'
+    | '/nas'
     | '/notes'
+    | '/passwords'
     | '/projects'
     | '/tasks'
   id:
@@ -117,8 +161,12 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/calendar'
     | '/documents'
+    | '/family'
     | '/finance'
+    | '/health'
+    | '/nas'
     | '/notes'
+    | '/passwords'
     | '/projects'
     | '/tasks'
   fileRoutesById: FileRoutesById
@@ -128,8 +176,12 @@ export interface RootRouteChildren {
   AssistantRoute: typeof AssistantRoute
   CalendarRoute: typeof CalendarRoute
   DocumentsRoute: typeof DocumentsRoute
+  FamilyRoute: typeof FamilyRoute
   FinanceRoute: typeof FinanceRoute
+  HealthRoute: typeof HealthRoute
+  NasRoute: typeof NasRoute
   NotesRoute: typeof NotesRoute
+  PasswordsRoute: typeof PasswordsRoute
   ProjectsRoute: typeof ProjectsRoute
   TasksRoute: typeof TasksRoute
 }
@@ -164,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/family': {
+      id: '/family'
+      path: '/family'
+      fullPath: '/family'
+      preLoaderRoute: typeof FamilyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/finance': {
       id: '/finance'
       path: '/finance'
@@ -171,11 +230,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nas': {
+      id: '/nas'
+      path: '/nas'
+      fullPath: '/nas'
+      preLoaderRoute: typeof NasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notes': {
       id: '/notes'
       path: '/notes'
       fullPath: '/notes'
       preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/passwords': {
+      id: '/passwords'
+      path: '/passwords'
+      fullPath: '/passwords'
+      preLoaderRoute: typeof PasswordsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -200,8 +280,12 @@ const rootRouteChildren: RootRouteChildren = {
   AssistantRoute: AssistantRoute,
   CalendarRoute: CalendarRoute,
   DocumentsRoute: DocumentsRoute,
+  FamilyRoute: FamilyRoute,
   FinanceRoute: FinanceRoute,
+  HealthRoute: HealthRoute,
+  NasRoute: NasRoute,
   NotesRoute: NotesRoute,
+  PasswordsRoute: PasswordsRoute,
   ProjectsRoute: ProjectsRoute,
   TasksRoute: TasksRoute,
 }
