@@ -16,10 +16,12 @@ import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as FamilyRouteImport } from './routes/family'
 import { Route as FinanceRouteImport } from './routes/finance'
 import { Route as HealthRouteImport } from './routes/health'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as NasRouteImport } from './routes/nas'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as PasswordsRouteImport } from './routes/passwords'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TasksRouteImport } from './routes/tasks'
 
 const IndexRoute = IndexRouteImport.update({
@@ -57,6 +59,11 @@ const HealthRoute = HealthRouteImport.update({
   path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NasRoute = NasRouteImport.update({
   id: '/nas',
   path: '/nas',
@@ -77,6 +84,11 @@ const ProjectsRoute = ProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -91,10 +103,12 @@ export interface FileRoutesByFullPath {
   '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
   '/health': typeof HealthRoute
+  '/home': typeof HomeRoute
   '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
   '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
+  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
 }
 export interface FileRoutesByTo {
@@ -105,10 +119,12 @@ export interface FileRoutesByTo {
   '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
   '/health': typeof HealthRoute
+  '/home': typeof HomeRoute
   '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
   '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
+  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
 }
 export interface FileRoutesById {
@@ -120,10 +136,12 @@ export interface FileRoutesById {
   '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
   '/health': typeof HealthRoute
+  '/home': typeof HomeRoute
   '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
   '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
+  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
 }
 export interface FileRouteTypes {
@@ -136,10 +154,12 @@ export interface FileRouteTypes {
     | '/family'
     | '/finance'
     | '/health'
+    | '/home'
     | '/nas'
     | '/notes'
     | '/passwords'
     | '/projects'
+    | '/settings'
     | '/tasks'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -150,10 +170,12 @@ export interface FileRouteTypes {
     | '/family'
     | '/finance'
     | '/health'
+    | '/home'
     | '/nas'
     | '/notes'
     | '/passwords'
     | '/projects'
+    | '/settings'
     | '/tasks'
   id:
     | '__root__'
@@ -164,10 +186,12 @@ export interface FileRouteTypes {
     | '/family'
     | '/finance'
     | '/health'
+    | '/home'
     | '/nas'
     | '/notes'
     | '/passwords'
     | '/projects'
+    | '/settings'
     | '/tasks'
   fileRoutesById: FileRoutesById
 }
@@ -179,10 +203,12 @@ export interface RootRouteChildren {
   FamilyRoute: typeof FamilyRoute
   FinanceRoute: typeof FinanceRoute
   HealthRoute: typeof HealthRoute
+  HomeRoute: typeof HomeRoute
   NasRoute: typeof NasRoute
   NotesRoute: typeof NotesRoute
   PasswordsRoute: typeof PasswordsRoute
   ProjectsRoute: typeof ProjectsRoute
+  SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
 }
 
@@ -237,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nas': {
       id: '/nas'
       path: '/nas'
@@ -265,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tasks': {
       id: '/tasks'
       path: '/tasks'
@@ -283,10 +323,12 @@ const rootRouteChildren: RootRouteChildren = {
   FamilyRoute: FamilyRoute,
   FinanceRoute: FinanceRoute,
   HealthRoute: HealthRoute,
+  HomeRoute: HomeRoute,
   NasRoute: NasRoute,
   NotesRoute: NotesRoute,
   PasswordsRoute: PasswordsRoute,
   ProjectsRoute: ProjectsRoute,
+  SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
 }
 export const routeTree = rootRouteImport
