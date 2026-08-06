@@ -21,7 +21,7 @@ export const Route = createFileRoute("/assistant")({
 
 type Message = { id: string; role: "user" | "ai"; text: string };
 
-const canned: Record<string, string> = {
+const canned = {
   default:
     "Here's what I found across your modules: 5 open tasks, ₹4,338 spent this week, and 12 documents waiting to be filed. Want me to draft a plan for today?",
   expenses:
