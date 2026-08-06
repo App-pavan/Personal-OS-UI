@@ -17,12 +17,17 @@ import { Route as FamilyRouteImport } from './routes/family'
 import { Route as FinanceRouteImport } from './routes/finance'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as MediaRouteImport } from './routes/media'
 import { Route as NasRouteImport } from './routes/nas'
 import { Route as NotesRouteImport } from './routes/notes'
 import { Route as PasswordsRouteImport } from './routes/passwords'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as RecipesRouteImport } from './routes/recipes'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ShoppingRouteImport } from './routes/shopping'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as TravelRouteImport } from './routes/travel'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +69,16 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KnowledgeRoute = KnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MediaRoute = MediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NasRoute = NasRouteImport.update({
   id: '/nas',
   path: '/nas',
@@ -84,14 +99,29 @@ const ProjectsRoute = ProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesRoute = RecipesRouteImport.update({
+  id: '/recipes',
+  path: '/recipes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShoppingRoute = ShoppingRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TravelRoute = TravelRouteImport.update({
+  id: '/travel',
+  path: '/travel',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -104,12 +134,17 @@ export interface FileRoutesByFullPath {
   '/finance': typeof FinanceRoute
   '/health': typeof HealthRoute
   '/home': typeof HomeRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/media': typeof MediaRoute
   '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
   '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
+  '/recipes': typeof RecipesRoute
   '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
   '/tasks': typeof TasksRoute
+  '/travel': typeof TravelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -120,12 +155,17 @@ export interface FileRoutesByTo {
   '/finance': typeof FinanceRoute
   '/health': typeof HealthRoute
   '/home': typeof HomeRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/media': typeof MediaRoute
   '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
   '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
+  '/recipes': typeof RecipesRoute
   '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
   '/tasks': typeof TasksRoute
+  '/travel': typeof TravelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -137,12 +177,17 @@ export interface FileRoutesById {
   '/finance': typeof FinanceRoute
   '/health': typeof HealthRoute
   '/home': typeof HomeRoute
+  '/knowledge': typeof KnowledgeRoute
+  '/media': typeof MediaRoute
   '/nas': typeof NasRoute
   '/notes': typeof NotesRoute
   '/passwords': typeof PasswordsRoute
   '/projects': typeof ProjectsRoute
+  '/recipes': typeof RecipesRoute
   '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
   '/tasks': typeof TasksRoute
+  '/travel': typeof TravelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -155,12 +200,17 @@ export interface FileRouteTypes {
     | '/finance'
     | '/health'
     | '/home'
+    | '/knowledge'
+    | '/media'
     | '/nas'
     | '/notes'
     | '/passwords'
     | '/projects'
+    | '/recipes'
     | '/settings'
+    | '/shopping'
     | '/tasks'
+    | '/travel'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -171,12 +221,17 @@ export interface FileRouteTypes {
     | '/finance'
     | '/health'
     | '/home'
+    | '/knowledge'
+    | '/media'
     | '/nas'
     | '/notes'
     | '/passwords'
     | '/projects'
+    | '/recipes'
     | '/settings'
+    | '/shopping'
     | '/tasks'
+    | '/travel'
   id:
     | '__root__'
     | '/'
@@ -187,12 +242,17 @@ export interface FileRouteTypes {
     | '/finance'
     | '/health'
     | '/home'
+    | '/knowledge'
+    | '/media'
     | '/nas'
     | '/notes'
     | '/passwords'
     | '/projects'
+    | '/recipes'
     | '/settings'
+    | '/shopping'
     | '/tasks'
+    | '/travel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -204,12 +264,17 @@ export interface RootRouteChildren {
   FinanceRoute: typeof FinanceRoute
   HealthRoute: typeof HealthRoute
   HomeRoute: typeof HomeRoute
+  KnowledgeRoute: typeof KnowledgeRoute
+  MediaRoute: typeof MediaRoute
   NasRoute: typeof NasRoute
   NotesRoute: typeof NotesRoute
   PasswordsRoute: typeof PasswordsRoute
   ProjectsRoute: typeof ProjectsRoute
+  RecipesRoute: typeof RecipesRoute
   SettingsRoute: typeof SettingsRoute
+  ShoppingRoute: typeof ShoppingRoute
   TasksRoute: typeof TasksRoute
+  TravelRoute: typeof TravelRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -270,6 +335,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/knowledge': {
+      id: '/knowledge'
+      path: '/knowledge'
+      fullPath: '/knowledge'
+      preLoaderRoute: typeof KnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/media': {
+      id: '/media'
+      path: '/media'
+      fullPath: '/media'
+      preLoaderRoute: typeof MediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nas': {
       id: '/nas'
       path: '/nas'
@@ -298,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes': {
+      id: '/recipes'
+      path: '/recipes'
+      fullPath: '/recipes'
+      preLoaderRoute: typeof RecipesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -305,11 +391,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tasks': {
       id: '/tasks'
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/travel': {
+      id: '/travel'
+      path: '/travel'
+      fullPath: '/travel'
+      preLoaderRoute: typeof TravelRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -324,12 +424,17 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceRoute: FinanceRoute,
   HealthRoute: HealthRoute,
   HomeRoute: HomeRoute,
+  KnowledgeRoute: KnowledgeRoute,
+  MediaRoute: MediaRoute,
   NasRoute: NasRoute,
   NotesRoute: NotesRoute,
   PasswordsRoute: PasswordsRoute,
   ProjectsRoute: ProjectsRoute,
+  RecipesRoute: RecipesRoute,
   SettingsRoute: SettingsRoute,
+  ShoppingRoute: ShoppingRoute,
   TasksRoute: TasksRoute,
+  TravelRoute: TravelRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
