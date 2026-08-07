@@ -399,7 +399,10 @@ export const docs = {
     });
   },
   addBlock(docId: string, type: Block["type"], after?: string) {
-    const block: Block = { id: uid(), type, text: "", done: type === "todo" ? false : undefined };
+    const block: Block =
+      type === "todo"
+        ? { id: uid(), type, text: "", done: false }
+        : { id: uid(), type, text: "" };
     set({
       docs: state.docs.map((d) => {
         if (d.id !== docId) return d;
