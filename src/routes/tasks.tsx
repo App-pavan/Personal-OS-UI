@@ -53,7 +53,7 @@ function IntentsPage() {
   const add = (e: React.FormEvent) => {
     e.preventDefault();
     if (!draft.trim()) return;
-    const id = actions.add(draft.trim(), { window: win === "all" ? "today" : win });
+    const id = actions.add(draft.trim(), { window: win === "all" ? "today" : (win ?? "today") });
     setDraft("");
     setOpenId(id);
     toast.success("Intent captured");
