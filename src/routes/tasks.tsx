@@ -1,191 +1,301 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { Check, ChevronRight, Clock, History, Link2, Plus, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
-import { CheckCircle2, ListChecks, Plus } from "lucide-react";
-import {
-  AIBar,
-  Card,
-  EmptyState,
-  ListRow,
-  ModuleHeader,
-  PageShell,
-  Pill,
-  Section,
-  StatCard,
-} from "@/components/os/primitives";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { tasks as seedTasks, type Task } from "@/lib/os-data";
+import { cn } from "@/lib/utils";
+import { Pill } from "@/components/os/primitives";
+import { intents as actions, useOS, type Intent, type Priority } from "@/lib/os-store";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
     meta: [
-      { title: "Tasks — Personal OS" },
-      { name: "description", content: "Capture, organize and complete everything on your plate." },
-      { property: "og:title", content: "Tasks — Personal OS" },
-      { property: "og:description", content: "A calm task module inside your Personal OS." },
+      { title: "Intents — Personal OS" },
+      {
+        name: "description",
+        content:
+          "Intent management: every commitment connected to projects, people, documents, money and place.",
+      },
+      { property: "og:title", content: "Intents — Personal OS" },
+      { property: "og:description", content: "Tasks as objects, not a checklist." },
     ],
   }),
-  component: TasksPage,
+  component: IntentsPage,
 });
 
-function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>(seedTasks);
-  const [filter, setFilter] = useState("open");
-  const [query, setQuery] = useState("");
+const windows: { key: Intent["window"] | "all"; label: string; line: string }[] = [
+  { key: "now", label: "Now", line: "Hard deadlines inside the next few hours." },
+  { key: "today", label: "Today", line: "Everything you intend to close before sleeping." },
+  { key: "soon", label: "This week", line: "Shapes the week without pressing on today." },
+  { key: "someday", label: "Someday", line: "Held, not forgotten." },
+  { key: "all", label: "Everything", line: "Every open intent across your life." },
+];
+
+const priorityTone: Record<Priority, "danger" | "warning" | "muted"> = {
+  urgent: "danger",
+  normal: "warning",
+  low: "muted",
+};
+
+function IntentsPage() {
+  const os = useOS();
+  const [win, setWin] = useState<Intent["window"] | "all">("today");
   const [draft, setDraft] = useState("");
+  const [openId, setOpenId] = useState<string | null>(os.intents[0]?.id ?? null);
+  const [subDraft, setSubDraft] = useState("");
 
-  const visible = useMemo(() => {
-    return tasks.filter((t) => {
-      const matchesFilter =
-        filter === "all" ? true : filter === "open" ? !t.done : filter === "done" ? t.done : t.priority === "high";
-      const matchesQuery = t.title.toLowerCase().includes(query.toLowerCase());
-      return matchesFilter && matchesQuery;
-    });
-  }, [tasks, filter, query]);
+  const list = useMemo(
+    () => os.intents.filter((i) => (win === "all" ? true : i.window === win)),
+    [os.intents, win],
+  );
+  const selected = os.intents.find((i) => i.id === openId) ?? null;
+  const activeWindow = windows.find((w) => w.key === win)!;
 
-  const toggle = (id: string) =>
-    setTasks((list) => list.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
-
-  const add = () => {
+  const add = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!draft.trim()) return;
-    setTasks((list) => [
-      {
-        id: `t${Date.now()}`,
-        title: draft.trim(),
-        module: "Tasks",
-        due: "Today",
-        priority: "medium",
-        done: false,
-      },
-      ...list,
-    ]);
+    const id = actions.add(draft.trim(), { window: win === "all" ? "today" : (win ?? "today") });
     setDraft("");
-    toast.success("Task added");
+    setOpenId(id);
+    toast.success("Intent captured");
   };
 
   return (
-    <PageShell>
-      <ModuleHeader
-        eyebrow="Module"
-        title="Tasks"
-        description="Everything you've committed to, grouped by intent rather than by app."
-        actions={
-          <Button className="gradient-primary rounded-2xl text-primary-foreground" onClick={add}>
-            <Plus className="size-4" />
-            <span className="hidden sm:inline">New task</span>
-          </Button>
-        }
-      />
+    <div className="mx-auto w-full max-w-[1500px]">
+      <header className="animate-rise max-w-2xl">
+        <p className="label-eyebrow">Intents</p>
+        <h1 className="display-lg mt-3">
+          {list.filter((i) => !i.done).length
+            ? `${list.filter((i) => !i.done).length} things want you in this window.`
+            : "This window is clear."}
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{activeWindow.line}</p>
+      </header>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Open" value={`${tasks.filter((t) => !t.done).length}`} hint="Across modules" icon={ListChecks} />
-        <StatCard
-          label="Completed"
-          value={`${tasks.filter((t) => t.done).length}`}
-          hint="This week"
-          icon={CheckCircle2}
-          tone="success"
-          delay={60}
-        />
-        <StatCard
-          label="High priority"
-          value={`${tasks.filter((t) => t.priority === "high" && !t.done).length}`}
-          hint="Needs attention"
-          icon={ListChecks}
-          tone="accent"
-          delay={120}
-        />
+      <div className="animate-rise mt-6 flex flex-wrap items-center gap-1" style={{ animationDelay: "80ms" }}>
+        {windows.map((w) => (
+          <button
+            key={w.label}
+            onClick={() => setWin(w.key)}
+            className={cn(
+              "rail-item rounded-md px-2.5 py-1.5 text-sm",
+              win === w.key
+                ? "bg-primary-soft font-medium text-primary"
+                : "text-muted-foreground hover:bg-muted/70",
+            )}
+          >
+            {w.label}
+          </button>
+        ))}
       </div>
 
-      <AIBar
-        placeholder="Ask AI to plan, reschedule or summarize your tasks…"
-        suggestions={["Plan my day", "What's overdue?", "Group tasks by project"]}
-        onAsk={(q) => toast.success("AI is planning…", { description: q })}
-      />
+      <form onSubmit={add} className="animate-rise mt-5 flex items-center gap-2" style={{ animationDelay: "120ms" }}>
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Write an intent the way you'd say it out loud…"
+          className="h-11 min-w-0 flex-1 rounded-lg border border-hairline bg-surface/60 px-3.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-ring/40"
+        />
+        <button
+          type="submit"
+          aria-label="Add intent"
+          className="gradient-primary grid size-11 shrink-0 place-items-center rounded-lg text-primary-foreground transition active:scale-95"
+        >
+          <Plus className="size-4" />
+        </button>
+      </form>
 
-      <Section delay={120}>
-        <Card className="space-y-4">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search tasks…"
-              className="h-11 min-w-0 rounded-2xl bg-muted/60 sm:max-w-xs"
-            />
-            <Tabs value={filter} onValueChange={setFilter}>
-              <TabsList className="rounded-2xl">
-                <TabsTrigger value="open" className="rounded-xl">
-                  Open
-                </TabsTrigger>
-                <TabsTrigger value="high" className="rounded-xl">
-                  Priority
-                </TabsTrigger>
-                <TabsTrigger value="done" className="rounded-xl">
-                  Done
-                </TabsTrigger>
-                <TabsTrigger value="all" className="rounded-xl">
-                  All
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
+        <section className="animate-rise" style={{ animationDelay: "160ms" }}>
+          <div className="hairline-list border-t border-hairline">
+            {list.map((i) => (
+              <button
+                key={i.id}
+                onClick={() => setOpenId(i.id)}
+                className={cn(
+                  "row-quiet flex w-full items-start gap-3 py-3.5 text-left",
+                  openId === i.id && "bg-muted/60",
+                )}
+              >
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    actions.toggle(i.id);
+                  }}
+                  role="checkbox"
+                  aria-checked={i.done}
+                  aria-label={`Complete ${i.title}`}
+                  className={cn(
+                    "mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border transition",
+                    i.done
+                      ? "border-transparent bg-primary text-primary-foreground"
+                      : "border-input text-transparent hover:border-primary hover:text-primary",
+                  )}
+                >
+                  <Check className="size-3" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className={cn("text-sm", i.done && "text-muted-foreground line-through")}>
+                      {i.title}
+                    </span>
+                    <Pill tone={priorityTone[i.priority]}>{i.priority}</Pill>
+                  </span>
+                  <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                    <span>{i.space}</span>
+                    <span>·</span>
+                    <span>{i.when}</span>
+                    {i.subtasks.length ? (
+                      <>
+                        <span>·</span>
+                        <span>
+                          {i.subtasks.filter((s) => s.done).length}/{i.subtasks.length} steps
+                        </span>
+                      </>
+                    ) : null}
+                  </span>
+                </span>
+                <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground" />
+              </button>
+            ))}
+            {!list.length ? (
+              <p className="py-10 text-sm text-muted-foreground">
+                Nothing lives in this window. That is allowed.
+              </p>
+            ) : null}
           </div>
+        </section>
 
-          <div className="flex items-center gap-2">
-            <Input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && add()}
-              placeholder="Add a task and press enter…"
-              className="h-11 rounded-2xl bg-muted/60"
-            />
-            <Button size="icon" aria-label="Add task" className="size-11 rounded-2xl" onClick={add}>
-              <Plus className="size-4" />
-            </Button>
-          </div>
+        {/* Intent as an object — relationships, steps, history, AI reading */}
+        {selected ? (
+          <aside
+            key={selected.id}
+            className="animate-rise surface-card sticky top-24 h-fit p-5"
+            style={{ animationDelay: "60ms" }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="label-eyebrow">{selected.space}</p>
+                <h2 className="mt-2 text-lg leading-snug font-medium">{selected.title}</h2>
+              </div>
+              <button
+                onClick={() => setOpenId(null)}
+                aria-label="Close"
+                className="grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted/70"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
 
-          {visible.length ? (
-            <div className="-mx-2">
-              {visible.map((t) => (
-                <ListRow
-                  key={t.id}
-                  leading={
-                    <Checkbox
-                      checked={t.done}
-                      onCheckedChange={() => toggle(t.id)}
-                      aria-label={`Complete ${t.title}`}
-                      className="size-5 rounded-lg"
-                    />
-                  }
-                  title={<span className={t.done ? "text-muted-foreground line-through" : ""}>{t.title}</span>}
-                  subtitle={`${t.module} · ${t.due}${t.project ? ` · ${t.project}` : ""}`}
-                  trailing={
-                    <Pill
-                      tone={t.priority === "high" ? "danger" : t.priority === "medium" ? "warning" : "muted"}
-                    >
-                      {t.priority}
-                    </Pill>
-                  }
-                />
+            {selected.detail ? (
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{selected.detail}</p>
+            ) : null}
+
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Clock className="size-3.5" />
+                {selected.when}
+              </span>
+              {(["urgent", "normal", "low"] as Priority[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => actions.setPriority(selected.id, p)}
+                  className={cn(
+                    "rounded-md px-1.5 py-0.5",
+                    selected.priority === p
+                      ? "bg-primary-soft text-primary"
+                      : "hover:bg-muted/70",
+                  )}
+                >
+                  {p}
+                </button>
               ))}
             </div>
-          ) : (
-            <EmptyState
-              icon={ListChecks}
-              title="Nothing here"
-              message="No tasks match this view. Add one above or clear your filters to see everything."
-              action={
-                <Button className="gradient-primary rounded-2xl text-primary-foreground" onClick={() => setFilter("all")}>
-                  Show all tasks
-                </Button>
-              }
-              secondary="Tip: ask AI to plan your day for you."
-            />
-          )}
-        </Card>
-      </Section>
-    </PageShell>
+
+            {selected.aiNote ? (
+              <p className="mt-4 flex gap-2.5 border-l border-primary/40 pl-3 text-sm leading-relaxed">
+                <Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                <span className="text-foreground/85">{selected.aiNote}</span>
+              </p>
+            ) : null}
+
+            <div className="mt-5">
+              <p className="label-eyebrow">Steps</p>
+              <div className="mt-2 space-y-1">
+                {selected.subtasks.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => actions.toggleSub(selected.id, s.id)}
+                    className="row-quiet flex w-full items-center gap-2.5 rounded-md px-1.5 py-1.5 text-left"
+                  >
+                    <span
+                      className={cn(
+                        "grid size-4 shrink-0 place-items-center rounded border",
+                        s.done
+                          ? "border-transparent bg-primary text-primary-foreground"
+                          : "border-input text-transparent",
+                      )}
+                    >
+                      <Check className="size-2.5" />
+                    </span>
+                    <span className={cn("text-sm", s.done && "text-muted-foreground line-through")}>
+                      {s.title}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!subDraft.trim()) return;
+                  actions.addSub(selected.id, subDraft.trim());
+                  setSubDraft("");
+                }}
+                className="mt-2"
+              >
+                <input
+                  value={subDraft}
+                  onChange={(e) => setSubDraft(e.target.value)}
+                  placeholder="Add a step…"
+                  className="h-9 w-full rounded-md border border-hairline bg-transparent px-2.5 text-sm outline-none focus:ring-2 focus:ring-ring/40"
+                />
+              </form>
+            </div>
+
+            {selected.links.length ? (
+              <div className="mt-5">
+                <p className="label-eyebrow">Related</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {selected.links.map((l) => (
+                    <span
+                      key={l.label}
+                      className="flex items-center gap-1.5 rounded-md border border-hairline px-2 py-1 text-xs text-muted-foreground"
+                    >
+                      <Link2 className="size-3" />
+                      {l.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {selected.history.length ? (
+              <div className="mt-5">
+                <p className="label-eyebrow">History</p>
+                <div className="mt-2 space-y-2">
+                  {selected.history.map((h) => (
+                    <p key={h.what} className="flex gap-2.5 text-xs leading-relaxed text-muted-foreground">
+                      <History className="mt-0.5 size-3 shrink-0" />
+                      <span>
+                        <span className="text-foreground/80">{h.when}</span> — {h.what}
+                      </span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </aside>
+        ) : null}
+      </div>
+    </div>
   );
 }
