@@ -64,9 +64,11 @@ function IntentsPage() {
       <header className="animate-rise max-w-2xl">
         <p className="label-eyebrow">Intents</p>
         <h1 className="display-lg mt-3">
-          {list.filter((i) => !i.done).length
-            ? `${list.filter((i) => !i.done).length} things want you in this window.`
-            : "This window is clear."}
+          {list.filter((i) => !i.done).length === 0
+            ? "This window is clear."
+            : list.filter((i) => !i.done).length === 1
+              ? "One thing wants you in this window."
+              : `${list.filter((i) => !i.done).length} things want you in this window.`}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{activeWindow.line}</p>
       </header>
