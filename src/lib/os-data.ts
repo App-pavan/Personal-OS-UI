@@ -1,5 +1,6 @@
 import {
   Banknote,
+  ClipboardCheck,
   BrainCircuit,
   CalendarDays,
   FileText,
@@ -39,6 +40,13 @@ export const modules: ModuleDef[] = [
     blurb: "Your personal intelligence",
   },
   { label: "Tasks", to: "/tasks", icon: ListChecks, group: "core", blurb: "Today and beyond" },
+  {
+    label: "Checklists",
+    to: "/checklists",
+    icon: ClipboardCheck,
+    group: "core",
+    blurb: "Reusable routines",
+  },
   {
     label: "Projects",
     to: "/projects",
@@ -84,8 +92,8 @@ export const modules: ModuleDef[] = [
 export const primaryNav = [
   { label: "Home", to: "/", icon: LayoutGrid },
   { label: "Tasks", to: "/tasks", icon: ListChecks },
+  { label: "Lists", to: "/checklists", icon: ClipboardCheck },
   { label: "AI", to: "/assistant", icon: BrainCircuit },
-  { label: "Finance", to: "/finance", icon: Banknote },
   { label: "Family", to: "/family", icon: Users },
 ];
 
