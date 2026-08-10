@@ -166,7 +166,7 @@ function TodayPage() {
       {/* Bento surface */}
       <div className="bento-grid animate-rise mt-9" style={{ animationDelay: "240ms" }}>
         {/* Focus — the heaviest tile */}
-        <section className="bento-tile tile-glow md:col-span-6 xl:col-span-7 xl:row-span-2">
+        <section className="bento-tile tile-glow md:col-span-6 xl:col-span-7">
           <TileHead label="Today's focus" to="/tasks" />
           <div className="hairline-list">
             {focus.map((i) => (
