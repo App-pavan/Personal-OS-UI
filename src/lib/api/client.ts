@@ -1,47 +1,27 @@
-import type { ApiError, ApiResponse, PaginationMeta } from "./types";
+import { API_BASE_URL, API_TIMEOUT_MS } from "./config";
+import { ApiRequestError, networkError, toApiError } from "./errors";
+import { tokenStore } from "./token-store";
+import type { ApiResponse, PaginationMeta } from "./types";
 
 /* ---------------------------------------------------------------
- * Centralised API client for the Personal OS backend.
+ * Centralised API client.
  *
- * Nothing in the UI talks to fetch() directly. Services (see
- * ./services) are the only consumers of this client, so the whole
- * app can be flipped from mock to live by swapping the service
- * implementation — no component changes.
+ * UI -> hooks -> services -> this client -> /api/v1
+ *
+ * Owns: base URL, JSON, Authorization header, timeouts, envelope
+ * unwrapping, error normalization and 401 -> refresh -> retry.
+ * Nothing else in the app may call fetch().
  * ------------------------------------------------------------- */
 
-export const API_BASE_URL = "/api/v1";
+export { ApiRequestError };
+export { API_BASE_URL };
 
-export class ApiRequestError extends Error {
-  status: number;
-  error?: ApiError | undefined;
+type SessionExpiredHandler = () => void;
+let onSessionExpired: SessionExpiredHandler = () => {};
 
-  constructor(message: string, status: number, error?: ApiError) {
-    super(message);
-    this.name = "ApiRequestError";
-    this.status = status;
-    this.error = error;
-  }
+export function setSessionExpiredHandler(handler: SessionExpiredHandler) {
+  onSessionExpired = handler;
 }
-
-type TokenProvider = () => string | null;
-type UnauthorizedHandler = () => void;
-
-let accessToken: string | null = null;
-let tokenProvider: TokenProvider = () => accessToken;
-let onUnauthorized: UnauthorizedHandler = () => {};
-
-export const auth = {
-  setAccessToken(token: string | null) {
-    accessToken = token;
-  },
-  setTokenProvider(provider: TokenProvider) {
-    tokenProvider = provider;
-  },
-  /** Wired in the integration phase (401 -> refresh -> retry -> lock). */
-  setUnauthorizedHandler(handler: UnauthorizedHandler) {
-    onUnauthorized = handler;
-  },
-};
 
 export type QueryParams = Record<
   string,
@@ -69,50 +49,124 @@ type RequestOptions = {
   body?: unknown;
   params?: QueryParams | undefined;
   signal?: AbortSignal | undefined;
-  /** Public endpoints (auth) skip the bearer header. */
+  /** Public endpoints (login / refresh) skip the bearer header and retry. */
   anonymous?: boolean;
 };
 
 export type Envelope<T> = { data: T; meta?: PaginationMeta | undefined };
 
-export async function request<T>(path: string, options: RequestOptions = {}): Promise<Envelope<T>> {
+const requestId = () =>
+  `pos-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+/* ---------------- single-flight refresh ---------------- */
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function refreshSession(): Promise<boolean> {
+  const refreshToken = tokenStore.refreshToken();
+  if (!refreshToken) return false;
+
+  refreshInFlight ??= (async () => {
+    try {
+      const res = await rawFetch("/auth/refresh", {
+        method: "POST",
+        body: { refreshToken, refresh_token: refreshToken },
+        anonymous: true,
+      });
+      const payload = res.data as Record<string, unknown>;
+      const access = (payload["accessToken"] ?? payload["access_token"]) as string | undefined;
+      const refresh =
+        ((payload["refreshToken"] ?? payload["refresh_token"]) as string | undefined) ??
+        refreshToken;
+      if (!access) return false;
+      tokenStore.set({ accessToken: access, refreshToken: refresh });
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+/* ---------------- transport ---------------- */
+
+async function rawFetch<T>(path: string, options: RequestOptions): Promise<Envelope<T>> {
   const { method = "GET", body, params, signal, anonymous } = options;
 
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "X-Request-Id": requestId(),
+  };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (!anonymous) {
-    const token = tokenProvider();
+    const token = tokenStore.accessToken();
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}${buildQuery(params)}`, {
-    method,
-    headers,
-    ...(signal ? { signal } : {}),
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  if (signal) signal.addEventListener("abort", () => controller.abort(), { once: true });
 
-  if (response.status === 401) {
-    onUnauthorized();
-    throw new ApiRequestError("Session expired", 401);
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}${buildQuery(params)}`, {
+      method,
+      headers,
+      signal: controller.signal,
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+  } catch (cause) {
+    throw networkError(cause);
+  } finally {
+    clearTimeout(timeout);
   }
 
   let payload: ApiResponse<T> | null = null;
+  if (response.status !== 204) {
+    try {
+      payload = (await response.json()) as ApiResponse<T>;
+    } catch {
+      payload = null;
+    }
+  }
+
+  if (!response.ok || (payload && payload.success === false)) {
+    throw toApiError(response.status, payload?.error);
+  }
+
+  // Normalize the backend envelope: services and components receive plain data.
+  return {
+    data: (payload && "data" in payload ? payload.data : (payload as unknown as T)) as T,
+    meta: payload?.meta,
+  };
+}
+
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<Envelope<T>> {
   try {
-    payload = (await response.json()) as ApiResponse<T>;
-  } catch {
-    payload = null;
-  }
+    return await rawFetch<T>(path, options);
+  } catch (error) {
+    const unauthorized = error instanceof ApiRequestError && error.status === 401;
+    if (!unauthorized || options.anonymous) throw error;
 
-  if (!response.ok || !payload?.success) {
-    throw new ApiRequestError(
-      payload?.error?.message ?? `Request failed (${response.status})`,
-      response.status,
-      payload?.error,
-    );
+    const refreshed = await refreshSession();
+    if (!refreshed) {
+      tokenStore.clear();
+      onSessionExpired();
+      throw error;
+    }
+    try {
+      return await rawFetch<T>(path, options);
+    } catch (retryError) {
+      if (retryError instanceof ApiRequestError && retryError.status === 401) {
+        tokenStore.clear();
+        onSessionExpired();
+      }
+      throw retryError;
+    }
   }
-
-  return { data: payload.data, meta: payload.meta };
 }
 
 export const api = {
@@ -120,5 +174,11 @@ export const api = {
     request<T>(path, { method: "GET", params, signal }),
   post: <T>(path: string, body?: unknown) => request<T>(path, { method: "POST", body }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: "PATCH", body }),
+  put: <T>(path: string, body?: unknown) => request<T>(path, { method: "PUT", body }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  /** Public endpoints only (login, refresh). */
+  anonymous: {
+    post: <T>(path: string, body?: unknown) =>
+      request<T>(path, { method: "POST", body, anonymous: true }),
+  },
 };

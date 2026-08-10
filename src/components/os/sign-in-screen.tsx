@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { Fingerprint, KeyRound, Loader2, Lock, ScanFace } from "lucide-react";
-import { session } from "@/lib/os-store";
-import { user } from "@/lib/os-data";
+import { useAuth } from "@/features/auth/auth-context";
+import { errorMessage } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
 
 /**
  * Master account gate. Personal OS has exactly one owner — there is no
- * sign-up, no invite, no account creation. Family members are managed
- * inside the OS after the owner is in.
+ * sign-up, no invite, no account creation. Credentials are verified by
+ * the backend; nothing is unlocked locally.
  */
-export function LockScreen() {
-  const [email, setEmail] = useState(user.email);
+export function SignInScreen() {
+  const { signIn, sessionExpired } = useAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [state, setState] = useState<"idle" | "checking" | "error">("idle");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [clock, setClock] = useState("");
 
   useEffect(() => {
@@ -25,14 +27,22 @@ export function LockScreen() {
     return () => window.clearInterval(id);
   }, []);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password.trim()) {
-      setState("error");
+    if (!email.trim() || !password) {
+      setError("Enter your email and master password.");
       return;
     }
-    setState("checking");
-    window.setTimeout(() => session.unlock(), 620);
+    setBusy(true);
+    setError(null);
+    try {
+      await signIn(email.trim(), password);
+    } catch (err) {
+      setError(errorMessage(err, "We couldn't sign you in. Check your credentials."));
+    } finally {
+      setBusy(false);
+      setPassword("");
+    }
   };
 
   return (
@@ -55,12 +65,11 @@ export function LockScreen() {
           <div className="animate-rise max-w-xl">
             <p className="label-eyebrow">Master account</p>
             <h1 className="display-xl mt-4 text-balance">
-              Welcome back, {user.name}.
+              Welcome back.
               <span className="block text-muted-foreground">Your OS is where you left it.</span>
             </h1>
             <p className="mt-6 max-w-md text-sm leading-relaxed text-muted-foreground">
-              One account owns this system. Everything inside — documents, keys, devices, family
-              spaces — is unlocked by you and only you.
+              One account owns this system. Everything inside is unlocked by you and only you.
             </p>
             <div className="mt-8 flex flex-wrap gap-2 text-xs text-muted-foreground">
               {["Email & password", "Passkey soon", "Biometric soon"].map((m, i) => (
@@ -82,17 +91,13 @@ export function LockScreen() {
             className="glass-panel sheen-top animate-rise w-full max-w-sm rounded-xl p-6"
             style={{ animationDelay: "120ms" }}
           >
-            <div className="flex items-center gap-3">
-              <span className="gradient-accent grid size-10 place-items-center rounded-lg text-sm font-semibold text-accent-foreground">
-                {user.initials}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{user.name}</p>
-                <p className="truncate text-xs text-muted-foreground">Owner · this device</p>
-              </div>
-            </div>
+            {sessionExpired ? (
+              <p className="mb-4 rounded-md border border-hairline bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                Your session expired. Sign in to continue.
+              </p>
+            ) : null}
 
-            <label className="mt-6 block text-xs font-medium text-muted-foreground" htmlFor="email">
+            <label className="block text-xs font-medium text-muted-foreground" htmlFor="email">
               Email
             </label>
             <input
@@ -101,6 +106,7 @@ export function LockScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
+              placeholder="you@example.com"
               className="mt-1.5 h-11 w-full rounded-lg border border-hairline bg-surface/70 px-3 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-ring/50"
             />
 
@@ -116,28 +122,22 @@ export function LockScreen() {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setState("idle");
+                setError(null);
               }}
               autoComplete="current-password"
               placeholder="••••••••••"
               className="mt-1.5 h-11 w-full rounded-lg border border-hairline bg-surface/70 px-3 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-ring/50"
             />
 
-            {state === "error" ? (
-              <p className="mt-2 text-xs text-destructive">Enter your master password to continue.</p>
-            ) : null}
+            {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
 
             <button
               type="submit"
-              disabled={state === "checking"}
+              disabled={busy}
               className="gradient-primary mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-primary-foreground transition active:scale-[0.99] disabled:opacity-70"
             >
-              {state === "checking" ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <KeyRound className="size-4" />
-              )}
-              {state === "checking" ? "Unlocking" : "Unlock"}
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
+              {busy ? "Signing in" : "Unlock"}
             </button>
 
             <div className="mt-4 flex items-center gap-2">
@@ -158,7 +158,7 @@ export function LockScreen() {
             </div>
 
             <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
-              No registration exists. Family members are added from inside the OS.
+              No registration exists. This system has a single owner account.
             </p>
           </form>
         </div>

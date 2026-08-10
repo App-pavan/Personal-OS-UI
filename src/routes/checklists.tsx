@@ -10,7 +10,8 @@ import {
   useChecklistMutations,
   useChecklistTemplates,
 } from "@/hooks/use-checklists";
-import { mockAssignees } from "@/lib/api/mock/seed";
+import { EmptyState, ErrorState, RowsSkeleton } from "@/components/os/state-views";
+import { useAuth } from "@/features/auth/auth-context";
 import type { ChecklistInstanceItem } from "@/lib/api/types";
 
 export const Route = createFileRoute("/checklists")({
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/checklists")({
 });
 
 function ChecklistsPage() {
+  const { user } = useAuth();
   const templates = useChecklistTemplates();
   const instances = useChecklistInstances();
   const m = useChecklistMutations();
@@ -47,6 +49,17 @@ function ChecklistsPage() {
   const [startFor, setStartFor] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [destination, setDestination] = useState("");
+
+  const [newName, setNewName] = useState("");
+
+  // Assignees come from real data only — the owner plus anyone already
+  // assigned on this run. There is no directory API yet.
+  const assignees = useMemo(() => {
+    const names = new Set<string>();
+    if (user?.name) names.add(user.name);
+    for (const item of run.data?.items ?? []) if (item.assigneeName) names.add(item.assigneeName);
+    return [...names];
+  }, [run.data, user?.name]);
 
   const grouped = useMemo(() => {
     const items = run.data?.items ?? [];
@@ -75,7 +88,15 @@ function ChecklistsPage() {
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)]">
         {/* ---------------- library ---------------- */}
         <section className="animate-rise" style={{ animationDelay: "80ms" }}>
-          {active.length ? (
+          {instances.isLoading ? (
+            <RowsSkeleton rows={2} />
+          ) : instances.isError ? (
+            <ErrorState
+              error={instances.error}
+              title="Unable to load your running checklists."
+              onRetry={() => void instances.refetch()}
+            />
+          ) : active.length ? (
             <>
               <p className="label-eyebrow">Running</p>
               <div className="hairline-list mt-2 border-t border-hairline">
@@ -103,7 +124,56 @@ function ChecklistsPage() {
             </>
           ) : null}
 
-          <p className="label-eyebrow mt-8">Template library</p>
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-2">
+            <p className="label-eyebrow">Template library</p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const name = newName.trim();
+                if (!name) return;
+                m.createTemplate.mutate(
+                  { name, category: "personal" },
+                  {
+                    onSuccess: () => {
+                      setNewName("");
+                      toast.success("Checklist created", { description: name });
+                    },
+                  },
+                );
+              }}
+              className="flex items-center gap-2"
+            >
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="New checklist name"
+                aria-label="New checklist name"
+                className="h-9 w-44 rounded-md border border-hairline bg-transparent px-2.5 text-sm outline-none focus:ring-2 focus:ring-ring/40"
+              />
+              <button
+                type="submit"
+                disabled={m.createTemplate.isPending}
+                className="gradient-primary h-9 rounded-md px-3 text-xs font-semibold text-primary-foreground disabled:opacity-70"
+              >
+                <Plus className="mr-1 inline size-3.5" />
+                Create
+              </button>
+            </form>
+          </div>
+          {templates.isLoading ? (
+            <RowsSkeleton rows={4} />
+          ) : templates.isError ? (
+            <ErrorState
+              error={templates.error}
+              title="Unable to load your checklists."
+              onRetry={() => void templates.refetch()}
+            />
+          ) : !(templates.data ?? []).filter((t) => !t.archived).length ? (
+            <EmptyState
+              title="No reusable checklists yet."
+              line="Create your first checklist for trips, routines or anything you repeat."
+            />
+          ) : (
           <div className="hairline-list mt-2 border-t border-hairline">
             {(templates.data ?? [])
               .filter((t) => !t.archived)
@@ -195,6 +265,7 @@ function ChecklistsPage() {
                 </div>
               ))}
           </div>
+          )}
         </section>
 
         {/* ---------------- runner ---------------- */}
@@ -300,7 +371,7 @@ function ChecklistsPage() {
                             className="h-7 rounded-md border border-hairline bg-transparent px-1 text-xs text-muted-foreground"
                           >
                             <option value="">—</option>
-                            {mockAssignees.map((p) => (
+                            {assignees.map((p: string) => (
                               <option key={p} value={p}>
                                 {p}
                               </option>
@@ -340,6 +411,18 @@ function ChecklistsPage() {
                 ))}
               </div>
             </div>
+          </aside>
+        ) : run.isLoading && currentRunId ? (
+          <aside className="surface-card h-fit p-5">
+            <RowsSkeleton rows={5} />
+          </aside>
+        ) : run.isError ? (
+          <aside className="h-fit">
+            <ErrorState
+              error={run.error}
+              title="Unable to load this checklist run."
+              onRetry={() => void run.refetch()}
+            />
           </aside>
         ) : (
           <aside className="surface-quiet h-fit p-6 text-sm text-muted-foreground">
