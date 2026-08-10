@@ -748,3 +748,20 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Netlify deployment
+
+TanStack Start SSR app — **not** a plain Vite SPA.
+
+| Setting | Correct | Wrong |
+|---------|---------|-------|
+| Publish directory | `dist` | ~~`dist/client`~~ |
+| Build command | `bun run build` | — |
+
+`dist/client` is only used inside the Lovable sandbox. Netlify builds use `netlify.toml` in this repo.
+
+Set in Netlify environment:
+
+```
+VITE_API_BASE_URL=https://cy6ap710ye.execute-api.ap-south-1.amazonaws.com
+```

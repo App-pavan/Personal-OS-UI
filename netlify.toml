@@ -1,0 +1,17 @@
+# Personal OS UI — Netlify deployment (TanStack Start + Nitro)
+#
+# This app is an SSR TanStack Start project, NOT a static Vite SPA.
+# Do NOT use publish directory "dist/client" — that path is only used
+# inside the Lovable sandbox. On Netlify the Nitro netlify preset outputs:
+#   - dist/                     → static assets + _redirects (publish)
+#   - .netlify/functions-internal/ → serverless SSR function
+
+[build]
+  command = "bun run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NITRO_PRESET = "netlify"
+
+# SPA fallback is handled by Nitro-generated _redirects in dist/
