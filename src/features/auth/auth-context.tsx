@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch((error: unknown) => {
         if (!alive) return;
         // Only an explicit 401 invalidates a restored session; a missing
-        // /auth/me endpoint or a network blip must not sign the owner out.
+        // /identity/auth/me endpoint or a network blip must not sign the owner out.
         if (error instanceof ApiRequestError && error.status === 401) {
           tokenStore.clear();
           writeCachedUser(null);

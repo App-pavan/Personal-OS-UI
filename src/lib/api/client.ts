@@ -68,7 +68,7 @@ async function refreshSession(): Promise<boolean> {
 
   refreshInFlight ??= (async () => {
     try {
-      const res = await rawFetch("/auth/refresh", {
+      const res = await rawFetch("/identity/auth/refresh", {
         method: "POST",
         body: { refreshToken, refresh_token: refreshToken },
         anonymous: true,
