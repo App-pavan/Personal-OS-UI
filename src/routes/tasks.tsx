@@ -111,7 +111,7 @@ function IntentsPage() {
       </form>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
-        <section className="animate-rise surface-raised p-4 md:p-5" style={{ animationDelay: "160ms" }}>
+        <section className="animate-rise surface-raised h-fit p-4 md:p-5" style={{ animationDelay: "160ms" }}>
           <div className="hairline-list">
 
             {list.map((i) => (
