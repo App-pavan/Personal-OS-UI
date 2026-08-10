@@ -71,15 +71,18 @@ function IntentsPage() {
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{activeWindow.line}</p>
       </header>
 
-      <div className="animate-rise mt-6 flex flex-wrap items-center gap-1" style={{ animationDelay: "80ms" }}>
+      <div
+        className="animate-rise glass-panel mt-6 inline-flex flex-wrap items-center gap-1 rounded-xl p-1"
+        style={{ animationDelay: "80ms" }}
+      >
         {windows.map((w) => (
           <button
             key={w.label}
             onClick={() => setWin(w.key)}
             className={cn(
-              "rail-item rounded-md px-2.5 py-1.5 text-sm",
+              "rail-item rounded-lg px-3 py-1.5 text-sm",
               win === w.key
-                ? "bg-primary-soft font-medium text-primary"
+                ? "gradient-primary font-semibold text-primary-foreground shadow-soft"
                 : "text-muted-foreground hover:bg-muted/70",
             )}
           >
@@ -87,6 +90,7 @@ function IntentsPage() {
           </button>
         ))}
       </div>
+
 
       <form onSubmit={add} className="animate-rise mt-5 flex items-center gap-2" style={{ animationDelay: "120ms" }}>
         <input
