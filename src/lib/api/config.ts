@@ -3,7 +3,7 @@
  * The base URL is never hardcoded in components or services.
  * ------------------------------------------------------------- */
 
-const raw = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+const raw = (import.meta.env["VITE_API_BASE_URL"] as string | undefined)?.trim();
 
 /** Same-origin fallback keeps the app usable behind a reverse proxy. */
 export const API_BASE_URL = (raw && raw.length ? raw : "/api/v1").replace(/\/+$/, "");
