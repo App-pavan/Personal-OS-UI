@@ -1,52 +1,45 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  ArrowRight,
-  Bell,
+  ClipboardCheck,
   Command,
-  Lock,
-  Mic,
-  NotebookPen,
+  ListChecks,
+  LogOut,
+  Moon,
   Plus,
-  ScanLine,
   Search,
   Sparkles,
   Sun,
-  Moon,
-  Timer,
-  Upload,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { modules, primaryNav, user, activity } from "@/lib/os-data";
-import { session, useOS, intents, docs } from "@/lib/os-store";
+import { modules } from "@/lib/nav";
+import { useAuth } from "@/features/auth/auth-context";
 import { useTheme } from "./theme-provider";
 import { CommandPalette, useCommandPalette } from "./command-palette";
-import { LockScreen } from "./lock-screen";
-import { toast } from "sonner";
+import { SignInScreen } from "./sign-in-screen";
 
-const groups: { key: "core" | "life" | "system"; label: string }[] = [
-  { key: "core", label: "Work" },
-  { key: "life", label: "Life" },
+const groups: { key: "core" | "system"; label: string }[] = [
+  { key: "core", label: "Product" },
   { key: "system", label: "System" },
 ];
 
 /* ---------- adaptive rail (Arc / visionOS flavored) ---------- */
 
-function Rail() {
+function Rail({ onSignOut }: { onSignOut: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [pinned, setPinned] = useState(false);
+  const { user } = useAuth();
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <aside
-      onMouseEnter={() => setPinned(true)}
-      onMouseLeave={() => setPinned(false)}
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
       className={cn(
         "sticky top-0 z-30 hidden h-screen shrink-0 flex-col gap-4 px-2.5 py-4 transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:flex",
-        pinned ? "w-[236px]" : "w-[68px]",
+        expanded ? "w-[236px]" : "w-[68px]",
       )}
     >
       <Link to="/" className="flex items-center gap-2.5 px-1.5 py-1">
@@ -56,11 +49,13 @@ function Rail() {
         <span
           className={cn(
             "min-w-0 transition-opacity duration-300",
-            pinned ? "opacity-100" : "pointer-events-none opacity-0",
+            expanded ? "opacity-100" : "pointer-events-none opacity-0",
           )}
         >
           <span className="block truncate text-sm font-semibold tracking-tight">Personal OS</span>
-          <span className="block truncate text-[11px] text-muted-foreground">{user.name}'s system</span>
+          <span className="block truncate text-[11px] text-muted-foreground">
+            {user?.name ? `${user.name}'s system` : "Master account"}
+          </span>
         </span>
       </Link>
 
@@ -70,7 +65,7 @@ function Rail() {
             <p
               className={cn(
                 "label-eyebrow px-2.5 pb-1 transition-opacity duration-300",
-                pinned ? "opacity-100" : "opacity-0",
+                expanded ? "opacity-100" : "opacity-0",
               )}
             >
               {g.label}
@@ -80,38 +75,31 @@ function Rail() {
               .map((m) => {
                 const active = pathname === m.to;
                 return (
-                  <Tooltip key={m.to}>
-                    <TooltipTrigger asChild>
-                      <Link
-                        to={m.to}
-                        aria-label={m.label}
-                        className={cn(
-                          "rail-item group relative flex h-10 items-center gap-3 rounded-lg px-2.5 text-sm",
-                          active
-                            ? "bg-primary-soft font-semibold text-primary"
-                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                        )}
-                      >
-                        {active ? (
-                          <span className="absolute top-1/2 -left-1.5 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
-                        ) : null}
-                        <m.icon className="size-[17px] shrink-0" />
-                        <span
-                          className={cn(
-                            "truncate transition-opacity duration-300",
-                            pinned ? "opacity-100" : "pointer-events-none opacity-0",
-                          )}
-                        >
-                          {m.label}
-                        </span>
-                      </Link>
-                    </TooltipTrigger>
-                    {!pinned ? (
-                      <TooltipContent side="right" className="rounded-md">
-                        {m.label}
-                      </TooltipContent>
+                  <Link
+                    key={m.to}
+                    to={m.to}
+                    aria-label={m.label}
+                    title={m.label}
+                    className={cn(
+                      "rail-item group relative flex h-10 items-center gap-3 rounded-lg px-2.5 text-sm",
+                      active
+                        ? "bg-primary-soft font-semibold text-primary"
+                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                    )}
+                  >
+                    {active ? (
+                      <span className="absolute top-1/2 -left-1.5 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
                     ) : null}
-                  </Tooltip>
+                    <m.icon className="size-[17px] shrink-0" />
+                    <span
+                      className={cn(
+                        "truncate transition-opacity duration-300",
+                        expanded ? "opacity-100" : "pointer-events-none opacity-0",
+                      )}
+                    >
+                      {m.label}
+                    </span>
+                  </Link>
                 );
               })}
           </div>
@@ -119,83 +107,46 @@ function Rail() {
       </div>
 
       <button
-        onClick={() => session.lock()}
+        onClick={onSignOut}
+        title="Sign out"
         className="rail-item flex h-10 items-center gap-3 rounded-lg px-2.5 text-sm text-muted-foreground hover:bg-muted/70 hover:text-foreground"
       >
-        <Lock className="size-[17px] shrink-0" />
+        <LogOut className="size-[17px] shrink-0" />
         <span
           className={cn(
             "truncate transition-opacity duration-300",
-            pinned ? "opacity-100" : "pointer-events-none opacity-0",
+            expanded ? "opacity-100" : "pointer-events-none opacity-0",
           )}
         >
-          Lock OS
+          Sign out
         </span>
       </button>
     </aside>
   );
 }
 
-/* ---------- global quick actions ---------- */
-
-const quickActions = [
-  { label: "Quick note", icon: NotebookPen, run: () => docs.add("Quick note") },
-  { label: "Quick task", icon: Plus, run: () => intents.add("New intent") },
-  { label: "Ask AI", icon: Sparkles, run: () => null },
-  { label: "Voice capture", icon: Mic, run: () => null },
-  { label: "Scan document", icon: ScanLine, run: () => null },
-  { label: "Upload file", icon: Upload, run: () => null },
-  { label: "Start timer", icon: Timer, run: () => null },
-];
+/* ---------- quick actions: only what the backend can do ---------- */
 
 function QuickActions({ trigger }: { trigger: ReactNode }) {
+  const actions = [
+    { label: "New task", to: "/tasks" as const, icon: ListChecks },
+    { label: "New checklist run", to: "/checklists" as const, icon: ClipboardCheck },
+  ];
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent align="end" className="w-64 rounded-xl border-hairline p-1.5">
+      <PopoverContent align="end" className="w-60 rounded-xl border-hairline p-1.5">
         <p className="label-eyebrow px-2.5 py-2">Quick actions</p>
-        {quickActions.map((a) => (
-          <button
+        {actions.map((a) => (
+          <Link
             key={a.label}
-            onClick={() => {
-              a.run();
-              toast.success(a.label, { description: "Captured into your OS" });
-            }}
+            to={a.to}
             className="row-quiet flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm"
           >
             <a.icon className="size-4 text-muted-foreground" />
             <span>{a.label}</span>
-          </button>
+          </Link>
         ))}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function Notifications() {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          aria-label="Recent activity"
-          className="relative grid size-9 place-items-center rounded-lg text-muted-foreground transition hover:bg-muted/70 hover:text-foreground"
-        >
-          <Bell className="size-[17px]" />
-          <span className="absolute top-2 right-2 size-1.5 rounded-full bg-accent" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 rounded-xl border-hairline p-1.5">
-        <p className="label-eyebrow px-2.5 py-2">Context changes</p>
-        <div className="hairline-list">
-          {activity.map((a) => (
-            <div key={a.id} className="px-2.5 py-2.5">
-              <p className="text-sm">{a.what}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {a.module} · {a.when}
-              </p>
-            </div>
-          ))}
-        </div>
       </PopoverContent>
     </Popover>
   );
@@ -204,19 +155,15 @@ function Notifications() {
 /* ---------- shell ---------- */
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { unlocked, hydrated } = useOS();
+  const { status, user, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   const { open, setOpen } = useCommandPalette();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileNav, setMobileNav] = useState(false);
 
-  useEffect(() => {
-    session.hydrate();
-  }, []);
-
   const current = modules.find((m) => m.to === pathname);
 
-  if (!hydrated) {
+  if (status === "restoring") {
     return (
       <div className="ambient-canvas grid min-h-screen place-items-center">
         <span className="gradient-primary animate-breathe grid size-11 place-items-center rounded-lg text-primary-foreground">
@@ -226,14 +173,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!unlocked) return <LockScreen />;
+  if (status === "signed_out") return <SignInScreen />;
 
   return (
     <div className="ambient-canvas min-h-screen">
       <CommandPalette open={open} onOpenChange={setOpen} />
 
       <div className="flex min-h-screen w-full">
-        <Rail />
+        <Rail onSignOut={() => void signOut()} />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 border-b border-hairline bg-background/70 px-4 py-2.5 backdrop-blur-xl md:px-8">
@@ -242,14 +189,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <div className="md:hidden">
                   <Sheet open={mobileNav} onOpenChange={setMobileNav}>
                     <SheetTrigger asChild>
-                      <button aria-label="Open modules" className="flex items-center gap-2">
+                      <button aria-label="Open navigation" className="flex items-center gap-2">
                         <span className="gradient-primary grid size-8 place-items-center rounded-lg text-primary-foreground">
                           <Sparkles className="size-4" />
                         </span>
                       </button>
                     </SheetTrigger>
                     <SheetContent side="left" className="w-[280px] border-hairline bg-sidebar p-4">
-                      <SheetTitle className="sr-only">Modules</SheetTitle>
+                      <SheetTitle className="sr-only">Navigation</SheetTitle>
                       <div className="mb-4 flex items-center justify-between">
                         <span className="text-sm font-semibold">Personal OS</span>
                         <button
@@ -285,10 +232,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                           </div>
                         ))}
                         <button
-                          onClick={() => session.lock()}
+                          onClick={() => void signOut()}
                           className="flex h-11 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-muted-foreground"
                         >
-                          <Lock className="size-[17px]" /> Lock OS
+                          <LogOut className="size-[17px]" /> Sign out
                         </button>
                       </div>
                     </SheetContent>
@@ -301,7 +248,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   <Search className="size-4 shrink-0" />
                   <span className="truncate">
-                    {current ? `Search ${current.label.toLowerCase()} and everything else…` : "Search everything…"}
+                    {current ? `Search ${current.label.toLowerCase()} and everything else…` : "Search tasks and checklists…"}
                   </span>
                   <kbd className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-md border border-hairline px-1.5 py-0.5 text-[10px] font-medium md:flex">
                     <Command className="size-2.5" />K
@@ -327,13 +274,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   {theme === "dark" ? <Sun className="size-[17px]" /> : <Moon className="size-[17px]" />}
                 </button>
-                <Notifications />
                 <Link
                   to="/settings"
                   aria-label="Account"
                   className="gradient-accent ml-1 grid size-8 place-items-center rounded-lg text-xs font-semibold text-accent-foreground"
                 >
-                  {user.initials}
+                  {user?.initials ?? "OS"}
                 </Link>
               </div>
             </div>
@@ -349,7 +295,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
         <div className="pointer-events-auto mx-auto mb-3 flex max-w-md items-center gap-2 px-3">
           <nav className="glass-panel flex flex-1 items-center justify-between rounded-xl px-1.5 py-1.5">
-            {primaryNav.map((n) => {
+            {modules.map((n) => {
               const active = pathname === n.to;
               return (
                 <Link
@@ -367,29 +313,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <QuickActions
-            trigger={
-              <button
-                aria-label="Quick actions"
-                className="gradient-primary grid size-12 shrink-0 place-items-center rounded-xl text-primary-foreground shadow-float transition active:scale-95"
-              >
-                <Plus className="size-5" />
-              </button>
-            }
-          />
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="Search"
+            className="gradient-primary grid size-12 shrink-0 place-items-center rounded-xl text-primary-foreground shadow-float transition active:scale-95"
+          >
+            <Search className="size-5" />
+          </button>
         </div>
       </div>
     </div>
-  );
-}
-
-export function ContinueStrip() {
-  return (
-    <Link
-      to="/notes"
-      className="row-quiet flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-muted-foreground"
-    >
-      Continue where you left off <ArrowRight className="size-3.5" />
-    </Link>
   );
 }
