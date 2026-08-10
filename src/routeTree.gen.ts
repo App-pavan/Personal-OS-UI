@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as ChecklistsRouteImport } from './routes/checklists'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as FamilyRouteImport } from './routes/family'
 import { Route as FinanceRouteImport } from './routes/finance'
@@ -42,6 +43,11 @@ const AssistantRoute = AssistantRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChecklistsRoute = ChecklistsRouteImport.update({
+  id: '/checklists',
+  path: '/checklists',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
   '/calendar': typeof CalendarRoute
+  '/checklists': typeof ChecklistsRoute
   '/documents': typeof DocumentsRoute
   '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
   '/calendar': typeof CalendarRoute
+  '/checklists': typeof ChecklistsRoute
   '/documents': typeof DocumentsRoute
   '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/assistant': typeof AssistantRoute
   '/calendar': typeof CalendarRoute
+  '/checklists': typeof ChecklistsRoute
   '/documents': typeof DocumentsRoute
   '/family': typeof FamilyRoute
   '/finance': typeof FinanceRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/'
     | '/assistant'
     | '/calendar'
+    | '/checklists'
     | '/documents'
     | '/family'
     | '/finance'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/'
     | '/assistant'
     | '/calendar'
+    | '/checklists'
     | '/documents'
     | '/family'
     | '/finance'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/'
     | '/assistant'
     | '/calendar'
+    | '/checklists'
     | '/documents'
     | '/family'
     | '/finance'
@@ -259,6 +271,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssistantRoute: typeof AssistantRoute
   CalendarRoute: typeof CalendarRoute
+  ChecklistsRoute: typeof ChecklistsRoute
   DocumentsRoute: typeof DocumentsRoute
   FamilyRoute: typeof FamilyRoute
   FinanceRoute: typeof FinanceRoute
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checklists': {
+      id: '/checklists'
+      path: '/checklists'
+      fullPath: '/checklists'
+      preLoaderRoute: typeof ChecklistsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -419,6 +439,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistantRoute: AssistantRoute,
   CalendarRoute: CalendarRoute,
+  ChecklistsRoute: ChecklistsRoute,
   DocumentsRoute: DocumentsRoute,
   FamilyRoute: FamilyRoute,
   FinanceRoute: FinanceRoute,
@@ -439,13 +460,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
