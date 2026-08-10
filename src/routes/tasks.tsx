@@ -174,7 +174,7 @@ function IntentsPage() {
         {selected ? (
           <aside
             key={selected.id}
-            className="animate-rise surface-card sticky top-24 h-fit p-5"
+            className="animate-rise bento-tile tile-glow sticky top-24 h-fit"
             style={{ animationDelay: "60ms" }}
           >
             <div className="flex items-start justify-between gap-3">
