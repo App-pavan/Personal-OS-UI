@@ -109,8 +109,9 @@ function IntentsPage() {
       </form>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
-        <section className="animate-rise" style={{ animationDelay: "160ms" }}>
-          <div className="hairline-list border-t border-hairline">
+        <section className="animate-rise bento-tile" style={{ animationDelay: "160ms" }}>
+          <div className="hairline-list">
+
             {list.map((i) => (
               <button
                 key={i.id}
