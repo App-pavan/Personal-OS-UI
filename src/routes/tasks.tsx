@@ -109,7 +109,7 @@ function IntentsPage() {
       </form>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
-        <section className="animate-rise bento-tile" style={{ animationDelay: "160ms" }}>
+        <section className="animate-rise surface-raised p-4 md:p-5" style={{ animationDelay: "160ms" }}>
           <div className="hairline-list">
 
             {list.map((i) => (
@@ -174,7 +174,7 @@ function IntentsPage() {
         {selected ? (
           <aside
             key={selected.id}
-            className="animate-rise bento-tile tile-glow sticky top-24 h-fit"
+            className="animate-rise surface-raised tile-glow sticky top-24 h-fit overflow-hidden p-5"
             style={{ animationDelay: "60ms" }}
           >
             <div className="flex items-start justify-between gap-3">
