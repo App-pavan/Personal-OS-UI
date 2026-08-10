@@ -13,7 +13,7 @@ export const API_BASE_URL = "/api/v1";
 
 export class ApiRequestError extends Error {
   status: number;
-  error?: ApiError;
+  error?: ApiError | undefined;
 
   constructor(message: string, status: number, error?: ApiError) {
     super(message);
@@ -67,13 +67,13 @@ export function buildQuery(params?: QueryParams): string {
 type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
-  params?: QueryParams;
-  signal?: AbortSignal;
+  params?: QueryParams | undefined;
+  signal?: AbortSignal | undefined;
   /** Public endpoints (auth) skip the bearer header. */
   anonymous?: boolean;
 };
 
-export type Envelope<T> = { data: T; meta?: PaginationMeta };
+export type Envelope<T> = { data: T; meta?: PaginationMeta | undefined };
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<Envelope<T>> {
   const { method = "GET", body, params, signal, anonymous } = options;
@@ -88,8 +88,8 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const response = await fetch(`${API_BASE_URL}${path}${buildQuery(params)}`, {
     method,
     headers,
-    signal,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    ...(signal ? { signal } : {}),
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 
   if (response.status === 401) {
