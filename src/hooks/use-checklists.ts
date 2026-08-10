@@ -57,7 +57,7 @@ export function useChecklistMutations() {
   const fail = (fallback: string) => (error: unknown) =>
     toast.error(errorMessage(error, fallback));
 
-  const m = <TVars>(fn: (vars: TVars) => Promise<unknown>, fallback: string) =>
+  const m = <TVars, TData>(fn: (vars: TVars) => Promise<TData>, fallback: string) =>
     useMutation({ mutationFn: fn, onSuccess: done, onError: fail(fallback) });
 
   return {
