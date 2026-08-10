@@ -141,7 +141,7 @@ function ChecklistsPage() {
                           setName(t.name);
                           setDestination("");
                         }}
-                        className="rounded-md bg-primary-soft px-2.5 py-1.5 text-xs font-medium text-primary"
+                        className="gradient-primary rounded-md px-2.5 py-1.5 text-xs font-semibold text-primary-foreground transition active:scale-95"
                       >
                         Start
                       </button>
@@ -221,7 +221,7 @@ function ChecklistsPage() {
             <div className="mt-4 flex flex-wrap gap-1.5 text-xs">
               <button
                 onClick={() => m.checkAllRequired.mutate(run.data!.id)}
-                className="rounded-md bg-primary-soft px-2.5 py-1.5 font-medium text-primary"
+                className="gradient-primary rounded-md px-2.5 py-1.5 font-semibold text-primary-foreground transition active:scale-95"
               >
                 Check all required
               </button>
