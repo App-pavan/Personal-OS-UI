@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { checklistService } from "@/lib/api/services";
-import type { CreateChecklistInstanceInput } from "@/lib/api/types";
+import { errorMessage } from "@/lib/api/errors";
+import type {
+  ChecklistTemplateItem,
+  CreateChecklistInstanceInput,
+  CreateChecklistTemplateInput,
+  UpdateChecklistTemplateInput,
+} from "@/lib/api/types";
 
 export const checklistKeys = {
   all: ["checklists"] as const,
@@ -11,7 +18,11 @@ export const checklistKeys = {
 };
 
 export function useChecklistTemplates() {
-  return useQuery({ queryKey: checklistKeys.templates, queryFn: () => checklistService.listTemplates() });
+  return useQuery({
+    queryKey: checklistKeys.templates,
+    queryFn: () => checklistService.listTemplates(),
+    retry: 1,
+  });
 }
 
 export function useChecklistTemplate(id: string | null) {
@@ -19,11 +30,16 @@ export function useChecklistTemplate(id: string | null) {
     queryKey: checklistKeys.template(id ?? "none"),
     queryFn: () => checklistService.getTemplate(id!),
     enabled: Boolean(id),
+    retry: 1,
   });
 }
 
 export function useChecklistInstances() {
-  return useQuery({ queryKey: checklistKeys.instances, queryFn: () => checklistService.listInstances() });
+  return useQuery({
+    queryKey: checklistKeys.instances,
+    queryFn: () => checklistService.listInstances(),
+    retry: 1,
+  });
 }
 
 export function useChecklistInstance(id: string | null) {
@@ -31,56 +47,91 @@ export function useChecklistInstance(id: string | null) {
     queryKey: checklistKeys.instance(id ?? "none"),
     queryFn: () => checklistService.getInstance(id!),
     enabled: Boolean(id),
+    retry: 1,
   });
 }
 
 export function useChecklistMutations() {
   const qc = useQueryClient();
   const done = () => qc.invalidateQueries({ queryKey: checklistKeys.all });
+  const fail = (fallback: string) => (error: unknown) =>
+    toast.error(errorMessage(error, fallback));
+
+  const m = <TVars>(fn: (vars: TVars) => Promise<unknown>, fallback: string) =>
+    useMutation({ mutationFn: fn, onSuccess: done, onError: fail(fallback) });
 
   return {
-    start: useMutation({
-      mutationFn: (input: CreateChecklistInstanceInput) => checklistService.startInstance(input),
-      onSuccess: done,
-    }),
-    toggleItem: useMutation({
-      mutationFn: (vars: { id: string; itemId: string }) =>
-        checklistService.toggleItem(vars.id, vars.itemId),
-      onSuccess: done,
-    }),
-    checkAllRequired: useMutation({
-      mutationFn: (id: string) => checklistService.checkAllRequired(id),
-      onSuccess: done,
-    }),
-    uncheckAll: useMutation({
-      mutationFn: (id: string) => checklistService.uncheckAll(id),
-      onSuccess: done,
-    }),
-    complete: useMutation({
-      mutationFn: (id: string) => checklistService.completeInstance(id),
-      onSuccess: done,
-    }),
-    reset: useMutation({
-      mutationFn: (id: string) => checklistService.resetInstance(id),
-      onSuccess: done,
-    }),
-    cancel: useMutation({
-      mutationFn: (id: string) => checklistService.cancelInstance(id),
-      onSuccess: done,
-    }),
-    assignItem: useMutation({
-      mutationFn: (vars: { id: string; itemId: string; assigneeName: string }) =>
+    /* instances */
+    start: m(
+      (input: CreateChecklistInstanceInput) => checklistService.startInstance(input),
+      "Checklist could not be started.",
+    ),
+    toggleItem: m(
+      (vars: { id: string; itemId: string }) => checklistService.toggleItem(vars.id, vars.itemId),
+      "Item could not be updated.",
+    ),
+    checkAllRequired: m(
+      (id: string) => checklistService.checkAllRequired(id),
+      "Required items could not be checked.",
+    ),
+    uncheckAll: m((id: string) => checklistService.uncheckAll(id), "Items could not be cleared."),
+    complete: m(
+      (id: string) => checklistService.completeInstance(id),
+      "Checklist could not be completed.",
+    ),
+    reset: m((id: string) => checklistService.resetInstance(id), "Checklist could not be reset."),
+    cancel: m((id: string) => checklistService.cancelInstance(id), "Checklist could not be cancelled."),
+    duplicateInstance: m(
+      (id: string) => checklistService.duplicateInstance(id),
+      "Checklist could not be duplicated.",
+    ),
+    assignItem: m(
+      (vars: { id: string; itemId: string; assigneeName: string }) =>
         checklistService.assignItem(vars.id, vars.itemId, vars.assigneeName),
-      onSuccess: done,
-    }),
-    convertItemToTask: useMutation({
-      mutationFn: (vars: { id: string; itemId: string }) =>
+      "Assignment could not be saved.",
+    ),
+    convertItemToTask: m(
+      (vars: { id: string; itemId: string }) =>
         checklistService.convertItemToTask(vars.id, vars.itemId),
-      onSuccess: done,
-    }),
-    duplicateTemplate: useMutation({
-      mutationFn: (id: string) => checklistService.duplicateTemplate(id),
-      onSuccess: done,
-    }),
+      "Task could not be created from this item.",
+    ),
+
+    /* templates */
+    createTemplate: m(
+      (input: CreateChecklistTemplateInput) => checklistService.createTemplate(input),
+      "Checklist could not be created.",
+    ),
+    updateTemplate: m(
+      (vars: { id: string; input: UpdateChecklistTemplateInput }) =>
+        checklistService.updateTemplate(vars.id, vars.input),
+      "Checklist could not be updated.",
+    ),
+    duplicateTemplate: m(
+      (id: string) => checklistService.duplicateTemplate(id),
+      "Checklist could not be duplicated.",
+    ),
+    archiveTemplate: m(
+      (id: string) => checklistService.archiveTemplate(id),
+      "Checklist could not be archived.",
+    ),
+    restoreTemplate: m(
+      (id: string) => checklistService.restoreTemplate(id),
+      "Checklist could not be restored.",
+    ),
+    saveTemplateItem: m(
+      (vars: { templateId: string; item: Partial<ChecklistTemplateItem> & { title: string } }) =>
+        checklistService.saveTemplateItem(vars.templateId, vars.item),
+      "Item could not be saved.",
+    ),
+    removeTemplateItem: m(
+      (vars: { templateId: string; itemId: string }) =>
+        checklistService.removeTemplateItem(vars.templateId, vars.itemId),
+      "Item could not be removed.",
+    ),
+    reorderTemplateItems: m(
+      (vars: { templateId: string; itemIds: string[] }) =>
+        checklistService.reorderTemplateItems(vars.templateId, vars.itemIds),
+      "Order could not be saved.",
+    ),
   };
 }
