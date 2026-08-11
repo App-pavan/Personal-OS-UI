@@ -6,6 +6,11 @@ import {
   toBackendTemplateItem,
   toBackendUpdateTemplateInput,
 } from "./checklist-mapper";
+import {
+  fromBackendInstance,
+  fromBackendInstanceDetail,
+  toBackendCreateInstanceInput,
+} from "./instance-mapper";
 import { priorityFromBackend, priorityToBackend } from "./priority";
 import type {
   BulkTaskOperation,
@@ -219,35 +224,70 @@ class ApiChecklistService implements ChecklistService {
       ).data,
     );
 
-  listInstances = async () => (await api.get<ChecklistInstance[]>("/checklists/instances")).data;
+  listInstances = async () =>
+    (await api.get<Record<string, unknown>[]>("/checklists/instances")).data.map((raw) =>
+      fromBackendInstance(raw),
+    );
   getInstance = async (id: string) =>
-    (await api.get<ChecklistInstanceDetail>(`/checklists/instances/${id}`)).data;
+    fromBackendInstanceDetail(
+      (await api.get<Record<string, unknown>>(`/checklists/instances/${id}`)).data,
+    );
   startInstance = async (input: CreateChecklistInstanceInput) =>
-    (await api.post<ChecklistInstanceDetail>("/checklists/instances", input)).data;
+    fromBackendInstanceDetail(
+      (
+        await api.post<Record<string, unknown>>(
+          "/checklists/instances",
+          toBackendCreateInstanceInput(input),
+        )
+      ).data,
+    );
   completeInstance = async (id: string) =>
-    (await api.post<ChecklistInstanceDetail>(`/checklists/instances/${id}/complete`)).data;
+    fromBackendInstanceDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/instances/${id}/complete`)).data,
+    );
   cancelInstance = async (id: string) =>
-    (await api.post<ChecklistInstanceDetail>(`/checklists/instances/${id}/cancel`)).data;
+    fromBackendInstanceDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/instances/${id}/cancel`)).data,
+    );
   resetInstance = async (id: string) =>
-    (await api.post<ChecklistInstanceDetail>(`/checklists/instances/${id}/reset`)).data;
+    fromBackendInstanceDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/instances/${id}/reset`)).data,
+    );
   duplicateInstance = async (id: string) =>
-    (await api.post<ChecklistInstanceDetail>(`/checklists/instances/${id}/duplicate`)).data;
+    fromBackendInstanceDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/instances/${id}/duplicate`)).data,
+    );
   toggleItem = async (id: string, itemId: string) =>
-    (await api.post<ChecklistInstanceDetail>(`/checklists/instances/${id}/items/${itemId}/toggle`))
-      .data;
+    fromBackendInstanceDetail(
+      (
+        await api.post<Record<string, unknown>>(`/checklists/instances/${id}/toggle-item`, {
+          itemId,
+        })
+      ).data,
+    );
   checkAllRequired = async (id: string) =>
-    (await api.post<ChecklistInstanceDetail>(`/checklists/instances/${id}/check-all-required`)).data;
+    fromBackendInstanceDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/instances/${id}/check-all-required`))
+        .data,
+    );
   uncheckAll = async (id: string) =>
-    (await api.post<ChecklistInstanceDetail>(`/checklists/instances/${id}/uncheck-all`)).data;
+    fromBackendInstanceDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/instances/${id}/uncheck-all`)).data,
+    );
   assignItem = async (id: string, itemId: string, assigneeName: string) =>
-    (await api.post<ChecklistInstanceDetail>(
-      `/checklists/instances/${id}/items/${itemId}/assign`,
-      { assigneeName },
-    )).data;
+    fromBackendInstanceDetail(
+      (
+        await api.post<Record<string, unknown>>(
+          `/checklists/instances/${id}/items/${itemId}/assign`,
+          { assigneeId: assigneeName },
+        )
+      ).data,
+    );
   convertItemToTask = async (id: string, itemId: string) =>
-    (await api.post<ChecklistInstanceDetail>(
-      `/checklists/instances/${id}/items/${itemId}/convert-to-task`,
-    )).data;
+    fromBackendInstanceDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/instances/${id}/items/${itemId}/task`))
+        .data,
+    );
   recommendations = async () =>
     (await api.get<ChecklistTemplate[]>("/checklists/recommendations")).data;
 }
