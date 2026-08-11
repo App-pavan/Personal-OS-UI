@@ -1,4 +1,12 @@
 import { api, buildQuery } from "./client";
+import {
+  fromBackendTemplate,
+  fromBackendTemplateDetail,
+  toBackendCreateTemplateInput,
+  toBackendTemplateItem,
+  toBackendUpdateTemplateInput,
+} from "./checklist-mapper";
+import { priorityFromBackend, priorityToBackend } from "./priority";
 import type {
   BulkTaskOperation,
   ChecklistInstance,
@@ -80,44 +88,64 @@ export interface ChecklistService {
 /* ---------------- live task service ---------------- */
 
 class ApiTaskService implements TaskService {
+  private normalizeTask = <T extends TaskDetail | TaskSummary>(task: T): T => ({
+    ...task,
+    priority: priorityFromBackend(task.priority),
+  });
+
   async list(query: TaskListQuery = {}) {
     const res = await api.get<TaskSummary[]>("/tasks", query as Record<string, never>);
     return {
-      items: res.data,
+      items: res.data.map((task) => this.normalizeTask(task)),
       meta: res.meta ?? { page: 1, perPage: res.data.length, total: res.data.length, totalPages: 1 },
     };
   }
-  get = async (id: string) => (await api.get<TaskDetail>(`/tasks/${id}`)).data;
-  create = async (input: CreateTaskInput) => (await api.post<TaskDetail>("/tasks", input)).data;
+  get = async (id: string) => this.normalizeTask((await api.get<TaskDetail>(`/tasks/${id}`)).data);
+  create = async (input: CreateTaskInput) =>
+    this.normalizeTask(
+      (
+        await api.post<TaskDetail>("/tasks", {
+          ...input,
+          ...(input.priority ? { priority: priorityToBackend(input.priority) } : {}),
+        })
+      ).data,
+    );
   update = async (id: string, input: UpdateTaskInput) =>
-    (await api.patch<TaskDetail>(`/tasks/${id}`, input)).data;
+    this.normalizeTask(
+      (
+        await api.patch<TaskDetail>(`/tasks/${id}`, {
+          ...input,
+          ...(input.priority ? { priority: priorityToBackend(input.priority) } : {}),
+        })
+      ).data,
+    );
   remove = async (id: string) => {
     await api.delete<null>(`/tasks/${id}`);
   };
   bulk = async (op: BulkTaskOperation) => {
     await api.post<null>("/tasks/bulk", op);
   };
-  complete = async (id: string) => (await api.post<TaskDetail>(`/tasks/${id}/complete`)).data;
-  reopen = async (id: string) => (await api.post<TaskDetail>(`/tasks/${id}/reopen`)).data;
-  archive = async (id: string) => (await api.post<TaskDetail>(`/tasks/${id}/archive`)).data;
-  restore = async (id: string) => (await api.post<TaskDetail>(`/tasks/${id}/restore`)).data;
-  duplicate = async (id: string) => (await api.post<TaskDetail>(`/tasks/${id}/duplicate`)).data;
+  complete = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/complete`)).data);
+  reopen = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/reopen`)).data);
+  archive = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/archive`)).data);
+  restore = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/restore`)).data);
+  duplicate = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/duplicate`)).data);
   assign = async (id: string, assigneeName: string) =>
-    (await api.post<TaskDetail>(`/tasks/${id}/assign`, { assigneeName })).data;
+    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/assign`, { assigneeName })).data);
   setProgress = async (id: string, progress: number) =>
-    (await api.post<TaskDetail>(`/tasks/${id}/progress`, { progress })).data;
+    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/progress`, { progress })).data);
   setPinned = async (id: string, pinned: boolean) =>
-    (await api.post<TaskDetail>(`/tasks/${id}/pin`, { pinned })).data;
+    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/pin`, { pinned })).data);
   setFavorite = async (id: string, favorite: boolean) =>
-    (await api.post<TaskDetail>(`/tasks/${id}/favorite`, { favorite })).data;
+    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/favorite`, { favorite })).data);
   addSubtask = async (id: string, title: string) =>
-    (await api.post<TaskDetail>(`/tasks/${id}/subtasks`, { title })).data;
+    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/subtasks`, { title })).data);
   toggleSubtask = async (id: string, subtaskId: string) =>
-    (await api.post<TaskDetail>(`/tasks/${id}/subtasks/${subtaskId}/toggle`)).data;
+    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/subtasks/${subtaskId}/toggle`)).data);
   toggleChecklistItem = async (id: string, itemId: string) =>
-    (await api.post<TaskDetail>(`/tasks/${id}/checklist/${itemId}/toggle`)).data;
+    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/checklist/${itemId}/toggle`)).data);
   addComment = async (id: string, body: string) =>
-    (await api.post<TaskDetail>(`/tasks/${id}/comments`, { body })).data;
+    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/comments`, { body })).data);
 }
 
 
@@ -125,39 +153,71 @@ class ApiTaskService implements TaskService {
 
 class ApiChecklistService implements ChecklistService {
   listTemplates = async () =>
-    (await api.get<ChecklistTemplate[]>("/checklists/templates")).data;
+    (await api.get<Record<string, unknown>[]>("/checklists/templates")).data.map((raw) =>
+      fromBackendTemplate(raw),
+    );
   getTemplate = async (id: string) =>
-    (await api.get<ChecklistTemplateDetail>(`/checklists/templates/${id}`)).data;
+    fromBackendTemplateDetail((await api.get<Record<string, unknown>>(`/checklists/templates/${id}`)).data);
   createTemplate = async (input: CreateChecklistTemplateInput) =>
-    (await api.post<ChecklistTemplateDetail>("/checklists/templates", input)).data;
+    fromBackendTemplateDetail(
+      (await api.post<Record<string, unknown>>("/checklists/templates", toBackendCreateTemplateInput(input)))
+        .data,
+    );
   updateTemplate = async (id: string, input: UpdateChecklistTemplateInput) =>
-    (await api.patch<ChecklistTemplateDetail>(`/checklists/templates/${id}`, input)).data;
+    fromBackendTemplateDetail(
+      (
+        await api.patch<Record<string, unknown>>(
+          `/checklists/templates/${id}`,
+          toBackendUpdateTemplateInput(input),
+        )
+      ).data,
+    );
   duplicateTemplate = async (id: string) =>
-    (await api.post<ChecklistTemplateDetail>(`/checklists/templates/${id}/duplicate`)).data;
+    fromBackendTemplateDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/templates/${id}/duplicate`)).data,
+    );
   archiveTemplate = async (id: string) =>
-    (await api.post<ChecklistTemplateDetail>(`/checklists/templates/${id}/archive`)).data;
+    fromBackendTemplateDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/templates/${id}/archive`)).data,
+    );
   restoreTemplate = async (id: string) =>
-    (await api.post<ChecklistTemplateDetail>(`/checklists/templates/${id}/restore`)).data;
+    fromBackendTemplateDetail(
+      (await api.post<Record<string, unknown>>(`/checklists/templates/${id}/restore`)).data,
+    );
   saveTemplateItem = async (
     templateId: string,
     item: Partial<ChecklistTemplateItem> & { title: string },
-  ) =>
-    item.id
-      ? (await api.patch<ChecklistTemplateDetail>(
-          `/checklists/templates/${templateId}/items/${item.id}`,
-          item,
-        )).data
-      : (await api.post<ChecklistTemplateDetail>(`/checklists/templates/${templateId}/items`, item))
-          .data;
+  ) => {
+    const body = toBackendTemplateItem(item);
+    return fromBackendTemplateDetail(
+      item.id
+        ? (
+            await api.patch<Record<string, unknown>>(
+              `/checklists/templates/${templateId}/items/${item.id}`,
+              body,
+            )
+          ).data
+        : (await api.post<Record<string, unknown>>(`/checklists/templates/${templateId}/items`, body))
+            .data,
+    );
+  };
   removeTemplateItem = async (templateId: string, itemId: string) =>
-    (await api.delete<ChecklistTemplateDetail>(
-      `/checklists/templates/${templateId}/items/${itemId}`,
-    )).data;
+    fromBackendTemplateDetail(
+      (
+        await api.delete<Record<string, unknown>>(
+          `/checklists/templates/${templateId}/items/${itemId}`,
+        )
+      ).data,
+    );
   reorderTemplateItems = async (templateId: string, itemIds: string[]) =>
-    (await api.post<ChecklistTemplateDetail>(
-      `/checklists/templates/${templateId}/items/reorder`,
-      { itemIds },
-    )).data;
+    fromBackendTemplateDetail(
+      (
+        await api.post<Record<string, unknown>>(
+          `/checklists/templates/${templateId}/items/reorder`,
+          { itemIds },
+        )
+      ).data,
+    );
 
   listInstances = async () => (await api.get<ChecklistInstance[]>("/checklists/instances")).data;
   getInstance = async (id: string) =>
