@@ -38,7 +38,7 @@ function itemTypeToBackend(type: ChecklistItemType | undefined): string {
   }
 }
 
-function itemTypeFromBackend(type: unknown, quantity?: number): ChecklistItemType {
+export function itemTypeFromBackend(type: unknown, quantity?: number): ChecklistItemType {
   if (type === "task") return "task";
   if (quantity !== undefined && quantity > 0) return "quantity";
   return "standard";

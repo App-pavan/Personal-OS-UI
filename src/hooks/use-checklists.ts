@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { checklistService } from "@/lib/api/services";
 import { errorMessage } from "@/lib/api/errors";
 import type {
+  ChecklistInstanceDetail,
   ChecklistTemplateItem,
   CreateChecklistInstanceInput,
   CreateChecklistTemplateInput,
@@ -66,10 +67,39 @@ export function useChecklistMutations() {
       (input: CreateChecklistInstanceInput) => checklistService.startInstance(input),
       "Checklist could not be started.",
     ),
-    toggleItem: m(
-      (vars: { id: string; itemId: string }) => checklistService.toggleItem(vars.id, vars.itemId),
-      "Item could not be updated.",
-    ),
+    toggleItem: useMutation({
+      mutationFn: (vars: { id: string; itemId: string }) =>
+        checklistService.toggleItem(vars.id, vars.itemId),
+      onMutate: async (vars) => {
+        await qc.cancelQueries({ queryKey: checklistKeys.instance(vars.id) });
+        const previous = qc.getQueryData<ChecklistInstanceDetail>(checklistKeys.instance(vars.id));
+        if (previous) {
+          qc.setQueryData<ChecklistInstanceDetail>(checklistKeys.instance(vars.id), {
+            ...previous,
+            items: previous.items.map((item) =>
+              item.id === vars.itemId ? { ...item, completed: !item.completed } : item,
+            ),
+            completedCount: previous.items.reduce(
+              (count, item) =>
+                count +
+                (item.id === vars.itemId ? (item.completed ? 0 : 1) : item.completed ? 1 : 0),
+              0,
+            ),
+          });
+        }
+        return { previous };
+      },
+      onError: (error, vars, context) => {
+        if (context?.previous) {
+          qc.setQueryData(checklistKeys.instance(vars.id), context.previous);
+        }
+        fail("Item could not be updated.")(error);
+      },
+      onSettled: (_data, _error, vars) => {
+        void qc.invalidateQueries({ queryKey: checklistKeys.instance(vars.id) });
+        void qc.invalidateQueries({ queryKey: checklistKeys.instances });
+      },
+    }),
     checkAllRequired: m(
       (id: string) => checklistService.checkAllRequired(id),
       "Required items could not be checked.",
