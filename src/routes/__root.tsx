@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/os/theme-provider";
+import { UniversalEditorProvider } from "@/components/editor/create-surface";
 import { AppShell } from "@/components/os/app-shell";
 import { AuthProvider } from "@/features/auth/auth-context";
 import { Toaster } from "@/components/ui/sonner";
@@ -128,10 +129,12 @@ function RootComponent() {
       <ThemeProvider>
         <TooltipProvider>
           <AuthProvider>
-            <AppShell>
+            <UniversalEditorProvider>
+              <AppShell>
               {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <Outlet />
-            </AppShell>
+                <Outlet />
+              </AppShell>
+            </UniversalEditorProvider>
           </AuthProvider>
           <Toaster position="top-center" />
         </TooltipProvider>
