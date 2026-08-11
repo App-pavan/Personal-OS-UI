@@ -219,8 +219,7 @@ function EditorSurface({
         e.preventDefault();
         requestClose();
       }}
-      showCloseButton={false}
-      className="surface-raised flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col gap-0 overflow-hidden rounded-none border-hairline p-0 shadow-float duration-200 sm:h-auto sm:max-h-[88vh] sm:max-w-[780px] sm:rounded-xl lg:max-w-[860px]"
+      className="surface-raised [&>button:last-child]:hidden flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col gap-0 overflow-hidden rounded-none border-hairline p-0 shadow-float duration-200 sm:h-auto sm:max-h-[88vh] sm:max-w-[780px] sm:rounded-xl lg:max-w-[860px]"
     >
       <DialogTitle className="sr-only">
         {editing ? `Edit ${kindLabel}` : `New ${kindLabel}`}
