@@ -20,6 +20,7 @@ import { useAuth } from "@/features/auth/auth-context";
 import { useTheme } from "./theme-provider";
 import { CommandPalette, useCommandPalette } from "./command-palette";
 import { SignInScreen } from "./sign-in-screen";
+import { useUniversalEditor } from "@/components/editor/create-surface";
 
 const groups: { key: "core" | "system"; label: string }[] = [
   { key: "core", label: "Product" },
@@ -125,27 +126,35 @@ function Rail({ onSignOut }: { onSignOut: () => void }) {
   );
 }
 
-/* ---------- quick actions: only what the backend can do ---------- */
+/* ---------- global create: one menu, one editor ---------- */
 
 function QuickActions({ trigger }: { trigger: ReactNode }) {
+  const editor = useUniversalEditor();
+  const [open, setOpen] = useState(false);
   const actions = [
-    { label: "New task", to: "/tasks" as const, icon: ListChecks },
-    { label: "New checklist run", to: "/checklists" as const, icon: ClipboardCheck },
+    { label: "Task", hint: "Something to do", kind: "task" as const, icon: ListChecks },
+    { label: "Checklist", hint: "A routine you repeat", kind: "checklist" as const, icon: ClipboardCheck },
   ];
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent align="end" className="w-60 rounded-xl border-hairline p-1.5">
-        <p className="label-eyebrow px-2.5 py-2">Quick actions</p>
+      <PopoverContent align="end" className="w-56 rounded-xl border-hairline p-1.5">
+        <p className="label-eyebrow px-2.5 py-2">Create</p>
         {actions.map((a) => (
-          <Link
+          <button
             key={a.label}
-            to={a.to}
-            className="row-quiet flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm"
+            onClick={() => {
+              setOpen(false);
+              editor.create(a.kind);
+            }}
+            className="row-quiet flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-sm"
           >
-            <a.icon className="size-4 text-muted-foreground" />
-            <span>{a.label}</span>
-          </Link>
+            <a.icon className="size-4 text-primary" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">{a.label}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">{a.hint}</span>
+            </span>
+          </button>
         ))}
       </PopoverContent>
     </Popover>
@@ -313,13 +322,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <button
-            onClick={() => setOpen(true)}
-            aria-label="Search"
-            className="gradient-primary grid size-12 shrink-0 place-items-center rounded-xl text-primary-foreground shadow-float transition active:scale-95"
-          >
-            <Search className="size-5" />
-          </button>
+          <QuickActions
+            trigger={
+              <button
+                aria-label="Create"
+                className="gradient-primary grid size-12 shrink-0 place-items-center rounded-xl text-primary-foreground shadow-float transition active:scale-95"
+              >
+                <Plus className="size-5" />
+              </button>
+            }
+          />
         </div>
       </div>
     </div>
