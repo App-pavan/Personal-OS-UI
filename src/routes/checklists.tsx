@@ -407,7 +407,7 @@ function Runner({
   onClose,
 }: {
   run: NonNullable<ReturnType<typeof useChecklistInstance>["data"]>;
-  ownerName?: string;
+  ownerName?: string | undefined;
   mutations: Mutations;
   onClose: () => void;
 }) {
