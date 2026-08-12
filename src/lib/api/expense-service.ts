@@ -51,22 +51,34 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
   const raw = asRaw(input);
   const category = asRaw(pick(raw, ["category"]));
   const categoryId = str(pick(raw, ["categoryId", "category_id"]) ?? idOf(category));
+  const suggestedCategoryId = str(pick(raw, ["suggestedCategoryId", "suggested_category_id"]));
   const categoryName = str(pick(category, ["name", "title"]) ?? pick(raw, ["categoryName"]));
-  const splitsRaw = asList(pick(raw, ["splits", "shares", "splitShares"]));
+  const merchantObj = asRaw(pick(raw, ["merchant"]));
+  const merchantRaw = str(
+    pick(merchantObj, ["normalizedName", "rawName", "name"]) ??
+      pick(raw, ["merchant", "merchantName", "payee", "title"]),
+    "Unknown merchant",
+  );
+  const merchantNormalized = str(pick(merchantObj, ["normalizedName"]));
+  const splitObj = asRaw(pick(raw, ["split"]));
+  const splitsRaw = asList(
+    pick(splitObj, ["allocations"]) ?? pick(raw, ["splits", "shares", "splitShares"]),
+  );
   const status = str(pick(raw, ["status"]), "pending") as TransactionStatus;
   const source = str(pick(raw, ["source"]), "manual") as TransactionSource;
   const ownership = str(pick(raw, ["ownership"]), "personal") === "split" ? "split" : "personal";
   const note = str(pick(raw, ["note", "notes", "description"]));
-  const billUrl = str(pick(raw, ["billUrl", "bill", "receiptUrl"]));
-  const splitMode = str(pick(raw, ["splitMode", "split_mode"]));
+  const bill = asRaw(pick(raw, ["bill"]));
+  const billUrl = str(pick(bill, ["storageKey", "attachmentId"]) ?? pick(raw, ["billUrl", "receiptUrl"]));
+  const splitMode = str(pick(splitObj, ["mode"]) ?? pick(raw, ["splitMode", "split_mode"]));
 
   return {
     id: idOf(raw),
-    merchant: str(pick(raw, ["merchant", "merchantName", "payee", "title"]), "Unknown merchant"),
+    merchant: merchantRaw,
     amountMinor: num(pick(raw, ["amountMinor", "amount_minor", "amount"])),
     currency: str(pick(raw, ["currency"]), "INR").toUpperCase(),
     occurredAt: str(
-      pick(raw, ["occurredAt", "occurred_at", "date", "transactedAt", "createdAt"]),
+      pick(raw, ["transactionDate", "occurredAt", "occurred_at", "date", "transactedAt", "createdAt"]),
       new Date().toISOString(),
     ),
     status,
@@ -81,11 +93,13 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
         ...(memberName ? { memberName } : {}),
       };
     }),
+    ...(merchantNormalized ? { merchantNormalized } : {}),
     ...(categoryId ? { categoryId } : {}),
+    ...(suggestedCategoryId ? { suggestedCategoryId } : {}),
     ...(categoryName ? { categoryName } : {}),
     ...(note ? { note } : {}),
     ...(billUrl ? { billUrl } : {}),
-    ...(splitMode === "custom" || splitMode === "equal" ? { splitMode } : {}),
+    ...(splitMode === "custom" || splitMode === "equal" ? { splitMode: splitMode as "custom" | "equal" } : {}),
     ...(str(pick(raw, ["createdAt"])) ? { createdAt: str(pick(raw, ["createdAt"])) } : {}),
     ...(str(pick(raw, ["updatedAt"])) ? { updatedAt: str(pick(raw, ["updatedAt"])) } : {}),
   };
@@ -132,7 +146,7 @@ function listOf(data: unknown): Raw[] {
 
 function queryParams(query: TransactionQuery): Record<string, string | number | undefined> {
   const params: Record<string, string | number | undefined> = {};
-  if (query.status?.length) params["status"] = query.status.join(",");
+  if (query.status?.length) params["status"] = query.status[0];
   if (query.category) params["category"] = query.category;
   if (query.merchant) params["merchant"] = query.merchant;
   if (query.member) params["member"] = query.member;
@@ -145,29 +159,39 @@ function queryParams(query: TransactionQuery): Record<string, string | number | 
   if (query.search) params["search"] = query.search;
   if (query.page) params["page"] = query.page;
   if (query.limit) params["limit"] = query.limit;
-  if (query.sort) params["sort"] = query.sort;
+  if (query.sort) {
+    params["sort"] = query.sort === "occurredAt" ? "transactionDate" : query.sort;
+  }
   if (query.order) params["order"] = query.order;
   return params;
 }
 
 function writeBody(input: TransactionWriteInput | TransactionPatchInput): Raw {
   const body: Raw = {};
-  if (input.merchant !== undefined) body["merchant"] = input.merchant;
+  if (input.merchant !== undefined)
+    body["merchant"] = { rawName: input.merchant, normalizedName: input.merchant };
   if (input.amountMinor !== undefined) body["amountMinor"] = Math.trunc(input.amountMinor);
   if (input.currency !== undefined) body["currency"] = input.currency;
-  if (input.occurredAt !== undefined) body["occurredAt"] = input.occurredAt;
+  if (input.occurredAt !== undefined) body["transactionDate"] = input.occurredAt;
   if (input.categoryId !== undefined) body["categoryId"] = input.categoryId;
   if (input.ownership !== undefined) body["ownership"] = input.ownership;
-  if (input.splitMode !== undefined) body["splitMode"] = input.splitMode;
-  if (input.splits !== undefined)
-    body["splits"] = input.splits.map((share) => ({
-      memberId: share.memberId,
-      amountMinor: Math.trunc(share.amountMinor),
-    }));
+  if (input.splitMode !== undefined && input.splits !== undefined) {
+    body["split"] = {
+      mode: input.splitMode,
+      allocations: input.splits.map((share) => ({
+        memberId: share.memberId,
+        amountMinor: Math.trunc(share.amountMinor),
+      })),
+    };
+  } else if (input.ownership === "personal") {
+    body["split"] = null;
+  }
   if (input.note !== undefined) body["note"] = input.note;
-  if (input.billUrl !== undefined) body["billUrl"] = input.billUrl;
+  if (input.billUrl !== undefined)
+    body["bill"] = input.billUrl ? { storageKey: input.billUrl } : null;
   if (input.status !== undefined) body["status"] = input.status;
   if (input.source !== undefined) body["source"] = input.source;
+  if ("markManaged" in input && input.markManaged) body["markManaged"] = true;
   return body;
 }
 

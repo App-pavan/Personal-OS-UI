@@ -11,8 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChecklistsRouteImport } from './routes/checklists'
+import { Route as ExpensesRouteRouteImport } from './routes/expenses/route'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
+import { Route as ExpensesCategoriesRouteImport } from './routes/expenses/categories'
+import { Route as ExpensesMembersRouteImport } from './routes/expenses/members'
+import { Route as ExpensesTransactionsRouteImport } from './routes/expenses/transactions'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const ChecklistsRoute = ChecklistsRouteImport.update({
   id: '/checklists',
   path: '/checklists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExpensesRouteRoute = ExpensesRouteRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -34,36 +44,98 @@ const TasksRoute = TasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExpensesIndexRoute = ExpensesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ExpensesRouteRoute,
+} as any)
+const ExpensesCategoriesRoute = ExpensesCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => ExpensesRouteRoute,
+} as any)
+const ExpensesMembersRoute = ExpensesMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => ExpensesRouteRoute,
+} as any)
+const ExpensesTransactionsRoute = ExpensesTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => ExpensesRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/expenses': typeof ExpensesRouteRouteWithChildren
   '/checklists': typeof ChecklistsRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
+  '/expenses/categories': typeof ExpensesCategoriesRoute
+  '/expenses/members': typeof ExpensesMembersRoute
+  '/expenses/transactions': typeof ExpensesTransactionsRoute
+  '/expenses/': typeof ExpensesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checklists': typeof ChecklistsRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
+  '/expenses/categories': typeof ExpensesCategoriesRoute
+  '/expenses/members': typeof ExpensesMembersRoute
+  '/expenses/transactions': typeof ExpensesTransactionsRoute
+  '/expenses': typeof ExpensesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/expenses': typeof ExpensesRouteRouteWithChildren
   '/checklists': typeof ChecklistsRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
+  '/expenses/categories': typeof ExpensesCategoriesRoute
+  '/expenses/members': typeof ExpensesMembersRoute
+  '/expenses/transactions': typeof ExpensesTransactionsRoute
+  '/expenses/': typeof ExpensesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/checklists' | '/settings' | '/tasks'
+  fullPaths:
+    | '/'
+    | '/expenses'
+    | '/checklists'
+    | '/settings'
+    | '/tasks'
+    | '/expenses/categories'
+    | '/expenses/members'
+    | '/expenses/transactions'
+    | '/expenses/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/checklists' | '/settings' | '/tasks'
-  id: '__root__' | '/' | '/checklists' | '/settings' | '/tasks'
+  to:
+    | '/'
+    | '/checklists'
+    | '/settings'
+    | '/tasks'
+    | '/expenses/categories'
+    | '/expenses/members'
+    | '/expenses/transactions'
+    | '/expenses'
+  id:
+    | '__root__'
+    | '/'
+    | '/expenses'
+    | '/checklists'
+    | '/settings'
+    | '/tasks'
+    | '/expenses/categories'
+    | '/expenses/members'
+    | '/expenses/transactions'
+    | '/expenses/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ExpensesRouteRoute: typeof ExpensesRouteRouteWithChildren
   ChecklistsRoute: typeof ChecklistsRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
@@ -85,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChecklistsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/expenses': {
+      id: '/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof ExpensesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -99,11 +178,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/expenses/': {
+      id: '/expenses/'
+      path: '/'
+      fullPath: '/expenses/'
+      preLoaderRoute: typeof ExpensesIndexRouteImport
+      parentRoute: typeof ExpensesRouteRoute
+    }
+    '/expenses/categories': {
+      id: '/expenses/categories'
+      path: '/categories'
+      fullPath: '/expenses/categories'
+      preLoaderRoute: typeof ExpensesCategoriesRouteImport
+      parentRoute: typeof ExpensesRouteRoute
+    }
+    '/expenses/members': {
+      id: '/expenses/members'
+      path: '/members'
+      fullPath: '/expenses/members'
+      preLoaderRoute: typeof ExpensesMembersRouteImport
+      parentRoute: typeof ExpensesRouteRoute
+    }
+    '/expenses/transactions': {
+      id: '/expenses/transactions'
+      path: '/transactions'
+      fullPath: '/expenses/transactions'
+      preLoaderRoute: typeof ExpensesTransactionsRouteImport
+      parentRoute: typeof ExpensesRouteRoute
+    }
   }
 }
 
+interface ExpensesRouteRouteChildren {
+  ExpensesCategoriesRoute: typeof ExpensesCategoriesRoute
+  ExpensesMembersRoute: typeof ExpensesMembersRoute
+  ExpensesTransactionsRoute: typeof ExpensesTransactionsRoute
+  ExpensesIndexRoute: typeof ExpensesIndexRoute
+}
+
+const ExpensesRouteRouteChildren: ExpensesRouteRouteChildren = {
+  ExpensesCategoriesRoute: ExpensesCategoriesRoute,
+  ExpensesMembersRoute: ExpensesMembersRoute,
+  ExpensesTransactionsRoute: ExpensesTransactionsRoute,
+  ExpensesIndexRoute: ExpensesIndexRoute,
+}
+
+const ExpensesRouteRouteWithChildren = ExpensesRouteRoute._addFileChildren(
+  ExpensesRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ExpensesRouteRoute: ExpensesRouteRouteWithChildren,
   ChecklistsRoute: ChecklistsRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,

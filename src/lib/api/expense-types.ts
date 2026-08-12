@@ -49,6 +49,7 @@ export type TransactionSplitShare = {
 export type ExpenseTransaction = {
   id: string;
   merchant: string;
+  merchantNormalized?: string;
   amountMinor: number;
   currency: string;
   occurredAt: string;
@@ -56,6 +57,7 @@ export type ExpenseTransaction = {
   source: TransactionSource;
   ownership: TransactionOwnership;
   categoryId?: string;
+  suggestedCategoryId?: string;
   categoryName?: string;
   note?: string;
   billUrl?: string;
@@ -105,7 +107,9 @@ export type TransactionWriteInput = {
   source?: TransactionSource;
 };
 
-export type TransactionPatchInput = Partial<TransactionWriteInput>;
+export type TransactionPatchInput = Partial<TransactionWriteInput> & {
+  markManaged?: boolean;
+};
 
 export type CreateCategoryInput = { name: string; icon?: string; color?: string };
 export type CreateMemberInput = { name: string; avatarColor?: string };

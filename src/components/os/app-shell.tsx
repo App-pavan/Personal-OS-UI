@@ -15,7 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { modules } from "@/lib/nav";
+import { modules, navIsActive } from "@/lib/nav";
 import { useAuth } from "@/features/auth/auth-context";
 import { useTheme } from "./theme-provider";
 import { CommandPalette, useCommandPalette } from "./command-palette";
@@ -74,7 +74,7 @@ function Rail({ onSignOut }: { onSignOut: () => void }) {
             {modules
               .filter((m) => m.group === g.key)
               .map((m) => {
-                const active = pathname === m.to;
+                const active = navIsActive(pathname, m.to);
                 return (
                   <Link
                     key={m.to}
@@ -229,7 +229,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                                   onClick={() => setMobileNav(false)}
                                   className={cn(
                                     "flex h-11 items-center gap-3 rounded-lg px-2.5 text-sm",
-                                    pathname === m.to
+                                    navIsActive(pathname, m.to)
                                       ? "bg-primary-soft font-semibold text-primary"
                                       : "text-muted-foreground",
                                   )}
@@ -305,7 +305,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="pointer-events-auto mx-auto mb-3 flex max-w-md items-center gap-2 px-3">
           <nav className="glass-panel flex flex-1 items-center justify-between rounded-xl px-1.5 py-1.5">
             {modules.map((n) => {
-              const active = pathname === n.to;
+              const active = navIsActive(pathname, n.to);
               return (
                 <Link
                   key={n.to}
