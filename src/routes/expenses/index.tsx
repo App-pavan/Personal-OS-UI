@@ -1,5 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ModuleHeader } from "@/components/os/primitives";
 import { EmptyState, ErrorState } from "@/components/os/state-views";
@@ -8,22 +7,15 @@ import { RecentTransactions } from "@/features/expenses/components/recent-transa
 import { SpendingSummary } from "@/features/expenses/components/spending-summary";
 import { SpendingTrend } from "@/features/expenses/components/spending-trend";
 import { TransactionDetail } from "@/features/expenses/components/transaction-detail";
-import {
-  comparePeriods,
-  deriveCategoryBreakdown,
-  deriveSummary,
-  monthRange,
-  periodLabel,
-  type PeriodKey,
-} from "@/features/expenses/lib/analytics";
+import { monthRange, periodLabel, type PeriodKey } from "@/features/expenses/lib/analytics";
+import { GlassButton, GlassCard } from "@/features/expenses/components/glass";
 import {
   useCategories,
+  useExpenseDashboard,
   useMembers,
   useTransaction,
   useTransactionMutations,
-  useTransactions,
 } from "@/hooks/use-expenses";
-import { GlassButton } from "@/features/expenses/components/glass";
 
 export const Route = createFileRoute("/expenses/")({
   head: () => ({ meta: [{ title: "Expenses — Personal OS" }] }),
@@ -33,33 +25,30 @@ export const Route = createFileRoute("/expenses/")({
 function ExpenseOverviewPage() {
   const [period, setPeriod] = useState<PeriodKey>("this_month");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { from, to } = monthRange(period);
+  const { from } = monthRange(period);
+  const monthKey = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, "0")}`;
 
-  const list = useTransactions({
-    from: from.toISOString(),
-    to: to.toISOString(),
-    limit: 200,
-    sort: "occurredAt",
-    order: "desc",
-  });
-  const prevList = useTransactions({
-    from: new Date(from.getTime() - (to.getTime() - from.getTime())).toISOString(),
-    to: from.toISOString(),
-    limit: 200,
-  });
+  const dashboard = useExpenseDashboard(monthKey);
   const categories = useCategories();
   const members = useMembers();
   const detail = useTransaction(selectedId);
   const m = useTransactionMutations();
 
-  const items = list.data?.items ?? [];
-  const catMap = useMemo(
-    () => new Map((categories.data ?? []).map((c) => [c.id, c.name])),
-    [categories.data],
+  const dash = dashboard.data;
+  const recent = dash?.recentTransactions ?? [];
+  const breakdownItems = useMemo(
+    () =>
+      (dash?.topCategories ?? []).map((c) => ({
+        id: c.categoryId,
+        name: c.categoryName,
+        amountMinor: c.amountMinor,
+        percentage: c.percentage,
+        budgetLimitMinor: c.budgetLimitMinor,
+        budgetUsagePercent: c.budgetUsagePercent,
+        budgetStatus: c.budgetStatus,
+      })),
+    [dash?.topCategories],
   );
-  const summary = deriveSummary(items, from, to);
-  const breakdown = deriveCategoryBreakdown(items, from, to, catMap);
-  const delta = comparePeriods(items, prevList.data?.items ?? [], from, to);
 
   return (
     <>
@@ -68,38 +57,47 @@ function ExpenseOverviewPage() {
         title="Expense overview"
         description={periodLabel(period)}
         actions={
-          <div className="flex gap-1 rounded-lg border border-hairline/60 p-0.5">
-            {(
-              [
-                ["this_month", "This month"],
-                ["last_month", "Last month"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setPeriod(key)}
-                className={
-                  period === key
-                    ? "rounded-md bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
-                    : "rounded-md px-3 py-1.5 text-xs text-muted-foreground"
-                }
-              >
-                {label}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex gap-1 rounded-lg border border-hairline/60 p-0.5">
+              {(
+                [
+                  ["this_month", "This month"],
+                  ["last_month", "Last month"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setPeriod(key)}
+                  className={
+                    period === key
+                      ? "rounded-md bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
+                      : "rounded-md px-3 py-1.5 text-xs text-muted-foreground"
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <Link to="/expenses/budgets">
+              <GlassButton>Budget</GlassButton>
+            </Link>
           </div>
         }
       />
 
-      {list.isError ? (
-        <ErrorState error={list.error} onRetry={() => list.refetch()} title="Couldn't load expenses" />
-      ) : list.isLoading ? (
+      {dashboard.isError ? (
+        <ErrorState
+          error={dashboard.error}
+          onRetry={() => dashboard.refetch()}
+          title="Couldn't load expenses"
+        />
+      ) : dashboard.isLoading ? (
         <div className="grid gap-4 lg:grid-cols-2">
           <SpendingSummary loading totalMinor={0} currency="INR" transactionCount={0} personalCount={0} sharedCount={0} pendingCount={0} delta={null} />
-          <SpendingTrend loading transactions={[]} currency="INR" />
+          <SpendingTrend loading daily={[]} currency="INR" />
         </div>
-      ) : items.length === 0 ? (
+      ) : !dash || dash.transactionCount === 0 ? (
         <EmptyState
           title="No expenses yet"
           line="Your transactions will appear here as you start spending."
@@ -111,28 +109,37 @@ function ExpenseOverviewPage() {
         />
       ) : (
         <div className="space-y-4 animate-rise">
+          {dash.budgetAlerts.length > 0 ? (
+            <div className="space-y-2">
+              {dash.budgetAlerts.map((alert, i) => (
+                <GlassCard key={i} className="border-warning/30 text-sm">
+                  {alert.message}
+                </GlassCard>
+              ))}
+            </div>
+          ) : null}
           <SpendingSummary
-            totalMinor={summary.totalMinor}
-            currency={summary.currency}
-            transactionCount={summary.count}
-            personalCount={summary.personal}
-            sharedCount={summary.shared}
-            pendingCount={summary.pending}
-            delta={delta}
-            partial={summary.partial}
+            totalMinor={dash.totalSpentMinor}
+            currency={dash.currency}
+            transactionCount={dash.transactionCount}
+            personalCount={0}
+            sharedCount={0}
+            pendingCount={0}
+            delta={null}
+            budgetTotalMinor={dash.budgetTotalMinor}
+            budgetRemainingMinor={dash.budgetRemainingMinor}
+            budgetUsagePercent={dash.budgetUsagePercent}
+            budgetStatus={dash.budgetStatus}
           />
           <div className="grid gap-4 lg:grid-cols-2">
-            <SpendingTrend transactions={items} currency={summary.currency} />
+            <SpendingTrend daily={dash.weeklyTrend} currency={dash.currency} />
             <CategoryBreakdown
-              items={breakdown.items}
-              total={breakdown.total}
-              currency={summary.currency}
+              items={breakdownItems}
+              total={dash.totalSpentMinor}
+              currency={dash.currency}
             />
           </div>
-          <RecentTransactions
-            transactions={items.slice(0, 6)}
-            onSelect={setSelectedId}
-          />
+          <RecentTransactions transactions={recent} onSelect={setSelectedId} />
         </div>
       )}
 

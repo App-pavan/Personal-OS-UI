@@ -4,12 +4,14 @@ import { toast } from "sonner";
 import { expenseApi } from "@/lib/api/expense-service";
 import { errorMessage } from "@/lib/api/errors";
 import type {
+  CreateBudgetInput,
   CreateCategoryInput,
   CreateMemberInput,
   ExpenseTransaction,
   TransactionPatchInput,
   TransactionQuery,
   TransactionWriteInput,
+  UpdateBudgetInput,
   UpdateMemberInput,
 } from "@/lib/api/expense-types";
 import type { Paginated } from "@/lib/api/types";
@@ -24,6 +26,11 @@ export const expenseKeys = {
   transaction: (id: string) => ["expenses", "transactions", "detail", id] as const,
   categories: ["expenses", "categories"] as const,
   members: ["expenses", "members"] as const,
+  budgets: ["expenses", "budgets"] as const,
+  budget: (id: string) => ["expenses", "budgets", id] as const,
+  budgetSummary: (id: string) => ["expenses", "budgets", "summary", id] as const,
+  dashboard: (month: string) => ["expenses", "insights", "dashboard", month] as const,
+  insights: ["expenses", "insights"] as const,
 };
 
 export function useTransactions(query: TransactionQuery = {}) {
@@ -62,6 +69,61 @@ export function useMembers() {
   });
 }
 
+export function useExpenseDashboard(month: string) {
+  return useQuery({
+    queryKey: expenseKeys.dashboard(month),
+    queryFn: () => expenseApi.insights.dashboard(month),
+    retry: 1,
+  });
+}
+
+export function useBudgets() {
+  return useQuery({
+    queryKey: expenseKeys.budgets,
+    queryFn: () => expenseApi.budgets.list(),
+    retry: 1,
+  });
+}
+
+export function useBudgetSummary(id: string | null) {
+  return useQuery({
+    queryKey: expenseKeys.budgetSummary(id ?? "none"),
+    queryFn: () => expenseApi.budgets.summary(id!),
+    enabled: Boolean(id),
+    retry: 1,
+  });
+}
+
+export function useBudgetMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: expenseKeys.budgets });
+    qc.invalidateQueries({ queryKey: expenseKeys.insights });
+  };
+  return {
+    create: useMutation({
+      mutationFn: (input: CreateBudgetInput) => expenseApi.budgets.create(input),
+      onSuccess: () => {
+        invalidate();
+        toast.success("Budget saved.");
+      },
+      onError: (error: unknown) =>
+        toast.error(errorMessage(error, "The budget could not be saved.")),
+    }),
+    update: useMutation({
+      mutationFn: (vars: { id: string; input: UpdateBudgetInput }) =>
+        expenseApi.budgets.update(vars.id, vars.input),
+      onSuccess: (_, vars) => {
+        invalidate();
+        qc.invalidateQueries({ queryKey: expenseKeys.budgetSummary(vars.id) });
+        toast.success("Budget updated.");
+      },
+      onError: (error: unknown) =>
+        toast.error(errorMessage(error, "The budget could not be updated.")),
+    }),
+  };
+}
+
 /** Debounce for search inputs so typing doesn't hammer the API. */
 export function useDebounced<T>(value: T, delay = 320): T {
   const [debounced, setDebounced] = useState(value);
@@ -74,7 +136,11 @@ export function useDebounced<T>(value: T, delay = 320): T {
 
 export function useTransactionMutations() {
   const qc = useQueryClient();
-  const invalidate = () => qc.invalidateQueries({ queryKey: expenseKeys.transactions });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: expenseKeys.transactions });
+    qc.invalidateQueries({ queryKey: expenseKeys.insights });
+    qc.invalidateQueries({ queryKey: expenseKeys.budgets });
+  };
   const fail = (fallback: string) => (error: unknown) =>
     toast.error(errorMessage(error, fallback));
 
