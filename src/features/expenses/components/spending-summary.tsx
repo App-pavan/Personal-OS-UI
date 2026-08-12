@@ -13,6 +13,10 @@ export function SpendingSummary({
   delta,
   partial,
   loading,
+  budgetTotalMinor,
+  budgetRemainingMinor,
+  budgetUsagePercent,
+  budgetStatus,
 }: {
   totalMinor: number;
   currency: string;
@@ -23,6 +27,10 @@ export function SpendingSummary({
   delta: number | null;
   partial?: boolean;
   loading?: boolean;
+  budgetTotalMinor?: number;
+  budgetRemainingMinor?: number;
+  budgetUsagePercent?: number;
+  budgetStatus?: string;
 }) {
   if (loading) {
     return (
@@ -55,6 +63,28 @@ export function SpendingSummary({
           <p className="mt-2 text-xs text-muted-foreground">
             Based on loaded transactions in this period
           </p>
+        ) : null}
+        {budgetTotalMinor != null && budgetTotalMinor > 0 ? (
+          <div className="mt-4 space-y-2">
+            <div className="h-2 overflow-hidden rounded-full bg-muted/50">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  budgetStatus === "EXCEEDED"
+                    ? "bg-destructive"
+                    : budgetStatus === "NEAR_LIMIT"
+                      ? "bg-warning"
+                      : "bg-primary",
+                )}
+                style={{ width: `${Math.min(budgetUsagePercent ?? 0, 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formatMoney(budgetRemainingMinor ?? 0, currency)} remaining of{" "}
+              {formatMoney(budgetTotalMinor, currency)}
+              {budgetUsagePercent != null ? ` · ${budgetUsagePercent.toFixed(1)}%` : ""}
+            </p>
+          </div>
         ) : null}
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Metric label="Transactions" value={String(transactionCount)} />

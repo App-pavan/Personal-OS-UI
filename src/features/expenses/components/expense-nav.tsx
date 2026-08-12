@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutGrid, List, Tags, Users } from "lucide-react";
+import { LayoutGrid, List, PiggyBank, Tags, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/expenses", label: "Overview", icon: LayoutGrid, exact: true },
   { to: "/expenses/transactions", label: "Transactions", icon: List, exact: false },
+  { to: "/expenses/budgets", label: "Budgets", icon: PiggyBank, exact: false },
   { to: "/expenses/categories", label: "Categories", icon: Tags, exact: false },
   { to: "/expenses/members", label: "Members", icon: Users, exact: false },
 ] as const;

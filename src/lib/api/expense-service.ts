@@ -1,16 +1,25 @@
 import { api } from "./client";
 import type { PaginationMeta, Paginated } from "./types";
 import type {
+  BudgetAlert,
+  BudgetSummary,
+  CategoryAnalyticsRow,
+  CreateBudgetInput,
   CreateCategoryInput,
   CreateMemberInput,
+  DailySpendingRow,
+  ExpenseBudget,
   ExpenseCategory,
+  ExpenseDashboard,
   ExpenseMember,
   ExpenseTransaction,
+  MonthlySummary,
   TransactionPatchInput,
   TransactionQuery,
   TransactionSource,
   TransactionStatus,
   TransactionWriteInput,
+  UpdateBudgetInput,
   UpdateMemberInput,
 } from "./expense-types";
 
@@ -261,4 +270,160 @@ export const expenseApi = {
       return normalizeMember((await api.patch<unknown>(`${BASE}/members/${id}`, input)).data);
     },
   },
+  budgets: {
+    async list(): Promise<ExpenseBudget[]> {
+      return listOf((await api.get<unknown>(`${BASE}/budgets`)).data).map(normalizeBudget);
+    },
+    async get(id: string) {
+      return normalizeBudget((await api.get<unknown>(`${BASE}/budgets/${id}`)).data);
+    },
+    async create(input: CreateBudgetInput) {
+      return normalizeBudget((await api.post<unknown>(`${BASE}/budgets`, input)).data);
+    },
+    async update(id: string, input: UpdateBudgetInput) {
+      return normalizeBudget((await api.patch<unknown>(`${BASE}/budgets/${id}`, input)).data);
+    },
+    async remove(id: string) {
+      await api.delete<null>(`${BASE}/budgets/${id}`);
+    },
+    async summary(id: string) {
+      return normalizeBudgetSummary((await api.get<unknown>(`${BASE}/budgets/${id}/summary`)).data);
+    },
+    async alerts(month?: string) {
+      const params = month ? { month } : undefined;
+      return listOf((await api.get<unknown>(`${BASE}/budgets/alerts`, params)).data).map(
+        normalizeBudgetAlert,
+      );
+    },
+  },
+  insights: {
+    async dashboard(month?: string): Promise<ExpenseDashboard> {
+      const params = month ? { month } : undefined;
+      return normalizeDashboard((await api.get<unknown>(`${BASE}/insights/dashboard`, params)).data);
+    },
+    async monthly(month?: string, currency = "INR"): Promise<MonthlySummary> {
+      return normalizeMonthly(
+        (await api.get<unknown>(`${BASE}/insights/monthly`, { month, currency })).data,
+      );
+    },
+    async weekly(currency = "INR"): Promise<DailySpendingRow[]> {
+      return listOf((await api.get<unknown>(`${BASE}/insights/weekly`, { currency })).data).map(
+        normalizeDailySpending,
+      );
+    },
+    async daily(from: string, to: string, currency = "INR"): Promise<DailySpendingRow[]> {
+      return listOf(
+        (await api.get<unknown>(`${BASE}/insights/daily`, { from, to, currency })).data,
+      ).map(normalizeDailySpending);
+    },
+    async categories(month?: string): Promise<CategoryAnalyticsRow[]> {
+      const params = month ? { month } : undefined;
+      return listOf((await api.get<unknown>(`${BASE}/insights/categories`, params)).data).map(
+        normalizeCategoryAnalytics,
+      );
+    },
+  },
 };
+
+function normalizeBudget(raw: Raw): ExpenseBudget {
+  const limits = asList(pick(raw, ["categoryLimits"])).map((l) => ({
+    categoryId: str(pick(l, ["categoryId"])),
+    limitMinor: num(pick(l, ["limitMinor"])),
+  }));
+  return {
+    id: idOf(raw),
+    month: str(pick(raw, ["month"])),
+    currency: str(pick(raw, ["currency"]), "INR"),
+    totalAmountMinor: num(pick(raw, ["totalAmountMinor"])),
+    categoryLimits: limits,
+  };
+}
+
+function normalizeBudgetSummary(raw: Raw): BudgetSummary {
+  const budget = normalizeBudget(asRaw(pick(raw, ["budget"])));
+  const cats = asList(pick(raw, ["categoryBudgets"])).map(normalizeCategoryBudgetView);
+  return {
+    budget,
+    spentMinor: num(pick(raw, ["spentMinor"])),
+    remainingMinor: num(pick(raw, ["remainingMinor"])),
+    usagePercent: Number(pick(raw, ["usagePercent"]) ?? 0),
+    status: str(pick(raw, ["status"]), "SAFE") as BudgetSummary["status"],
+    transactionCount: num(pick(raw, ["transactionCount"])),
+    categoryBudgets: cats,
+  };
+}
+
+function normalizeCategoryBudgetView(raw: Raw): BudgetSummary["categoryBudgets"][number] {
+  return {
+    categoryId: str(pick(raw, ["categoryId"])),
+    categoryName: str(pick(raw, ["categoryName"]), "Category"),
+    limitMinor: num(pick(raw, ["limitMinor"])),
+    spentMinor: num(pick(raw, ["spentMinor"])),
+    remainingMinor: num(pick(raw, ["remainingMinor"])),
+    usagePercent: Number(pick(raw, ["usagePercent"]) ?? 0),
+    status: str(pick(raw, ["status"]), "SAFE") as BudgetSummary["status"],
+    transactionCount: num(pick(raw, ["transactionCount"])),
+  };
+}
+
+function normalizeBudgetAlert(raw: Raw): BudgetAlert {
+  return {
+    message: str(pick(raw, ["message"])),
+    thresholdPercent: num(pick(raw, ["thresholdPercent"])),
+    categoryName: str(pick(raw, ["categoryName"])),
+    spentMinor: num(pick(raw, ["spentMinor"])),
+    limitMinor: num(pick(raw, ["limitMinor"])),
+    status: str(pick(raw, ["status"]), "SAFE") as BudgetAlert["status"],
+  };
+}
+
+function normalizeCategoryAnalytics(raw: Raw): CategoryAnalyticsRow {
+  return {
+    categoryId: str(pick(raw, ["categoryId"])),
+    categoryName: str(pick(raw, ["categoryName"]), "Uncategorised"),
+    amountMinor: num(pick(raw, ["amountMinor"])),
+    percentage: Number(pick(raw, ["percentage"]) ?? 0),
+    transactionCount: num(pick(raw, ["transactionCount"])),
+    budgetLimitMinor: num(pick(raw, ["budgetLimitMinor"]), undefined as unknown as number) || undefined,
+    budgetUsagePercent: pick(raw, ["budgetUsagePercent"]) != null ? Number(pick(raw, ["budgetUsagePercent"])) : undefined,
+    budgetStatus: pick(raw, ["budgetStatus"]) ? str(pick(raw, ["budgetStatus"])) as CategoryAnalyticsRow["budgetStatus"] : undefined,
+  };
+}
+
+function normalizeDailySpending(raw: Raw): DailySpendingRow {
+  return {
+    date: str(pick(raw, ["date"])),
+    amountMinor: num(pick(raw, ["amountMinor"])),
+    transactionCount: num(pick(raw, ["transactionCount"])),
+  };
+}
+
+function normalizeDashboard(raw: Raw): ExpenseDashboard {
+  return {
+    month: str(pick(raw, ["month"])),
+    currency: str(pick(raw, ["currency"]), "INR"),
+    totalSpentMinor: num(pick(raw, ["totalSpentMinor"])),
+    budgetTotalMinor: num(pick(raw, ["budgetTotalMinor"]), undefined as unknown as number) || undefined,
+    budgetRemainingMinor: num(pick(raw, ["budgetRemainingMinor"]), undefined as unknown as number) || undefined,
+    budgetUsagePercent: pick(raw, ["budgetUsagePercent"]) != null ? Number(pick(raw, ["budgetUsagePercent"])) : undefined,
+    budgetStatus: pick(raw, ["budgetStatus"]) ? str(pick(raw, ["budgetStatus"])) as ExpenseDashboard["budgetStatus"] : undefined,
+    topCategories: asList(pick(raw, ["topCategories"])).map(normalizeCategoryAnalytics),
+    recentTransactions: asList(pick(raw, ["recentTransactions"])).map(normalizeTransaction),
+    weeklyTrend: asList(pick(raw, ["weeklyTrend"])).map(normalizeDailySpending),
+    budgetAlerts: asList(pick(raw, ["budgetAlerts"])).map(normalizeBudgetAlert),
+    transactionCount: num(pick(raw, ["transactionCount"])),
+  };
+}
+
+function normalizeMonthly(raw: Raw): MonthlySummary {
+  return {
+    month: str(pick(raw, ["month"])),
+    currency: str(pick(raw, ["currency"]), "INR"),
+    totalSpentMinor: num(pick(raw, ["totalSpentMinor"])),
+    personalSpentMinor: num(pick(raw, ["personalSpentMinor"])),
+    sharedSpentMinor: num(pick(raw, ["sharedSpentMinor"])),
+    transactionCount: num(pick(raw, ["transactionCount"])),
+    monthlyBudgetMinor: num(pick(raw, ["monthlyBudgetMinor"]), undefined as unknown as number) || undefined,
+    changePercent: pick(raw, ["changePercent"]) != null ? Number(pick(raw, ["changePercent"])) : null,
+  };
+}

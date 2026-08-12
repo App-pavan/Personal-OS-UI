@@ -114,3 +114,113 @@ export type TransactionPatchInput = Partial<TransactionWriteInput> & {
 export type CreateCategoryInput = { name: string; icon?: string; color?: string };
 export type CreateMemberInput = { name: string; avatarColor?: string };
 export type UpdateMemberInput = { name?: string; archived?: boolean };
+
+/* Phase 3 — budgets & insights (server-computed) */
+
+export type BudgetStatus = "SAFE" | "WARNING" | "NEAR_LIMIT" | "EXCEEDED";
+
+export type CategoryBudgetLimit = {
+  categoryId: string;
+  limitMinor: number;
+};
+
+export type ExpenseBudget = {
+  id: string;
+  month: string;
+  currency: string;
+  totalAmountMinor: number;
+  categoryLimits: CategoryBudgetLimit[];
+};
+
+export type CategoryBudgetView = {
+  categoryId: string;
+  categoryName: string;
+  limitMinor: number;
+  spentMinor: number;
+  remainingMinor: number;
+  usagePercent: number;
+  status: BudgetStatus;
+  transactionCount?: number;
+};
+
+export type BudgetSummary = {
+  budget: ExpenseBudget;
+  spentMinor: number;
+  remainingMinor: number;
+  usagePercent: number;
+  status: BudgetStatus;
+  transactionCount: number;
+  categoryBudgets: CategoryBudgetView[];
+};
+
+export type BudgetAlert = {
+  message: string;
+  thresholdPercent: number;
+  categoryName?: string;
+  spentMinor: number;
+  limitMinor: number;
+  status: BudgetStatus;
+};
+
+export type CategoryAnalyticsRow = {
+  categoryId: string;
+  categoryName: string;
+  amountMinor: number;
+  percentage: number;
+  transactionCount: number;
+  budgetLimitMinor?: number;
+  budgetSpentMinor?: number;
+  budgetRemainingMinor?: number;
+  budgetUsagePercent?: number;
+  budgetStatus?: BudgetStatus;
+};
+
+export type DailySpendingRow = {
+  date: string;
+  amountMinor: number;
+  transactionCount: number;
+};
+
+export type ExpenseDashboard = {
+  month: string;
+  currency: string;
+  totalSpentMinor: number;
+  budgetTotalMinor?: number;
+  budgetRemainingMinor?: number;
+  budgetUsagePercent?: number;
+  budgetStatus?: BudgetStatus;
+  topCategories: CategoryAnalyticsRow[];
+  recentTransactions: ExpenseTransaction[];
+  weeklyTrend: DailySpendingRow[];
+  budgetAlerts: BudgetAlert[];
+  transactionCount: number;
+};
+
+export type MonthlySummary = {
+  month: string;
+  currency: string;
+  totalSpentMinor: number;
+  personalSpentMinor: number;
+  sharedSpentMinor: number;
+  transactionCount: number;
+  monthlyBudgetMinor?: number;
+  budgetSpentMinor?: number;
+  budgetRemainingMinor?: number;
+  budgetUsagePercent?: number;
+  averageTransactionMinor?: number;
+  previousMonthSpentMinor?: number;
+  changePercent?: number | null;
+};
+
+export type CreateBudgetInput = {
+  month: string;
+  currency?: string;
+  totalAmountMinor: number;
+  categoryLimits?: CategoryBudgetLimit[];
+};
+
+export type UpdateBudgetInput = {
+  totalAmountMinor?: number;
+  currency?: string;
+  categoryLimits?: CategoryBudgetLimit[];
+};

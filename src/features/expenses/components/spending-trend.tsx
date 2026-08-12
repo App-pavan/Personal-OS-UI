@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import type { DailySpendingRow } from "@/lib/api/expense-types";
 import type { ExpenseTransaction } from "@/lib/api/expense-types";
 import { formatMoney } from "@/lib/money";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -12,15 +13,25 @@ const chartConfig = {
 
 export function SpendingTrend({
   transactions,
+  daily,
   currency,
   loading,
 }: {
-  transactions: ExpenseTransaction[];
+  transactions?: ExpenseTransaction[];
+  daily?: DailySpendingRow[];
   currency: string;
   loading?: boolean;
 }) {
   const [days, setDays] = useState<7 | 30 | 90>(30);
-  const data = useMemo(() => deriveTrend(transactions, days), [transactions, days]);
+  const data = useMemo(() => {
+    if (daily && daily.length > 0) {
+      return daily.map((d) => ({
+        label: d.date.slice(8),
+        amountMinor: d.amountMinor,
+      }));
+    }
+    return deriveTrend(transactions ?? [], days);
+  }, [daily, transactions, days]);
   const hasData = data.some((d) => d.amountMinor > 0);
 
   if (loading) {
@@ -35,22 +46,24 @@ export function SpendingTrend({
     <GlassCard>
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="label-eyebrow">Spending trend</p>
-        <div className="flex gap-1 rounded-lg border border-hairline/60 p-0.5">
-          {([7, 30, 90] as const).map((d) => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => setDays(d)}
-              className={
-                days === d
-                  ? "rounded-md bg-primary/15 px-2 py-1 text-xs font-medium text-primary"
-                  : "rounded-md px-2 py-1 text-xs text-muted-foreground"
-              }
-            >
-              {d === 7 ? "7d" : d === 30 ? "30d" : "3mo"}
-            </button>
-          ))}
-        </div>
+        {!daily?.length ? (
+          <div className="flex gap-1 rounded-lg border border-hairline/60 p-0.5">
+            {([7, 30, 90] as const).map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDays(d)}
+                className={
+                  days === d
+                    ? "rounded-md bg-primary/15 px-2 py-1 text-xs font-medium text-primary"
+                    : "rounded-md px-2 py-1 text-xs text-muted-foreground"
+                }
+              >
+                {d === 7 ? "7d" : d === 30 ? "30d" : "3mo"}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
       {!hasData ? (
         <p className="py-12 text-center text-sm text-muted-foreground">
