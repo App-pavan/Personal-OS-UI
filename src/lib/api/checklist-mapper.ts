@@ -78,25 +78,25 @@ function fromBackendTemplateItem(raw: BackendTemplateItem): ChecklistTemplateIte
 }
 
 export function fromBackendTemplate(raw: BackendTemplate): ChecklistTemplate {
-  const items = raw.items ?? [];
+  const items = raw["items"] ?? [];
   const requiredItemCount = items.filter((i) => i.required).length;
   return {
-    id: String(raw.id ?? ""),
-    name: String(raw.name ?? ""),
-    category: (raw.category as ChecklistTemplate["category"]) ?? "personal",
+    id: String(raw["id"] ?? ""),
+    name: String(raw["name"] ?? ""),
+    category: (raw["category"] as ChecklistTemplate["category"]) ?? "personal",
     itemCount: items.length,
     requiredItemCount,
-    usageCount: Number(raw.usageCount ?? 0),
-    favorite: Boolean(raw.isFavorite ?? raw.favorite),
-    archived: Boolean(raw.isArchived ?? raw.archived),
-    version: Number(raw.version ?? 1),
-    createdAt: String(raw.createdAt ?? ""),
-    updatedAt: String(raw.updatedAt ?? ""),
-    ...(raw.description ? { description: String(raw.description) } : {}),
-    ...(raw.estimatedMinutes !== undefined
-      ? { estimatedMinutes: Number(raw.estimatedMinutes) }
+    usageCount: Number(raw["usageCount"] ?? 0),
+    favorite: Boolean(raw["isFavorite"] ?? raw["favorite"]),
+    archived: Boolean(raw["isArchived"] ?? raw["archived"]),
+    version: Number(raw["version"] ?? 1),
+    createdAt: String(raw["createdAt"] ?? ""),
+    updatedAt: String(raw["updatedAt"] ?? ""),
+    ...(raw["description"] ? { description: String(raw["description"]) } : {}),
+    ...(raw["estimatedMinutes"] !== undefined
+      ? { estimatedMinutes: Number(raw["estimatedMinutes"]) }
       : {}),
-    ...(raw.lastUsedAt ? { lastUsedAt: String(raw.lastUsedAt) } : {}),
+    ...(raw["lastUsedAt"] ? { lastUsedAt: String(raw["lastUsedAt"]) } : {}),
   };
 }
 
