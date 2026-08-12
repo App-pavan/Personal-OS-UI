@@ -74,21 +74,21 @@ export function fromBackendInstance(raw: BackendInstance): ChecklistInstance {
     items.filter((i) => i.required && i.checked).length;
 
   return {
-    id: String(raw.id ?? ""),
-    templateId: String(raw.templateId ?? ""),
-    templateName: String(raw.templateName ?? raw.name ?? ""),
-    templateVersion: Number(raw.templateVersion ?? 1),
-    name: String(raw.name ?? ""),
-    status: statusFromBackend(raw.status),
+    id: String(raw["id"] ?? ""),
+    templateId: String(raw["templateId"] ?? ""),
+    templateName: String(raw["templateName"] ?? raw["name"] ?? ""),
+    templateVersion: Number(raw["templateVersion"] ?? 1),
+    name: String(raw["name"] ?? ""),
+    status: statusFromBackend(raw["status"]),
     itemCount,
     completedCount,
     requiredCount,
     requiredCompletedCount,
-    createdAt: String(raw.createdAt ?? ""),
-    ...(raw.destination ? { destination: String(raw.destination) } : {}),
-    ...(raw.startDate ? { startDate: String(raw.startDate) } : {}),
-    ...(raw.endDate ? { endDate: String(raw.endDate) } : {}),
-    ...(raw.completedAt ? { completedAt: String(raw.completedAt) } : {}),
+    createdAt: String(raw["createdAt"] ?? ""),
+    ...(raw["destination"] ? { destination: String(raw["destination"]) } : {}),
+    ...(raw["startDate"] ? { startDate: String(raw["startDate"]) } : {}),
+    ...(raw["endDate"] ? { endDate: String(raw["endDate"]) } : {}),
+    ...(raw["completedAt"] ? { completedAt: String(raw["completedAt"]) } : {}),
   };
 }
 
