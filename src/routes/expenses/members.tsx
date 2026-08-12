@@ -12,7 +12,7 @@ export const Route = createFileRoute("/expenses/members")({
 });
 
 function MembersPage() {
-  const members = useMembers();
+  const members = useMembers(true);
   const m = useMemberMutations();
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -115,7 +115,7 @@ function MembersPage() {
                       <GlassButton
                         variant="ghost"
                         className="px-2"
-                        onClick={() => m.update.mutate({ id: member.id, input: { archived: true } })}
+                        onClick={() => m.update.mutate({ id: member.id, input: { archive: true } })}
                       >
                         <Archive className="size-4" />
                       </GlassButton>

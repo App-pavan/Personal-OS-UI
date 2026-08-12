@@ -60,10 +60,10 @@ export function useCategories() {
   });
 }
 
-export function useMembers() {
+export function useMembers(includeArchived = false) {
   return useQuery({
-    queryKey: expenseKeys.members,
-    queryFn: () => expenseApi.members.list(),
+    queryKey: [...expenseKeys.members, includeArchived ? "archived" : "active"] as const,
+    queryFn: () => expenseApi.members.list(includeArchived),
     staleTime: 5 * 60_000,
     retry: 1,
   });

@@ -9,7 +9,7 @@ import {
   useBudgets,
   useCategories,
 } from "@/hooks/use-expenses";
-import { inputToMinor, minorToInput } from "@/lib/money";
+import { formatMoney, inputToMinor, minorToInput } from "@/lib/money";
 
 export const Route = createFileRoute("/expenses/budgets")({
   head: () => ({ meta: [{ title: "Budgets — Personal OS" }] }),

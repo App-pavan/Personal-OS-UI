@@ -132,13 +132,30 @@ function normalizeCategory(input: unknown): ExpenseCategory {
 function normalizeMember(input: unknown): ExpenseMember {
   const raw = asRaw(input);
   const avatarColor = str(pick(raw, ["avatarColor", "color"]));
+  const status = str(pick(raw, ["status"]));
+  const archived =
+    status === "archived" ||
+    Boolean(pick(raw, ["archived", "isArchived"]));
   return {
     id: idOf(raw),
     name: str(pick(raw, ["name", "displayName"]), "Member"),
     ...(avatarColor ? { avatarColor } : {}),
-    ...(pick(raw, ["archived", "isArchived"]) !== undefined
-      ? { archived: Boolean(pick(raw, ["archived", "isArchived"])) }
-      : {}),
+    ...(archived ? { archived: true } : {}),
+  };
+}
+
+function normalizePaginationMeta(
+  meta: unknown,
+  fallback: PaginationMeta,
+): PaginationMeta {
+  if (!meta || typeof meta !== "object") return fallback;
+  const raw = meta as Record<string, unknown>;
+  const page = asRaw(raw["pagination"] ?? raw);
+  return {
+    page: num(pick(page, ["page"]), fallback.page),
+    perPage: num(pick(page, ["perPage", "per_page", "limit"]), fallback.perPage),
+    total: num(pick(page, ["total"]), fallback.total),
+    totalPages: num(pick(page, ["totalPages", "total_pages"]), fallback.totalPages),
   };
 }
 
@@ -214,14 +231,13 @@ export const expenseApi = {
         queryParams(query) as Record<string, string | number>,
       );
       const items = listOf(res.data).map(normalizeTransaction);
-      const meta: PaginationMeta =
-        res.meta ??
-        ({
-          page: query.page ?? 1,
-          perPage: query.limit ?? items.length,
-          total: items.length,
-          totalPages: 1,
-        } satisfies PaginationMeta);
+      const fallback: PaginationMeta = {
+        page: query.page ?? 1,
+        perPage: query.limit ?? items.length,
+        total: items.length,
+        totalPages: 1,
+      };
+      const meta = normalizePaginationMeta(res.meta, fallback);
       return { items, meta };
     },
     async get(id: string) {
@@ -260,14 +276,18 @@ export const expenseApi = {
     },
   },
   members: {
-    async list(): Promise<ExpenseMember[]> {
-      return listOf((await api.get<unknown>(`${BASE}/members`)).data).map(normalizeMember);
+    async list(includeArchived = false): Promise<ExpenseMember[]> {
+      const params = includeArchived ? { archived: "true" } : undefined;
+      return listOf((await api.get<unknown>(`${BASE}/members`, params)).data).map(normalizeMember);
     },
     async create(input: CreateMemberInput) {
       return normalizeMember((await api.post<unknown>(`${BASE}/members`, input)).data);
     },
     async update(id: string, input: UpdateMemberInput) {
-      return normalizeMember((await api.patch<unknown>(`${BASE}/members/${id}`, input)).data);
+      const body: Raw = {};
+      if (input.name !== undefined) body["name"] = input.name;
+      if (input.archive !== undefined) body["archive"] = input.archive;
+      return normalizeMember((await api.patch<unknown>(`${BASE}/members/${id}`, body)).data);
     },
   },
   budgets: {

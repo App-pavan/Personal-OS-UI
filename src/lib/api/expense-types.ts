@@ -113,7 +113,7 @@ export type TransactionPatchInput = Partial<TransactionWriteInput> & {
 
 export type CreateCategoryInput = { name: string; icon?: string; color?: string };
 export type CreateMemberInput = { name: string; avatarColor?: string };
-export type UpdateMemberInput = { name?: string; archived?: boolean };
+export type UpdateMemberInput = { name?: string; archive?: boolean };
 
 /* Phase 3 — budgets & insights (server-computed) */
 
