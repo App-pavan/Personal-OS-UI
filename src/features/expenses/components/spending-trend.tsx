@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import type { DailySpendingRow } from "@/lib/api/expense-types";
-import type { ExpenseTransaction } from "@/lib/api/expense-types";
+import type { DailySpendingRow, ExpenseTransaction } from "@/lib/api/expense-types";
 import { formatMoney } from "@/lib/money";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { deriveTrend } from "../lib/analytics";
