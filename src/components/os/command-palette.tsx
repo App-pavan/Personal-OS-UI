@@ -43,7 +43,7 @@ export function CommandPalette({
   const templates = useChecklistTemplates();
   const instances = useChecklistInstances();
 
-  const go = (to: "/" | "/tasks" | "/checklists" | "/settings") => {
+  const go = (to: "/" | "/tasks" | "/checklists" | "/expenses" | "/settings") => {
     onOpenChange(false);
     navigate({ to });
   };

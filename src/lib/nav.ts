@@ -1,4 +1,4 @@
-import { ClipboardCheck, LayoutGrid, ListChecks, Settings } from "lucide-react";
+import { ClipboardCheck, LayoutGrid, ListChecks, Settings, Wallet } from "lucide-react";
 
 /**
  * Primary navigation.
@@ -8,7 +8,7 @@ import { ClipboardCheck, LayoutGrid, ListChecks, Settings } from "lucide-react";
  */
 export type ModuleDef = {
   label: string;
-  to: "/" | "/tasks" | "/checklists" | "/settings";
+  to: "/" | "/tasks" | "/checklists" | "/expenses" | "/settings";
   icon: typeof LayoutGrid;
   group: "core" | "system";
   blurb: string;
@@ -24,7 +24,19 @@ export const modules: ModuleDef[] = [
     group: "core",
     blurb: "Routines you repeat",
   },
+  {
+    label: "Expenses",
+    to: "/expenses",
+    icon: Wallet,
+    group: "core",
+    blurb: "Your financial command center",
+  },
   { label: "Settings", to: "/settings", icon: Settings, group: "system", blurb: "Preferences" },
 ];
 
 export const primaryNav = modules;
+
+export function navIsActive(pathname: string, to: ModuleDef["to"]) {
+  if (to === "/") return pathname === "/";
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
