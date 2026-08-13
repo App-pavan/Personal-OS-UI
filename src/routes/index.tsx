@@ -93,7 +93,10 @@ function HomePage() {
             { label: "Overdue", value: overdue.length },
             { label: "Running", value: running.length },
           ].map((s) => (
-            <div key={s.label} className="angular-clip-sm border border-hairline/50 bg-background/15 px-3 py-2.5">
+            <div
+              key={s.label}
+              className="angular-clip-sm border border-hairline/50 bg-background/15 px-3 py-2.5"
+            >
               <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{s.label}</p>
               <p className="mt-1 font-mono text-2xl font-semibold tabular-nums">
                 {tasks.isLoading || instances.isLoading ? "—" : s.value}
@@ -117,7 +120,11 @@ function HomePage() {
           {tasks.isLoading ? (
             <RowsSkeleton rows={4} />
           ) : tasks.isError ? (
-            <ErrorState error={tasks.error} title="Unable to load tasks." onRetry={() => tasks.refetch()} />
+            <ErrorState
+              error={tasks.error}
+              title="Unable to load tasks."
+              onRetry={() => tasks.refetch()}
+            />
           ) : !focus.length ? (
             <EmptyState
               title="Queue clear"
@@ -168,7 +175,10 @@ function HomePage() {
                         {i.completedCount}/{i.itemCount}
                       </span>
                     </div>
-                    <Meter value={(i.completedCount / Math.max(1, i.itemCount)) * 100} className="mt-2" />
+                    <Meter
+                      value={(i.completedCount / Math.max(1, i.itemCount)) * 100}
+                      className="mt-2"
+                    />
                   </div>
                 ))}
               </div>

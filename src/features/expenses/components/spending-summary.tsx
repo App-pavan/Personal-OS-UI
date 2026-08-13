@@ -81,10 +81,7 @@ export function SpendingSummary({
               {budgetUsagePercent?.toFixed(1) ?? 0}%
             </p>
           </div>
-          <ProgressIndicator
-            percent={budgetUsagePercent ?? 0}
-            className="mt-3 h-2"
-          />
+          <ProgressIndicator percent={budgetUsagePercent ?? 0} className="mt-3 h-2" />
           <p className="mt-2 text-xs text-muted-foreground">
             {formatMoney(budgetRemainingMinor ?? 0, currency)} remaining of{" "}
             {formatMoney(budgetTotalMinor, currency)}

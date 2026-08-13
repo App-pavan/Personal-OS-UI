@@ -234,9 +234,7 @@ export function SectionHeader({
           </p>
         ) : null}
         <h1 className="display-lg mt-2 truncate">{title}</h1>
-        {subtitle ? (
-          <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
-        ) : null}
+        {subtitle ? <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p> : null}
         <hr className="tech-divider mt-4 max-w-lg border-0" />
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
@@ -244,13 +242,7 @@ export function SectionHeader({
   );
 }
 
-export function MetricPanel({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function MetricPanel({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn("metric-panel p-5 md:p-6", className)}>
       <div className="relative z-[1]">{children}</div>
