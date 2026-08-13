@@ -77,7 +77,7 @@ export function SpendingTrend({
                 <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <CartesianGrid stroke="rgb(65 174 169 / 12%)" strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={11} />
             <YAxis
               tickLine={false}

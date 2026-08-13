@@ -1,8 +1,9 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { ExpenseTransaction } from "@/lib/api/expense-types";
-import { GlassCard } from "./glass";
-import { TransactionCard, TransactionRow } from "./transaction-row";
+import { ActivityItem, DataPanel } from "@/components/future";
+import { formatMoney } from "@/lib/money";
+import { formatWhen, sourceLabel } from "../lib/labels";
 
 export function RecentTransactions({
   transactions,
@@ -15,50 +16,45 @@ export function RecentTransactions({
 }) {
   if (loading) {
     return (
-      <GlassCard>
+      <DataPanel title="Recent activity">
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-lg bg-muted/50" />
+            <div key={i} className="scan-skeleton h-12 angular-clip-sm" />
           ))}
         </div>
-      </GlassCard>
+      </DataPanel>
     );
   }
 
   return (
-    <GlassCard className="p-0 md:p-0">
-      <div className="flex items-center justify-between border-b border-hairline/60 px-4 py-3 md:px-5">
-        <p className="label-eyebrow">Recent transactions</p>
+    <DataPanel
+      title="Recent activity"
+      action={
         <Link
           to="/expenses/transactions"
-          className="flex items-center gap-1 text-xs text-primary hover:underline"
+          className="flex items-center gap-1 text-xs text-primary hover:text-accent"
         >
           View all <ArrowRight className="size-3" />
         </Link>
-      </div>
+      }
+    >
       {transactions.length === 0 ? (
         <p className="px-4 py-10 text-center text-sm text-muted-foreground md:px-5">
-          No transactions yet.
+          No activity recorded yet.
         </p>
       ) : (
-        <>
-          <div className="hidden md:block px-4 md:px-5">
-            {transactions.map((tx) => (
-              <TransactionRow
-                key={tx.id}
-                transaction={tx}
-                onClick={() => onSelect(tx.id)}
-                compact
-              />
-            ))}
-          </div>
-          <div className="space-y-2 p-4 md:hidden">
-            {transactions.map((tx) => (
-              <TransactionCard key={tx.id} transaction={tx} onClick={() => onSelect(tx.id)} />
-            ))}
-          </div>
-        </>
+        <div className="px-2 md:px-3">
+          {transactions.map((tx) => (
+            <ActivityItem
+              key={tx.id}
+              title={tx.merchant}
+              meta={`${tx.categoryName ?? "Uncategorised"} · ${formatWhen(tx.occurredAt)} · ${sourceLabel[tx.source] ?? tx.source}`}
+              amount={formatMoney(tx.amountMinor, tx.currency)}
+              onClick={() => onSelect(tx.id)}
+            />
+          ))}
+        </div>
       )}
-    </GlassCard>
+    </DataPanel>
   );
 }

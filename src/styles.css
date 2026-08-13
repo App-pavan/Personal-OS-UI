@@ -152,26 +152,26 @@
 }
 
 .dark {
-  --background: #213e3b;
+  --background: #00092c;
   --foreground: #e8ffff;
-  --surface: rgb(33 62 59 / 92%);
-  --surface-2: #1a3532;
-  --card: rgb(33 62 59 / 88%);
+  --surface: rgb(33 62 59 / 45%);
+  --surface-2: #0a1535;
+  --card: rgb(0 9 44 / 55%);
   --card-foreground: #e8ffff;
-  --popover: #1a3532;
+  --popover: #0a1535;
   --popover-foreground: #e8ffff;
 
   --primary: #41aea9;
-  --primary-foreground: #213e3b;
+  --primary-foreground: #00092c;
   --primary-soft: rgb(65 174 169 / 14%);
 
-  --secondary: rgb(232 255 255 / 6%);
+  --secondary: rgb(232 255 255 / 5%);
   --secondary-foreground: #e8ffff;
-  --muted: rgb(232 255 255 / 6%);
-  --muted-foreground: rgb(232 255 255 / 65%);
+  --muted: rgb(232 255 255 / 5%);
+  --muted-foreground: rgb(232 255 255 / 62%);
 
   --accent: #a6f6f1;
-  --accent-foreground: #213e3b;
+  --accent-foreground: #00092c;
   --accent-soft: rgb(166 246 241 / 12%);
 
   --destructive: #2a6662;
@@ -180,43 +180,45 @@
   --warning: #41aea9;
   --info: rgb(232 255 255 / 55%);
 
-  --border: rgb(232 255 255 / 8%);
-  --hairline: rgb(232 255 255 / 10%);
-  --input: rgb(232 255 255 / 12%);
+  --border: rgb(166 246 241 / 10%);
+  --hairline: rgb(166 246 241 / 12%);
+  --input: rgb(166 246 241 / 14%);
   --ring: #41aea9;
 
   --chart-1: #41aea9;
   --chart-2: #a6f6f1;
-  --chart-3: rgb(232 255 255 / 45%);
-  --chart-4: rgb(232 255 255 / 30%);
+  --chart-3: rgb(100 180 255 / 45%);
+  --chart-4: rgb(232 255 255 / 28%);
   --chart-5: #213e3b;
 
-  --sidebar: #1a3532;
+  --sidebar: rgb(0 9 44 / 72%);
   --sidebar-foreground: #e8ffff;
   --sidebar-primary: #41aea9;
-  --sidebar-primary-foreground: #213e3b;
+  --sidebar-primary-foreground: #00092c;
   --sidebar-accent: rgb(65 174 169 / 12%);
   --sidebar-accent-foreground: #e8ffff;
-  --sidebar-border: rgb(232 255 255 / 10%);
+  --sidebar-border: rgb(166 246 241 / 10%);
   --sidebar-ring: #41aea9;
 
-  --elevation-1: 0 1px 2px rgb(0 0 0 / 35%), 0 4px 16px rgb(0 0 0 / 28%);
-  --elevation-2: 0 2px 6px rgb(0 0 0 / 40%), 0 14px 36px rgb(0 0 0 / 34%);
-  --elevation-3: 0 6px 16px rgb(0 0 0 / 45%), 0 28px 68px rgb(0 0 0 / 40%);
+  --elevation-1: 0 1px 2px rgb(0 0 0 / 45%), 0 4px 20px rgb(0 0 0 / 32%);
+  --elevation-2: 0 4px 12px rgb(0 0 0 / 50%), 0 20px 48px rgb(0 0 0 / 38%);
+  --elevation-3: 0 8px 24px rgb(0 0 0 / 55%), 0 32px 80px rgb(0 0 0 / 45%);
 
-  --glass-bg: rgb(33 62 59 / 60%);
-  --glass-border: rgb(166 246 241 / 12%);
-  --glow-primary: 0 0 0 1px rgb(65 174 169 / 20%), 0 18px 52px rgb(65 174 169 / 16%);
+  --glass-bg: rgb(33 62 59 / 45%);
+  --glass-border: rgb(166 246 241 / 14%);
+  --glow-primary: 0 0 0 1px rgb(65 174 169 / 22%), 0 0 32px rgb(65 174 169 / 18%), 0 20px 60px rgb(0 0 0 / 35%);
   --gradient-primary: linear-gradient(140deg, #41aea9, #2d8a86);
   --gradient-accent: linear-gradient(140deg, #a6f6f1, #41aea9);
   --gradient-ambient:
-    radial-gradient(940px 560px at 6% -16%, rgb(65 174 169 / 18%), transparent 64%),
-    radial-gradient(720px 440px at 98% -10%, rgb(166 246 241 / 10%), transparent 62%),
-    radial-gradient(760px 480px at 62% 112%, rgb(65 174 169 / 8%), transparent 66%),
-    linear-gradient(rgb(65 174 169 / 3%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(65 174 169 / 3%) 1px, transparent 1px);
-  --gradient-surface: linear-gradient(180deg, rgb(232 255 255 / 6%), rgb(232 255 255 / 3%));
-  --sheen: linear-gradient(180deg, rgb(232 255 255 / 8%), rgb(232 255 255 / 0%));
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgb(65 174 169 / 16%), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgb(100 180 255 / 8%), transparent 65%),
+    radial-gradient(ellipse 50% 35% at 0% 100%, rgb(65 174 169 / 10%), transparent 60%),
+    radial-gradient(circle at 20% 30%, rgb(166 246 241 / 4%) 0, transparent 8px),
+    radial-gradient(circle at 80% 70%, rgb(65 174 169 / 3%) 0, transparent 6px),
+    linear-gradient(rgb(65 174 169 / 2.5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(65 174 169 / 2.5%) 1px, transparent 1px);
+  --gradient-surface: linear-gradient(165deg, rgb(166 246 241 / 7%), rgb(33 62 59 / 25%) 45%, rgb(0 9 44 / 40%));
+  --sheen: linear-gradient(180deg, rgb(232 255 255 / 10%), rgb(232 255 255 / 0%));
 }
 
 /* ---------- bento layout ---------- */
@@ -334,16 +336,33 @@
 /* ---------- surfaces ---------- */
 
 @utility ambient-canvas {
+  position: relative;
   background-color: var(--background);
   background-image: var(--gradient-ambient);
   background-size:
     auto,
     auto,
     auto,
+    120px 120px,
+    160px 160px,
     48px 48px,
     48px 48px;
-  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat;
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, repeat;
   background-attachment: fixed;
+
+  &::after {
+    content: "";
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgb(0 0 0 / 45%) 100%);
+    z-index: 0;
+  }
+
+  & > * {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 @utility ambient-drift {

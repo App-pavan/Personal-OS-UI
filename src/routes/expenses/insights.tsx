@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ModuleHeader } from "@/components/os/primitives";
+import { InsightPanel, MetricPanel, PeriodChip, SectionHeader } from "@/components/future";
 import { EmptyState, ErrorState } from "@/components/os/state-views";
 import { CategoryBreakdown } from "@/features/expenses/components/category-breakdown";
 import { SpendingTrend } from "@/features/expenses/components/spending-trend";
@@ -56,24 +56,23 @@ function InsightsPage() {
 
   return (
     <>
-      <ModuleHeader
-        eyebrow="Expenses"
-        title="Spending insights"
-        description={formatMonthLabel(month)}
+      <SectionHeader
+        system="Expense system"
+        module="Module 04 / Intelligence"
+        title="Spending intelligence"
+        subtitle={formatMonthLabel(month)}
         actions={
-          <div className="flex gap-1 rounded-lg border border-hairline/60 p-0.5">
-            <MonthChip
+          <div className="flex gap-1 border border-hairline/60 p-0.5 angular-clip-sm">
+            <PeriodChip
+              label="This month"
               active={month === currentMonthKey()}
               onClick={() => setMonth(currentMonthKey())}
-            >
-              This month
-            </MonthChip>
-            <MonthChip
+            />
+            <PeriodChip
+              label="Last month"
               active={month === shiftMonth(currentMonthKey(), -1)}
               onClick={() => setMonth(shiftMonth(currentMonthKey(), -1))}
-            >
-              Last month
-            </MonthChip>
+            />
           </div>
         }
       />
@@ -92,7 +91,13 @@ function InsightsPage() {
           line="Once you track expenses, your spending picture will appear here."
         />
       ) : (
-        <div className="space-y-6">
+        <div className="mt-6 space-y-5 animate-hud-in">
+          {mon?.changePercent != null ? (
+            <InsightPanel signal="Spending signal">
+              Total spending {mon.changePercent >= 0 ? "increased" : "decreased"}{" "}
+              {Math.abs(mon.changePercent).toFixed(1)}% compared with last month.
+            </InsightPanel>
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryTile
               label="Total spending"
@@ -238,30 +243,5 @@ function SummaryTile({ label, value, accent }: { label: string; value: string; a
       <p className="label-eyebrow">{label}</p>
       <p className={cn("mt-2 font-mono text-xl tabular-nums", accent && "text-primary")}>{value}</p>
     </GlassCard>
-  );
-}
-
-function MonthChip({
-  children,
-  active,
-  onClick,
-}: {
-  children: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-md px-3 py-1.5 text-xs transition",
-        active
-          ? "bg-primary/15 font-medium text-primary"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {children}
-    </button>
   );
 }

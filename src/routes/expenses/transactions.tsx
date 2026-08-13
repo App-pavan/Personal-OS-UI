@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
-import { ModuleHeader } from "@/components/os/primitives";
+import { SectionHeader } from "@/components/future";
 import { EmptyState, ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { CreateTransactionFlow } from "@/features/expenses/components/create-transaction";
 import { ExpenseFilters } from "@/features/expenses/components/expense-filters";
@@ -54,10 +54,11 @@ function TransactionsPage() {
 
   return (
     <>
-      <ModuleHeader
-        eyebrow="Expenses"
-        title="Transactions"
-        description="Everything you spend, captured in one place."
+      <SectionHeader
+        system="Expense system"
+        module="Module 02 / Transactions"
+        title="Transaction command center"
+        subtitle="Everything you spend, captured in one place."
         actions={
           <GlassButton onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" /> Add transaction

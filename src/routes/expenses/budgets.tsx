@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock, Pencil } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { ModuleHeader } from "@/components/os/primitives";
+import { SectionHeader } from "@/components/future";
 import { ErrorState } from "@/components/os/state-views";
 import { BudgetEditorModal } from "@/features/expenses/components/budget-editor-modal";
 import { BudgetEmptyState } from "@/features/expenses/components/budget-empty-state";
@@ -124,10 +124,11 @@ function BudgetsPage() {
 
   return (
     <>
-      <ModuleHeader
-        eyebrow="Expenses"
-        title="Monthly budget"
-        description={`Plan and track spending for ${formatMonthLabel(month)}`}
+      <SectionHeader
+        system="Expense system"
+        module="Module 03 / Budget control"
+        title="Budget control center"
+        subtitle={`Plan and track spending for ${formatMonthLabel(month)}`}
         actions={<BudgetMonthSelector month={month} onChange={setMonth} />}
       />
 
@@ -142,7 +143,7 @@ function BudgetsPage() {
       ) : !budget ? (
         <BudgetEmptyState month={month} locked={locked} onCreate={openCreate} />
       ) : (
-        <div className="space-y-6 animate-soft-in">
+        <div className="mt-6 space-y-5 animate-hud-in">
           {locked ? (
             <GlassCard className="border-hairline bg-muted/20">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
