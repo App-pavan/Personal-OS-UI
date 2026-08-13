@@ -1,17 +1,20 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ActivityItem, DataPanel, IconBadge } from "@/components/future";
-import type { ExpenseTransaction } from "@/lib/api/expense-types";
+import type { ExpenseCategory, ExpenseTransaction } from "@/lib/api/expense-types";
 import { formatMoney } from "@/lib/money";
+import { displayCategoryLabel } from "../lib/category-resolve";
 import { getCategoryMeta } from "../lib/category-meta";
-import { formatWhen, sourceLabel } from "../lib/labels";
+import { formatWhenDetailed, sourceLabel } from "../lib/labels";
 
 export function RecentTransactions({
   transactions,
+  categories,
   onSelect,
   loading,
 }: {
   transactions: ExpenseTransaction[];
+  categories: ExpenseCategory[];
   onSelect: (id: string) => void;
   loading?: boolean;
 }) {
@@ -47,12 +50,13 @@ export function RecentTransactions({
       ) : (
         <div className="px-2 md:px-3">
           {transactions.map((tx) => {
-            const cat = getCategoryMeta(tx.categoryName, tx.categoryId);
+            const label = displayCategoryLabel(tx, categories);
+            const cat = getCategoryMeta(label, tx.categoryId ?? tx.suggestedCategoryId);
             return (
               <ActivityItem
                 key={tx.id}
                 title={tx.merchant}
-                meta={`${tx.categoryName ?? "Uncategorised"} · ${formatWhen(tx.occurredAt)} · ${sourceLabel[tx.source] ?? tx.source}`}
+                meta={`${label} · ${formatWhenDetailed(tx.occurredAt)} · ${sourceLabel[tx.source] ?? tx.source}`}
                 amount={formatMoney(tx.amountMinor, tx.currency)}
                 onClick={() => onSelect(tx.id)}
                 tone={cat.tone}

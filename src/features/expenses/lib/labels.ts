@@ -66,3 +66,11 @@ export function formatWhen(iso: string) {
   if (isYesterday) return "Yesterday";
   return d.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
 }
+
+export function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+export function formatWhenDetailed(iso: string) {
+  return `${formatWhen(iso)} · ${formatTime(iso)}`;
+}

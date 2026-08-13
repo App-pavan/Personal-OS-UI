@@ -19,9 +19,9 @@ export function SplitEditor({
   members: ExpenseMember[];
   selectedMemberIds: string[];
   mode: SplitMode;
-  customAmounts: Record<string, number>;
+  customAmounts: Record<string, number | null | undefined>;
   onModeChange: (mode: SplitMode) => void;
-  onCustomChange: (amounts: Record<string, number>) => void;
+  onCustomChange: (amounts: Record<string, number | null | undefined>) => void;
 }) {
   const rows = useMemo(() => {
     if (mode === "equal") {
@@ -41,6 +41,7 @@ export function SplitEditor({
 
   const allocated = sumMinor(rows.map((r) => r.amountMinor));
   const remaining = amountMinor - allocated;
+  const over = remaining < 0;
 
   return (
     <div className="space-y-4">
@@ -77,30 +78,39 @@ export function SplitEditor({
               <MoneyInput
                 className="w-28 text-right font-mono"
                 currency={currency}
+                placeholder="₹0.00"
                 valueMinor={customAmounts[row.id] ?? null}
-                onChangeMinor={(minor) =>
-                  onCustomChange({ ...customAmounts, [row.id]: minor ?? 0 })
-                }
+                onChangeMinor={(minor) => onCustomChange({ ...customAmounts, [row.id]: minor })}
               />
             )}
           </div>
         ))}
       </div>
 
-      <div className="flex justify-between text-sm">
-        <span className="text-muted-foreground">Total</span>
-        <span className="font-mono tabular-nums">{formatMoney(amountMinor, currency)}</span>
-      </div>
-      <div className="flex justify-between text-sm">
-        <span className="text-muted-foreground">Remaining</span>
-        <span
-          className={cn(
-            "font-mono tabular-nums",
-            remaining === 0 ? "text-success" : "text-warning",
-          )}
-        >
-          {formatMoney(remaining, currency)}
-        </span>
+      <div className="space-y-1.5 rounded-lg border border-hairline/50 bg-background/20 px-3 py-2.5 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Transaction total</span>
+          <span className="font-mono tabular-nums">{formatMoney(amountMinor, currency)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Assigned</span>
+          <span className="font-mono tabular-nums">{formatMoney(allocated, currency)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Remaining</span>
+          <span
+            className={cn(
+              "font-mono tabular-nums",
+              over
+                ? "tone-danger-text"
+                : remaining === 0
+                  ? "tone-success-text"
+                  : "tone-warning-text",
+            )}
+          >
+            {formatMoney(remaining, currency)}
+          </span>
+        </div>
       </div>
     </div>
   );

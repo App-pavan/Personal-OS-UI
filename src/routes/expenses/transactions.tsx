@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SectionHeader } from "@/components/future";
 import { EmptyState, ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { CreateTransactionFlow } from "@/features/expenses/components/create-transaction";
@@ -20,28 +20,55 @@ import {
 import type { TransactionQuery } from "@/lib/api/expense-types";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
+type TransactionsSearch = {
+  category?: string;
+  merchant?: string;
+};
+
 export const Route = createFileRoute("/expenses/transactions")({
+  validateSearch: (search: Record<string, unknown>): TransactionsSearch => ({
+    category: typeof search.category === "string" ? search.category : undefined,
+    merchant: typeof search.merchant === "string" ? search.merchant : undefined,
+  }),
   head: () => ({ meta: [{ title: "Transactions — Personal OS" }] }),
   component: TransactionsPage,
 });
 
 function TransactionsPage() {
+  const searchParams = Route.useSearch();
+
   const [query, setQuery] = useState<TransactionQuery>({
     page: 1,
     limit: 20,
     sort: "occurredAt",
     order: "desc",
+    ...(searchParams.category ? { category: searchParams.category } : {}),
+    ...(searchParams.merchant ? { merchant: searchParams.merchant } : {}),
   });
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounced(search);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const listQuery: TransactionQuery = {
-    ...query,
-    ...(debouncedSearch ? { search: debouncedSearch } : {}),
-  };
-  const list = useTransactions(listQuery);
+  useEffect(() => {
+    setQuery((q) => ({
+      ...q,
+      page: 1,
+      ...(searchParams.category ? { category: searchParams.category } : {}),
+      ...(searchParams.merchant ? { merchant: searchParams.merchant } : {}),
+    }));
+  }, [searchParams.category, searchParams.merchant]);
+
+  useEffect(() => {
+    setQuery((q) => {
+      const next = { ...q, page: 1 };
+      if (debouncedSearch) next.search = debouncedSearch;
+      else delete next.search;
+      return next;
+    });
+  }, [debouncedSearch]);
+
+  const list = useTransactions(query);
   const categories = useCategories();
   const members = useMembers();
   const detail = useTransaction(selectedId);
@@ -51,6 +78,10 @@ function TransactionsPage() {
   const items = list.data?.items ?? [];
   const meta = list.data?.meta;
   const totalPages = meta?.totalPages ?? 1;
+
+  const quickUpdate = (id: string, input: Parameters<typeof m.update.mutate>[0]["input"]) => {
+    m.update.mutate({ id, input });
+  };
 
   return (
     <>
@@ -80,7 +111,7 @@ function TransactionsPage() {
 
       {list.isError ? (
         <ErrorState error={list.error} onRetry={() => list.refetch()} />
-      ) : list.isLoading ? (
+      ) : list.isLoading && !list.data ? (
         <RowsSkeleton rows={8} />
       ) : items.length === 0 ? (
         <EmptyState
@@ -99,38 +130,50 @@ function TransactionsPage() {
       ) : (
         <>
           <div className="glass-panel hidden overflow-hidden rounded-xl border border-hairline/60 md:block">
-            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-4 border-b border-hairline/60 px-4 py-2 text-[11px] text-muted-foreground">
-              <span>Merchant</span>
-              <span>Status</span>
-              <span>Ownership</span>
-              <span className="text-right">Amount</span>
+            <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-hairline/60 px-4 py-2 text-[11px] text-muted-foreground">
+              <span>Transaction</span>
+              <span className="text-right">Amount & actions</span>
             </div>
             {items.map((tx) => (
-              <div key={tx.id} className="px-4">
-                <TransactionRow transaction={tx} onClick={() => setSelectedId(tx.id)} />
+              <div key={tx.id} className="px-3">
+                <TransactionRow
+                  transaction={tx}
+                  categories={categories.data ?? []}
+                  onClick={() => setSelectedId(tx.id)}
+                  onQuickUpdate={(input) => quickUpdate(tx.id, input)}
+                  onOpenSplit={() => setSelectedId(tx.id)}
+                />
               </div>
             ))}
           </div>
           <div className="space-y-2 md:hidden">
             {items.map((tx) => (
-              <TransactionCard key={tx.id} transaction={tx} onClick={() => setSelectedId(tx.id)} />
+              <TransactionCard
+                key={tx.id}
+                transaction={tx}
+                categories={categories.data ?? []}
+                onClick={() => setSelectedId(tx.id)}
+                onQuickUpdate={(input) => quickUpdate(tx.id, input)}
+                onOpenSplit={() => setSelectedId(tx.id)}
+              />
             ))}
           </div>
           <div className="flex items-center justify-between pt-2">
             <p className="text-xs text-muted-foreground">
-              Page {meta?.page ?? 1} of {totalPages} · {meta?.total ?? items.length} total
+              Page {meta?.page ?? query.page ?? 1} of {totalPages} · {meta?.total ?? items.length}{" "}
+              total
             </p>
             <div className="flex gap-2">
               <GlassButton
                 variant="ghost"
-                disabled={(query.page ?? 1) <= 1}
+                disabled={(query.page ?? 1) <= 1 || list.isFetching}
                 onClick={() => setQuery((q) => ({ ...q, page: Math.max(1, (q.page ?? 1) - 1) }))}
               >
                 Previous
               </GlassButton>
               <GlassButton
                 variant="ghost"
-                disabled={(query.page ?? 1) >= totalPages}
+                disabled={(query.page ?? 1) >= totalPages || list.isFetching}
                 onClick={() => setQuery((q) => ({ ...q, page: (q.page ?? 1) + 1 }))}
               >
                 Next

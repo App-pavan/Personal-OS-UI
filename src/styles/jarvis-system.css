@@ -380,9 +380,9 @@
   gap: 0.625rem;
   height: 2.5rem;
   padding: 0 0.875rem;
-  background: rgb(33 62 59 / 35%);
-  border: 1px solid rgb(166 246 241 / 14%);
-  backdrop-filter: blur(20px);
+  background: transparent;
+  border: 1px solid rgb(166 246 241 / 12%);
+  backdrop-filter: none;
   clip-path: polygon(
     8px 0,
     100% 0,
@@ -393,10 +393,13 @@
   );
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
 
+  &:hover,
   &:focus-within {
-    border-color: rgb(65 174 169 / 45%);
-    box-shadow: 0 0 24px rgb(65 174 169 / 15%);
+    background: rgb(33 62 59 / 18%);
+    border-color: rgb(65 174 169 / 35%);
+    box-shadow: 0 0 20px rgb(65 174 169 / 10%);
   }
 }

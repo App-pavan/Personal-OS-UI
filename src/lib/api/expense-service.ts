@@ -1,4 +1,5 @@
 import { api } from "./client";
+import { normalizePaginationMeta } from "./pagination";
 import type { PaginationMeta, Paginated } from "./types";
 import type {
   BudgetAlert,
@@ -214,14 +215,12 @@ export const expenseApi = {
         queryParams(query) as Record<string, string | number>,
       );
       const items = listOf(res.data).map(normalizeTransaction);
-      const meta: PaginationMeta =
-        res.meta ??
-        ({
-          page: query.page ?? 1,
-          perPage: query.limit ?? items.length,
-          total: items.length,
-          totalPages: 1,
-        } satisfies PaginationMeta);
+      const meta: PaginationMeta = normalizePaginationMeta(res.meta, {
+        page: query.page ?? 1,
+        perPage: query.limit ?? 20,
+        total: items.length,
+        totalPages: 1,
+      });
       return { items, meta };
     },
     async get(id: string) {

@@ -5,9 +5,10 @@ import { formatMoney } from "@/lib/money";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { displayCategoryLabel } from "../lib/category-resolve";
 import { getCategoryMeta } from "../lib/category-meta";
 import {
-  formatWhen,
+  formatWhenDetailed,
   ownershipLabel,
   ownershipTone,
   sourceLabel,
@@ -44,7 +45,10 @@ export function TransactionDetail({
   const isMobile = useMediaQuery("(max-width: 767px)");
   if (!transaction) return null;
 
-  const cat = getCategoryMeta(transaction.categoryName, transaction.categoryId);
+  const cat = getCategoryMeta(
+    displayCategoryLabel(transaction, categories),
+    transaction.categoryId ?? transaction.suggestedCategoryId,
+  );
   const CatIcon = cat.icon;
 
   const body = (
@@ -79,14 +83,14 @@ export function TransactionDetail({
               </p>
               <p className="mt-1 text-lg">{transaction.merchant}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {formatWhen(transaction.occurredAt)}
+                {formatWhenDetailed(transaction.occurredAt)}
               </p>
             </div>
           </div>
-          {transaction.categoryName ? (
+          {displayCategoryLabel(transaction, categories) !== "Uncategorised" ? (
             <p className="text-sm">
               <span className="text-muted-foreground">Category · </span>
-              {transaction.categoryName}
+              {displayCategoryLabel(transaction, categories)}
             </p>
           ) : null}
           {transaction.note ? (
