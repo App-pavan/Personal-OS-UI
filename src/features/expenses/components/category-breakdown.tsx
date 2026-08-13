@@ -1,15 +1,20 @@
 import { Cell, Pie, PieChart } from "recharts";
 import { formatMoney, percentOf } from "@/lib/money";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { GlassCard } from "./glass";
 
 const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-  "hsl(var(--accent))",
+  "#FF5F00",
+  "#FF8533",
+  "#FFAA66",
+  "rgba(238,238,238,0.45)",
+  "rgba(238,238,238,0.30)",
+  "#B20600",
 ];
 
 export function CategoryBreakdown({
@@ -35,7 +40,9 @@ export function CategoryBreakdown({
     return (
       <GlassCard>
         <p className="label-eyebrow">By category</p>
-        <p className="mt-8 text-center text-sm text-muted-foreground">No categorised spending yet.</p>
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          No categorised spending yet.
+        </p>
       </GlassCard>
     );
   }
@@ -71,7 +78,9 @@ export function CategoryBreakdown({
             </PieChart>
           </ChartContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <p className="font-mono text-sm tabular-nums">{formatMoney(total, currency, { compact: true })}</p>
+            <p className="font-mono text-sm tabular-nums">
+              {formatMoney(total, currency, { compact: true })}
+            </p>
             <p className="text-[10px] text-muted-foreground">total</p>
           </div>
         </div>

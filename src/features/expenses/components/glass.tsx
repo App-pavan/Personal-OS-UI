@@ -76,16 +76,17 @@ export function GlassBadge({
   className,
 }: {
   children: ReactNode;
-  tone?: "primary" | "accent" | "warning" | "success" | "muted" | "info";
+  tone?: "primary" | "accent" | "warning" | "success" | "muted" | "info" | "danger";
   className?: string;
 }) {
   const tones = {
-    primary: "bg-primary/15 text-primary border-primary/20",
-    accent: "bg-accent/15 text-accent border-accent/20",
-    warning: "bg-warning/15 text-warning border-warning/20",
-    success: "bg-success/15 text-success border-success/20",
-    muted: "bg-muted/50 text-muted-foreground border-hairline",
-    info: "bg-info/15 text-info border-info/20",
+    primary: "bg-primary/15 text-primary border-primary/25",
+    accent: "bg-primary/12 text-primary border-primary/20",
+    warning: "bg-primary/15 text-primary border-primary/25",
+    success: "bg-[rgb(238_238_238/0.08)] text-muted-foreground border-hairline",
+    muted: "bg-[rgb(238_238_238/0.06)] text-muted-foreground border-hairline",
+    info: "bg-[rgb(238_238_238/0.08)] text-muted-foreground border-hairline",
+    danger: "bg-destructive/12 text-destructive border-destructive/25",
   };
   return (
     <span
