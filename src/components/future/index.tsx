@@ -1,5 +1,57 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  type InsightKind,
+  type SemanticTone,
+  insightTone,
+  navAccentStyle,
+  semanticBadgeClasses,
+  semanticDotClasses,
+  semanticIconClasses,
+  semanticProgressClasses,
+  semanticTextClasses,
+} from "@/lib/design/semantic";
 import { cn } from "@/lib/utils";
+
+/* ---------- Semantic badge ---------- */
+
+export function SemanticBadge({
+  children,
+  tone = "muted",
+  dot,
+  className,
+}: {
+  children: ReactNode;
+  tone?: SemanticTone;
+  dot?: boolean;
+  className?: string;
+}) {
+  return (
+    <span className={cn(semanticBadgeClasses(tone, dot), className)}>
+      {dot ? <span className={semanticDotClasses(tone)} aria-hidden /> : null}
+      {children}
+    </span>
+  );
+}
+
+export function IconBadge({
+  icon: Icon,
+  tone = "primary",
+  size = "md",
+  className,
+}: {
+  icon: LucideIcon;
+  tone?: SemanticTone;
+  size?: "sm" | "md";
+  className?: string;
+}) {
+  const iconSize = size === "sm" ? "size-4" : "size-[18px]";
+  return (
+    <span className={cn(semanticIconClasses(tone, size), className)}>
+      <Icon className={iconSize} />
+    </span>
+  );
+}
 
 /* ---------- Labels & dividers ---------- */
 
@@ -36,11 +88,13 @@ export function HudPanel({
   className,
   glow,
   corners,
+  accent,
 }: {
   children: ReactNode;
   className?: string;
   glow?: boolean;
   corners?: boolean;
+  accent?: SemanticTone;
 }) {
   return (
     <div
@@ -48,8 +102,10 @@ export function HudPanel({
         "hud-panel angular-clip p-4 md:p-5",
         glow && "hud-panel-glow",
         corners && "hud-corners",
+        accent && "card-accent-top",
         className,
       )}
+      style={accent ? navAccentStyle(accent) : undefined}
     >
       <div className="relative z-[1]">{children}</div>
     </div>
@@ -63,14 +119,14 @@ export function MetricDisplay({
   value,
   hint,
   large,
-  warn,
+  tone,
   className,
 }: {
   label: string;
   value: string;
   hint?: string;
   large?: boolean;
-  warn?: boolean;
+  tone?: SemanticTone;
   className?: string;
 }) {
   return (
@@ -80,7 +136,7 @@ export function MetricDisplay({
         className={cn(
           "font-mono font-semibold tabular-nums tracking-tight",
           large ? "text-4xl md:text-5xl metric-glow" : "text-xl md:text-2xl",
-          warn && "text-accent",
+          tone ? semanticTextClasses(tone) : "",
         )}
       >
         {value}
@@ -97,46 +153,59 @@ export function FuturisticButton({
   variant = "primary",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "ghost";
+  variant?: "primary" | "ghost" | "secondary" | "danger" | "ai";
 }) {
-  return (
-    <button
-      className={cn(variant === "primary" ? "btn-future" : "btn-future-ghost", className)}
-      {...props}
-    />
-  );
+  const variants = {
+    primary: "btn-future",
+    ghost: "btn-future-ghost",
+    secondary: "btn-future-secondary",
+    danger: "btn-future-danger",
+    ai: "btn-future-ai",
+  };
+  return <button className={cn(variants[variant], className)} {...props} />;
 }
 
 /* ---------- Status ---------- */
 
-export function StatusIndicator({
-  label,
-  tone = "neutral",
-}: {
-  label: string;
-  tone?: "neutral" | "active" | "alert";
-}) {
-  const tones = {
-    neutral: "bg-muted-foreground/40",
-    active: "bg-primary shadow-[0_0_8px_rgb(65_174_169/50%)]",
-    alert: "bg-accent shadow-[0_0_8px_rgb(166_246_241/40%)]",
-  };
+export function StatusIndicator({ label, tone = "muted" }: { label: string; tone?: SemanticTone }) {
   return (
     <span className="inline-flex items-center gap-2 text-[11px] tracking-wide text-muted-foreground uppercase">
-      <span className={cn("size-1.5 rounded-full", tones[tone])} />
-      {label}
+      <span className={semanticDotClasses(tone)} />
+      <span className={semanticTextClasses(tone)}>{label}</span>
     </span>
   );
 }
 
 /* ---------- Progress ---------- */
 
-export function ProgressIndicator({ percent, className }: { percent: number; className?: string }) {
+export function ProgressIndicator({
+  percent,
+  tone,
+  className,
+}: {
+  percent: number;
+  tone?: SemanticTone;
+  className?: string;
+}) {
   const width = Math.min(Math.max(percent, 0), 100);
+  const fillTone =
+    tone ??
+    (percent > 100
+      ? "danger"
+      : percent >= 90
+        ? "orange"
+        : percent >= 75
+          ? "warning"
+          : percent >= 50
+            ? "aqua"
+            : "success");
   return (
     <div className={cn("h-1.5 overflow-hidden bg-muted/40 angular-clip-sm", className)}>
       <div
-        className="h-full bg-primary transition-all duration-500 angular-clip-sm"
+        className={cn(
+          "h-full transition-all duration-500 angular-clip-sm",
+          semanticProgressClasses(fillTone),
+        )}
         style={{ width: `${width}%` }}
       />
     </div>
@@ -150,15 +219,24 @@ export function FuturisticEmpty({
   line,
   action,
   icon,
+  tone = "primary",
 }: {
   title: string;
   line: string;
   action?: ReactNode;
   icon?: ReactNode;
+  tone?: SemanticTone;
 }) {
   return (
     <div className="animate-hud-in flex min-h-[320px] flex-col items-center justify-center px-6 py-16 text-center">
-      <span className="grid size-14 place-items-center angular-clip-sm border border-primary/25 bg-primary/10 text-primary">
+      <span
+        className={cn(
+          "grid size-14 place-items-center angular-clip-sm border",
+          semanticIconClasses(tone, "md"),
+          "size-14",
+        )}
+        style={navAccentStyle(tone)}
+      >
         {icon}
       </span>
       <p className="mt-6 text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
@@ -242,9 +320,20 @@ export function SectionHeader({
   );
 }
 
-export function MetricPanel({ children, className }: { children: ReactNode; className?: string }) {
+export function MetricPanel({
+  children,
+  className,
+  accent,
+}: {
+  children: ReactNode;
+  className?: string;
+  accent?: SemanticTone;
+}) {
   return (
-    <div className={cn("metric-panel p-5 md:p-6", className)}>
+    <div
+      className={cn("metric-panel p-5 md:p-6 card-accent-top", className)}
+      style={accent ? navAccentStyle(accent) : undefined}
+    >
       <div className="relative z-[1]">{children}</div>
     </div>
   );
@@ -255,14 +344,19 @@ export function DataPanel({
   className,
   title,
   action,
+  accent,
 }: {
   children: ReactNode;
   className?: string;
   title?: string;
   action?: ReactNode;
+  accent?: SemanticTone;
 }) {
   return (
-    <div className={cn("data-panel overflow-hidden", className)}>
+    <div
+      className={cn("data-panel overflow-hidden card-accent-top", className)}
+      style={accent ? navAccentStyle(accent) : undefined}
+    >
       {title ? (
         <div className="flex items-center justify-between border-b border-hairline px-4 py-3 md:px-5">
           <p className="label-eyebrow">{title}</p>
@@ -278,14 +372,27 @@ export function InsightPanel({
   signal,
   children,
   className,
+  kind = "neutral",
 }: {
   signal: string;
   children: ReactNode;
   className?: string;
+  kind?: InsightKind;
 }) {
+  const tone = insightTone[kind];
   return (
-    <div className={cn("insight-panel p-4 md:p-5", className)}>
-      <p className="text-[10px] font-medium tracking-[0.18em] text-primary uppercase">{signal}</p>
+    <div
+      className={cn("insight-panel p-4 md:p-5 card-accent-top", className)}
+      style={navAccentStyle(tone)}
+    >
+      <p
+        className={cn(
+          "text-[10px] font-medium tracking-[0.18em] uppercase",
+          semanticTextClasses(tone),
+        )}
+      >
+        ✦ {signal}
+      </p>
       <p className="mt-2 text-sm leading-relaxed text-foreground/90">{children}</p>
     </div>
   );
@@ -297,12 +404,16 @@ export function ActivityItem({
   amount,
   onClick,
   active,
+  leading,
+  tone = "primary",
 }: {
   title: string;
   meta: string;
   amount: string;
   onClick?: () => void;
   active?: boolean;
+  leading?: ReactNode;
+  tone?: SemanticTone;
 }) {
   const Comp = onClick ? "button" : "div";
   return (
@@ -314,13 +425,17 @@ export function ActivityItem({
         onClick && "hover:bg-primary/6",
         active && "bg-primary/8",
       )}
+      style={navAccentStyle(tone)}
     >
-      <span
-        className={cn(
-          "size-2 shrink-0 rounded-full",
-          active ? "bg-primary shadow-[0_0_8px_rgb(65_174_169/60%)]" : "bg-primary/50",
-        )}
-      />
+      {leading ?? (
+        <span
+          className={cn(
+            "semantic-dot shrink-0 transition",
+            active ? semanticDotClasses(tone) : semanticTextClasses(tone) + " opacity-70",
+          )}
+          style={{ background: active ? undefined : `var(--nav-accent)` }}
+        />
+      )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{title}</p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</p>
@@ -334,10 +449,12 @@ export function PeriodChip({
   label,
   active,
   onClick,
+  tone = "primary",
 }: {
   label: string;
   active: boolean;
   onClick: () => void;
+  tone?: SemanticTone;
 }) {
   return (
     <button
@@ -346,9 +463,10 @@ export function PeriodChip({
       className={cn(
         "px-3 py-1.5 text-xs transition angular-clip-sm",
         active
-          ? "bg-primary/15 font-medium text-primary shadow-[0_0_16px_rgb(65_174_169/15%)]"
+          ? cn(semanticBadgeClasses(tone), "border-0 font-medium")
           : "text-muted-foreground hover:text-foreground",
       )}
+      style={active ? navAccentStyle(tone) : undefined}
     >
       {label}
     </button>

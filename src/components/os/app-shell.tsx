@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { modules, navIsActive } from "@/lib/nav";
+import { moduleAccent, navAccentStyle, semanticTextClasses } from "@/lib/design/semantic";
 import { useAuth } from "@/features/auth/auth-context";
 import { useTheme } from "./theme-provider";
 import { CommandPalette, useCommandPalette } from "./command-palette";
@@ -75,6 +76,7 @@ function Rail({ onSignOut }: { onSignOut: () => void }) {
               .filter((m) => m.group === g.key)
               .map((m) => {
                 const active = navIsActive(pathname, m.to);
+                const accent = moduleAccent[m.to];
                 return (
                   <Link
                     key={m.to}
@@ -82,16 +84,25 @@ function Rail({ onSignOut }: { onSignOut: () => void }) {
                     aria-label={m.label}
                     title={m.label}
                     className={cn(
-                      "rail-item group relative flex h-10 items-center gap-3 px-2.5 text-sm angular-clip-sm",
+                      "rail-item group relative flex h-10 items-center gap-3 px-2.5 text-sm angular-clip-sm transition",
                       active
-                        ? "bg-primary/15 font-semibold text-primary shadow-[inset_0_0_0_1px_rgb(65_174_169/20%)]"
+                        ? cn("font-semibold nav-active-glow", semanticTextClasses(accent))
                         : "text-muted-foreground hover:bg-primary/8 hover:text-foreground",
                     )}
+                    style={active ? navAccentStyle(accent) : undefined}
                   >
                     {active ? (
-                      <span className="absolute top-1/2 -left-1.5 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+                      <span
+                        className="absolute top-1/2 -left-1.5 h-5 w-[3px] -translate-y-1/2 rounded-full"
+                        style={{ background: "var(--nav-accent)" }}
+                      />
                     ) : null}
-                    <m.icon className="size-[17px] shrink-0" />
+                    <m.icon
+                      className={cn(
+                        "size-[17px] shrink-0 transition",
+                        active ? semanticTextClasses(accent) : "opacity-70 group-hover:opacity-100",
+                      )}
+                    />
                     <span
                       className={cn(
                         "truncate transition-opacity duration-300",
@@ -227,22 +238,35 @@ export function AppShell({ children }: { children: ReactNode }) {
                             <p className="label-eyebrow px-2 pb-1">{g.label}</p>
                             {modules
                               .filter((m) => m.group === g.key)
-                              .map((m) => (
-                                <Link
-                                  key={m.to}
-                                  to={m.to}
-                                  onClick={() => setMobileNav(false)}
-                                  className={cn(
-                                    "flex h-11 items-center gap-3 rounded-lg px-2.5 text-sm",
-                                    navIsActive(pathname, m.to)
-                                      ? "bg-primary-soft font-semibold text-primary"
-                                      : "text-muted-foreground",
-                                  )}
-                                >
-                                  <m.icon className="size-[17px]" />
-                                  {m.label}
-                                </Link>
-                              ))}
+                              .map((m) => {
+                                const active = navIsActive(pathname, m.to);
+                                const accent = moduleAccent[m.to];
+                                return (
+                                  <Link
+                                    key={m.to}
+                                    to={m.to}
+                                    onClick={() => setMobileNav(false)}
+                                    className={cn(
+                                      "flex h-11 items-center gap-3 rounded-lg px-2.5 text-sm",
+                                      active
+                                        ? cn(
+                                            "font-semibold nav-active-glow",
+                                            semanticTextClasses(accent),
+                                          )
+                                        : "text-muted-foreground",
+                                    )}
+                                    style={active ? navAccentStyle(accent) : undefined}
+                                  >
+                                    <m.icon
+                                      className={cn(
+                                        "size-[17px]",
+                                        active && semanticTextClasses(accent),
+                                      )}
+                                    />
+                                    {m.label}
+                                  </Link>
+                                );
+                              })}
                           </div>
                         ))}
                         <button
@@ -320,6 +344,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="hud-panel flex flex-1 items-center justify-between angular-clip px-1.5 py-1.5">
             {modules.map((n) => {
               const active = navIsActive(pathname, n.to);
+              const accent = moduleAccent[n.to];
               return (
                 <Link
                   key={n.to}
@@ -327,10 +352,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                   aria-label={n.label}
                   className={cn(
                     "rail-item flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 px-2.5 angular-clip-sm",
-                    active ? "bg-primary/15 text-primary" : "text-muted-foreground",
+                    active
+                      ? cn("nav-active-glow", semanticTextClasses(accent))
+                      : "text-muted-foreground",
                   )}
+                  style={active ? navAccentStyle(accent) : undefined}
                 >
-                  <n.icon className="size-[17px]" />
+                  <n.icon className={cn("size-[17px]", active && semanticTextClasses(accent))} />
                   <span className="text-[10px] font-medium">{n.label}</span>
                 </Link>
               );

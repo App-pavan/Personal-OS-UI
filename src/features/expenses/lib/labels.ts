@@ -1,4 +1,9 @@
-import type { TransactionOwnership, TransactionSource, TransactionStatus } from "@/lib/api/expense-types";
+import type {
+  TransactionOwnership,
+  TransactionSource,
+  TransactionStatus,
+} from "@/lib/api/expense-types";
+import type { SemanticTone } from "@/lib/design/semantic";
 
 export const statusLabel: Record<TransactionStatus, string> = {
   pending: "Pending",
@@ -7,16 +12,21 @@ export const statusLabel: Record<TransactionStatus, string> = {
   archived: "Archived",
 };
 
-export const statusTone: Record<TransactionStatus, "warning" | "success" | "muted" | "info"> = {
+export const statusTone: Record<TransactionStatus, SemanticTone> = {
   pending: "warning",
   managed: "success",
   ignored: "muted",
-  archived: "info",
+  archived: "secondary",
 };
 
 export const ownershipLabel: Record<TransactionOwnership, string> = {
   personal: "Personal",
   split: "Shared",
+};
+
+export const ownershipTone: Record<TransactionOwnership, SemanticTone> = {
+  personal: "primary",
+  split: "info",
 };
 
 export const sourceLabel: Record<TransactionSource, string> = {
@@ -27,6 +37,16 @@ export const sourceLabel: Record<TransactionSource, string> = {
   ai: "AI",
   ocr: "OCR",
   api: "API",
+};
+
+export const sourceTone: Record<TransactionSource, SemanticTone> = {
+  manual: "primary",
+  sms: "secondary",
+  bank: "info",
+  import: "orange",
+  ai: "purple",
+  ocr: "accent",
+  api: "success",
 };
 
 export function formatWhen(iso: string) {

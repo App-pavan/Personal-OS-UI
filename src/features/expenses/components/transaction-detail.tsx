@@ -1,10 +1,20 @@
 import { Archive, Ban, CheckCircle2, RotateCcw, X } from "lucide-react";
+import { IconBadge } from "@/components/future";
 import type { ExpenseCategory, ExpenseMember, ExpenseTransaction } from "@/lib/api/expense-types";
 import { formatMoney } from "@/lib/money";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { formatWhen, ownershipLabel, sourceLabel, statusLabel } from "../lib/labels";
+import { getCategoryMeta } from "../lib/category-meta";
+import {
+  formatWhen,
+  ownershipLabel,
+  ownershipTone,
+  sourceLabel,
+  sourceTone,
+  statusLabel,
+  statusTone,
+} from "../lib/labels";
 import { GlassBadge, GlassButton } from "./glass";
 import { ManageTransaction } from "./manage-transaction";
 
@@ -34,12 +44,21 @@ export function TransactionDetail({
   const isMobile = useMediaQuery("(max-width: 767px)");
   if (!transaction) return null;
 
+  const cat = getCategoryMeta(transaction.categoryName, transaction.categoryId);
+  const CatIcon = cat.icon;
+
   const body = (
     <div className="space-y-6 overflow-y-auto p-4 md:p-6">
       <div className="flex flex-wrap gap-2">
-        <GlassBadge tone="primary">{statusLabel[transaction.status]}</GlassBadge>
-        <GlassBadge tone="muted">{ownershipLabel[transaction.ownership]}</GlassBadge>
-        <GlassBadge tone="info">{sourceLabel[transaction.source]}</GlassBadge>
+        <GlassBadge tone={statusTone[transaction.status]} dot>
+          {statusLabel[transaction.status]}
+        </GlassBadge>
+        <GlassBadge tone={ownershipTone[transaction.ownership]}>
+          {ownershipLabel[transaction.ownership]}
+        </GlassBadge>
+        <GlassBadge tone={sourceTone[transaction.source]} dot>
+          {sourceLabel[transaction.source]}
+        </GlassBadge>
       </div>
 
       {transaction.status === "pending" ? (
@@ -52,14 +71,17 @@ export function TransactionDetail({
         />
       ) : (
         <>
-          <div>
-            <p className="display-lg font-mono tabular-nums">
-              {formatMoney(transaction.amountMinor, transaction.currency)}
-            </p>
-            <p className="mt-1 text-lg">{transaction.merchant}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {formatWhen(transaction.occurredAt)}
-            </p>
+          <div className="flex items-start gap-4">
+            <IconBadge icon={CatIcon} tone={cat.tone} />
+            <div>
+              <p className="display-lg font-mono tabular-nums">
+                {formatMoney(transaction.amountMinor, transaction.currency)}
+              </p>
+              <p className="mt-1 text-lg">{transaction.merchant}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {formatWhen(transaction.occurredAt)}
+              </p>
+            </div>
           </div>
           {transaction.categoryName ? (
             <p className="text-sm">
@@ -101,7 +123,7 @@ export function TransactionDetail({
           </GlassButton>
         )}
         {transaction.status !== "archived" && (
-          <GlassButton variant="ghost" onClick={() => onArchive(transaction.id)}>
+          <GlassButton variant="danger" onClick={() => onArchive(transaction.id)}>
             <Archive className="size-4" /> Archive
           </GlassButton>
         )}

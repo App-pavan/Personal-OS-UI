@@ -2,11 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { ArrowRight, Check, ClipboardCheck, Clock, ListChecks, Sparkles } from "lucide-react";
 import { DataPanel, HudPanel, InsightPanel, MetricPanel, SectionHeader } from "@/components/future";
+import {
+  semanticSurfaceClasses,
+  semanticTextClasses,
+  type SemanticTone,
+} from "@/lib/design/semantic";
 import { Meter, Pill } from "@/components/os/primitives";
 import { EmptyState, ErrorState, FutureState, RowsSkeleton } from "@/components/os/state-views";
 import { useTaskMutations, useTasks } from "@/hooks/use-tasks";
 import { useChecklistInstances } from "@/hooks/use-checklists";
 import { useAuth } from "@/features/auth/auth-context";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -87,18 +93,22 @@ function HomePage() {
         </p>
         <p className="mt-2 text-2xl font-medium tracking-tight md:text-3xl">{briefing}</p>
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: "Open", value: open.length },
-            { label: "Due today", value: today.length },
-            { label: "Overdue", value: overdue.length },
-            { label: "Running", value: running.length },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="angular-clip-sm border border-hairline/50 bg-background/15 px-3 py-2.5"
-            >
+          {(
+            [
+              { label: "Open", value: open.length, tone: "primary" as SemanticTone },
+              { label: "Due today", value: today.length, tone: "info" as SemanticTone },
+              { label: "Overdue", value: overdue.length, tone: "danger" as SemanticTone },
+              { label: "Running", value: running.length, tone: "secondary" as SemanticTone },
+            ] as const
+          ).map((s) => (
+            <div key={s.label} className={semanticSurfaceClasses(s.tone)}>
               <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{s.label}</p>
-              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums">
+              <p
+                className={cn(
+                  "mt-1 font-mono text-2xl font-semibold tabular-nums",
+                  semanticTextClasses(s.tone),
+                )}
+              >
                 {tasks.isLoading || instances.isLoading ? "—" : s.value}
               </p>
             </div>
@@ -144,7 +154,17 @@ function HomePage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-sm">{t.title}</p>
-                      <Pill tone={t.priority === "urgent" ? "danger" : "muted"}>{t.priority}</Pill>
+                      <Pill
+                        tone={
+                          t.priority === "urgent"
+                            ? "danger"
+                            : t.priority === "high"
+                              ? "warning"
+                              : "muted"
+                        }
+                      >
+                        {t.priority}
+                      </Pill>
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {t.status.replace(/_/g, " ")}
@@ -185,7 +205,7 @@ function HomePage() {
             )}
           </DataPanel>
 
-          <InsightPanel signal="Context">
+          <InsightPanel signal="Context" kind="ai">
             {overdue.length
               ? `Clearing "${overdue[0]!.title}" removes most of today's pressure.`
               : running.length

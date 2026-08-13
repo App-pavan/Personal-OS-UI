@@ -1,4 +1,10 @@
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
+import {
+  semanticBadgeClasses,
+  semanticProgressClasses,
+  semanticTextClasses,
+  type SemanticTone,
+} from "@/lib/design/semantic";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -146,29 +152,13 @@ export function StatCard({
 export function Pill({
   children,
   tone = "muted",
+  dot,
 }: {
   children: ReactNode;
-  tone?: "muted" | "primary" | "accent" | "success" | "warning" | "danger" | "info";
+  tone?: SemanticTone;
+  dot?: boolean;
 }) {
-  const tones = {
-    muted: "bg-muted text-muted-foreground",
-    primary: "bg-primary-soft text-primary",
-    accent: "bg-accent-soft text-accent",
-    success: "bg-primary-soft text-success",
-    warning: "bg-accent-soft text-warning",
-    danger: "bg-accent-soft text-destructive",
-    info: "bg-primary-soft text-info",
-  } as const;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium",
-        tones[tone],
-      )}
-    >
-      {children}
-    </span>
-  );
+  return <span className={semanticBadgeClasses(tone, dot)}>{children}</span>;
 }
 
 export function Meter({
@@ -177,21 +167,28 @@ export function Meter({
   className,
 }: {
   value: number;
-  tone?: "primary" | "accent" | "success" | "warning" | "danger";
+  tone?: SemanticTone;
   className?: string;
 }) {
-  const tones = {
-    primary: "bg-primary",
-    accent: "bg-accent",
-    success: "bg-success",
-    warning: "bg-warning",
-    danger: "bg-destructive",
-  } as const;
+  const pct = Math.min(100, Math.max(0, value));
+  const fillTone =
+    tone !== "primary"
+      ? tone
+      : pct >= 90
+        ? "danger"
+        : pct >= 70
+          ? "warning"
+          : pct >= 40
+            ? "aqua"
+            : "success";
   return (
     <div className={cn("h-1 w-full overflow-hidden rounded-full bg-muted", className)}>
       <div
-        className={cn("h-full rounded-full transition-[width] duration-700 ease-out", tones[tone])}
-        style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+        className={cn(
+          "h-full rounded-full transition-[width] duration-700 ease-out",
+          semanticProgressClasses(fillTone),
+        )}
+        style={{ width: `${pct}%` }}
       />
     </div>
   );

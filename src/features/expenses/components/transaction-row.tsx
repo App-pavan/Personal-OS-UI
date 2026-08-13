@@ -1,8 +1,18 @@
 import { ChevronRight } from "lucide-react";
 import type { ExpenseTransaction } from "@/lib/api/expense-types";
+import { IconBadge } from "@/components/future";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import { formatWhen, ownershipLabel, statusLabel, statusTone } from "../lib/labels";
+import { getCategoryMeta } from "../lib/category-meta";
+import {
+  formatWhen,
+  ownershipLabel,
+  ownershipTone,
+  sourceLabel,
+  sourceTone,
+  statusLabel,
+  statusTone,
+} from "../lib/labels";
 import { GlassBadge } from "./glass";
 
 export function TransactionRow({
@@ -15,15 +25,23 @@ export function TransactionRow({
   compact?: boolean;
 }) {
   const tone = statusTone[transaction.status];
+  const cat = getCategoryMeta(transaction.categoryName, transaction.categoryId);
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "group flex w-full items-center gap-3 border-b border-hairline/50 py-3.5 text-left transition hover:bg-primary/8 angular-clip-sm px-1",
+        "group flex w-full items-center gap-3 border-b border-hairline/50 py-3.5 text-left transition hover:bg-primary/6 angular-clip-sm px-1",
         compact && "py-3",
       )}
     >
+      <IconBadge
+        icon={cat.icon}
+        tone={cat.tone}
+        size="sm"
+        className="transition group-hover:tone-orange-glow"
+      />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{transaction.merchant}</p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
@@ -31,14 +49,14 @@ export function TransactionRow({
         </p>
       </div>
       {!compact && (
-        <GlassBadge tone={tone} className="hidden sm:inline-flex">
+        <GlassBadge tone={tone} dot className="hidden sm:inline-flex">
           {statusLabel[transaction.status]}
         </GlassBadge>
       )}
       {!compact && (
-        <span className="hidden text-xs text-muted-foreground md:inline">
+        <GlassBadge tone={ownershipTone[transaction.ownership]} className="hidden md:inline-flex">
           {ownershipLabel[transaction.ownership]}
-        </span>
+        </GlassBadge>
       )}
       <span className="font-mono text-sm tabular-nums">
         {formatMoney(transaction.amountMinor, transaction.currency)}
@@ -56,26 +74,39 @@ export function TransactionCard({
   onClick?: () => void;
 }) {
   const tone = statusTone[transaction.status];
+  const cat = getCategoryMeta(transaction.categoryName, transaction.categoryId);
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="hud-panel w-full angular-clip-sm p-4 text-left transition hover:border-primary/30"
+      className="hud-panel w-full angular-clip-sm p-4 text-left transition hover:border-primary/30 card-accent-top"
+      style={{ ["--card-accent" as string]: cat.color }}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-medium">{transaction.merchant}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {transaction.categoryName ?? "Uncategorised"}
-          </p>
+        <div className="flex items-start gap-3">
+          <IconBadge icon={cat.icon} tone={cat.tone} size="sm" />
+          <div>
+            <p className="font-medium">{transaction.merchant}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {transaction.categoryName ?? "Uncategorised"}
+            </p>
+          </div>
         </div>
         <p className="font-mono text-sm tabular-nums">
           {formatMoney(transaction.amountMinor, transaction.currency)}
         </p>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <GlassBadge tone={tone}>{statusLabel[transaction.status]}</GlassBadge>
-        <GlassBadge tone="muted">{ownershipLabel[transaction.ownership]}</GlassBadge>
+        <GlassBadge tone={tone} dot>
+          {statusLabel[transaction.status]}
+        </GlassBadge>
+        <GlassBadge tone={ownershipTone[transaction.ownership]}>
+          {ownershipLabel[transaction.ownership]}
+        </GlassBadge>
+        <GlassBadge tone={sourceTone[transaction.source]} dot>
+          {sourceLabel[transaction.source]}
+        </GlassBadge>
         <span className="text-xs text-muted-foreground">{formatWhen(transaction.occurredAt)}</span>
       </div>
     </button>

@@ -1,4 +1,6 @@
 import type { BudgetStatus } from "@/lib/api/expense-types";
+import type { SemanticTone } from "@/lib/design/semantic";
+import { budgetProgressTone } from "@/lib/design/semantic";
 
 export function currentMonthKey(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -41,35 +43,59 @@ export function budgetHealthLabel(status: BudgetStatus): BudgetHealthLabel {
 export function budgetStatusTone(status: BudgetStatus): string {
   switch (status) {
     case "EXCEEDED":
-      return "text-destructive";
+      return "tone-danger-text";
     case "NEAR_LIMIT":
+      return "tone-orange-text";
     case "WARNING":
-      return "text-primary";
+      return "tone-warning-text";
     default:
-      return "text-muted-foreground";
+      return "tone-success-text";
   }
 }
 
-export function progressBarTone(status: BudgetStatus): string {
+export function progressBarTone(status: BudgetStatus, percent?: number): string {
+  if (percent != null) {
+    return semanticProgressFromTone(budgetProgressTone(percent));
+  }
   switch (status) {
     case "EXCEEDED":
-      return "bg-destructive";
+      return semanticProgressFromTone("danger");
     case "NEAR_LIMIT":
+      return semanticProgressFromTone("orange");
     case "WARNING":
-      return "bg-primary";
+      return semanticProgressFromTone("warning");
     default:
-      return "bg-muted/50";
+      return semanticProgressFromTone("success");
   }
 }
 
-export function budgetBadgeTone(status: BudgetStatus): "danger" | "primary" | "muted" {
+function semanticProgressFromTone(tone: SemanticTone): string {
+  const map: Record<SemanticTone, string> = {
+    success: "bg-[var(--semantic-success)] shadow-[var(--glow-green)]",
+    warning: "bg-[var(--semantic-warning)] shadow-[var(--glow-warning)]",
+    danger: "bg-[var(--semantic-danger)] shadow-[var(--glow-danger)]",
+    info: "bg-[var(--semantic-info)] shadow-[var(--glow-blue)]",
+    primary: "bg-[var(--semantic-primary)] shadow-[var(--glow-primary)]",
+    secondary: "bg-[var(--semantic-secondary)] shadow-[var(--glow-violet)]",
+    accent: "bg-[var(--semantic-accent)] shadow-[var(--glow-pink)]",
+    purple: "bg-[var(--accent-purple)] shadow-[var(--glow-purple)]",
+    aqua: "bg-[var(--accent-aqua)] shadow-[var(--glow-aqua)]",
+    orange: "bg-[var(--accent-orange)] shadow-[var(--glow-orange)]",
+    muted: "bg-[var(--semantic-ignored)]",
+    neutral: "bg-[var(--semantic-ignored)]",
+  };
+  return map[tone];
+}
+
+export function budgetBadgeTone(status: BudgetStatus): SemanticTone {
   switch (status) {
     case "EXCEEDED":
       return "danger";
     case "NEAR_LIMIT":
+      return "orange";
     case "WARNING":
-      return "primary";
+      return "warning";
     default:
-      return "muted";
+      return "success";
   }
 }

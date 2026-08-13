@@ -15,7 +15,10 @@ export function BudgetProgressBar({
   return (
     <div className={cn("h-2 overflow-hidden rounded-full bg-muted/40", className)}>
       <div
-        className={cn("h-full rounded-full transition-all duration-500", progressBarTone(status))}
+        className={cn(
+          "h-full rounded-full transition-all duration-500",
+          progressBarTone(status, percent),
+        )}
         style={{ width: `${width}%` }}
       />
     </div>
