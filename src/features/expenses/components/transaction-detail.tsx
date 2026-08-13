@@ -17,6 +17,7 @@ import {
   statusTone,
 } from "../lib/labels";
 import { GlassBadge, GlassButton } from "./glass";
+import type { ManageStep } from "../lib/manage-steps";
 import { ManageTransaction } from "./manage-transaction";
 
 export function TransactionDetail({
@@ -30,6 +31,7 @@ export function TransactionDetail({
   onUnignore,
   onArchive,
   updating,
+  manageStep,
 }: {
   transaction: ExpenseTransaction | null;
   categories: ExpenseCategory[];
@@ -41,6 +43,7 @@ export function TransactionDetail({
   onUnignore: (id: string) => void;
   onArchive: (id: string) => void;
   updating?: boolean;
+  manageStep?: ManageStep;
 }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
   if (!transaction) return null;
@@ -71,6 +74,7 @@ export function TransactionDetail({
           categories={categories}
           members={members}
           onSave={(input) => onUpdate(input)}
+          {...(manageStep ? { initialStep: manageStep } : {})}
           {...(updating ? { saving: updating } : {})}
         />
       ) : (

@@ -18,20 +18,23 @@ type RowProps = {
   categories: ExpenseCategory[];
   onClick?: () => void;
   onQuickUpdate?: (input: TransactionPatchInput) => void;
-  onOpenSplit?: () => void;
+  onOpenEditor?: (intent?: "split") => void;
 };
 
 function useRowHandlers(
-  transaction: ExpenseTransaction,
   onQuickUpdate?: (input: TransactionPatchInput) => void,
-  onOpenSplit?: () => void,
+  onOpenEditor?: (intent?: "split") => void,
 ) {
   const canEdit = Boolean(onQuickUpdate);
+
+  const handleCategory = (categoryId: string) => {
+    onQuickUpdate?.({ categoryId });
+  };
 
   const handleOwnership = (ownership: ExpenseTransaction["ownership"]) => {
     if (!onQuickUpdate) return;
     if (ownership === "split") {
-      onOpenSplit?.();
+      onOpenEditor?.("split");
       return;
     }
     onQuickUpdate({ ownership });
@@ -40,13 +43,13 @@ function useRowHandlers(
   const handleStatus = (status: ExpenseTransaction["status"]) => {
     if (!onQuickUpdate) return;
     if (status === "managed") {
-      onQuickUpdate({ markManaged: true, status: "managed" });
-    } else {
-      onQuickUpdate({ status });
+      onOpenEditor?.();
+      return;
     }
+    onQuickUpdate({ status });
   };
 
-  return { canEdit, handleOwnership, handleStatus };
+  return { canEdit, handleCategory, handleOwnership, handleStatus };
 }
 
 export function TransactionRow({
@@ -54,17 +57,16 @@ export function TransactionRow({
   categories,
   onClick,
   onQuickUpdate,
-  onOpenSplit,
+  onOpenEditor,
 }: RowProps) {
   const categoryLabel = displayCategoryLabel(transaction, categories);
   const cat = getCategoryMeta(
     categoryLabel,
     transaction.categoryId ?? transaction.suggestedCategoryId,
   );
-  const { canEdit, handleOwnership, handleStatus } = useRowHandlers(
-    transaction,
+  const { canEdit, handleCategory, handleOwnership, handleStatus } = useRowHandlers(
     onQuickUpdate,
-    onOpenSplit,
+    onOpenEditor,
   );
 
   return (
@@ -93,15 +95,13 @@ export function TransactionRow({
       <div className="min-w-0 space-y-1.5">
         <p className="truncate text-sm font-medium">{transaction.merchant}</p>
         <div className="flex flex-wrap items-center gap-1.5">
-          <TransactionCategoryChip
-            transaction={transaction}
-            categories={categories}
-            onSelect={
-              canEdit
-                ? (categoryId) => onQuickUpdate?.({ categoryId, markManaged: true })
-                : undefined
-            }
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <TransactionCategoryChip
+              transaction={transaction}
+              categories={categories}
+              onSelect={canEdit ? handleCategory : undefined}
+            />
+          </div>
           <span className="text-[11px] text-muted-foreground">
             {formatWhenDetailed(transaction.occurredAt)}
           </span>
@@ -136,17 +136,16 @@ export function TransactionCard({
   categories,
   onClick,
   onQuickUpdate,
-  onOpenSplit,
+  onOpenEditor,
 }: RowProps) {
   const categoryLabel = displayCategoryLabel(transaction, categories);
   const cat = getCategoryMeta(
     categoryLabel,
     transaction.categoryId ?? transaction.suggestedCategoryId,
   );
-  const { canEdit, handleOwnership, handleStatus } = useRowHandlers(
-    transaction,
+  const { canEdit, handleCategory, handleOwnership, handleStatus } = useRowHandlers(
     onQuickUpdate,
-    onOpenSplit,
+    onOpenEditor,
   );
 
   return (
@@ -166,15 +165,13 @@ export function TransactionCard({
             </span>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <TransactionCategoryChip
-              transaction={transaction}
-              categories={categories}
-              onSelect={
-                canEdit
-                  ? (categoryId) => onQuickUpdate?.({ categoryId, markManaged: true })
-                  : undefined
-              }
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <TransactionCategoryChip
+                transaction={transaction}
+                categories={categories}
+                onSelect={canEdit ? handleCategory : undefined}
+              />
+            </div>
             <span className="text-[11px] text-muted-foreground">
               {formatWhenDetailed(transaction.occurredAt)}
             </span>
