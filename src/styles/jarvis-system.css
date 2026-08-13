@@ -218,3 +218,65 @@
     border-color: rgb(166 246 241 / 40%);
   }
 }
+
+/* ---------- panel tiers ---------- */
+
+@utility metric-panel {
+  position: relative;
+  background: var(--gradient-surface);
+  border: 1px solid rgb(166 246 241 / 16%);
+  backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: var(--glow-primary);
+  clip-path: polygon(
+    14px 0,
+    100% 0,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    0 100%,
+    0 14px
+  );
+}
+
+@utility data-panel {
+  position: relative;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  border-radius: 1rem;
+  box-shadow: var(--elevation-1);
+}
+
+@utility insight-panel {
+  position: relative;
+  background: linear-gradient(135deg, rgb(65 174 169 / 10%), rgb(100 180 255 / 6%));
+  border: 1px solid rgb(166 246 241 / 18%);
+  backdrop-filter: blur(16px);
+  border-radius: 0.875rem;
+}
+
+@utility command-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.5rem;
+  padding: 0 0.875rem;
+  background: rgb(33 62 59 / 35%);
+  border: 1px solid rgb(166 246 241 / 14%);
+  backdrop-filter: blur(20px);
+  clip-path: polygon(
+    8px 0,
+    100% 0,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    0 100%,
+    0 8px
+  );
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:focus-within {
+    border-color: rgb(65 174 169 / 45%);
+    box-shadow: 0 0 24px rgb(65 174 169 / 15%);
+  }
+}

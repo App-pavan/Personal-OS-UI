@@ -1,7 +1,7 @@
 import { TrendingUp } from "lucide-react";
-import { deltaPercent, formatMoney } from "@/lib/money";
+import { MetricPanel, ProgressIndicator } from "@/components/future";
+import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import { GlassCard } from "./glass";
 
 export function SpendingSummary({
   totalMinor,
@@ -33,79 +33,91 @@ export function SpendingSummary({
   budgetStatus?: string;
 }) {
   if (loading) {
-    return (
-      <GlassCard glow className="animate-pulse">
-        <div className="h-32 rounded-lg bg-muted/50" />
-      </GlassCard>
-    );
+    return <MetricPanel className="scan-skeleton min-h-[220px]" />;
   }
 
   return (
-    <GlassCard glow className="relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
-      <div className="relative">
-        <p className="label-eyebrow">Total spending</p>
-        <p className="display-xl mt-2 font-mono tabular-nums tracking-tight">
-          {formatMoney(totalMinor, currency)}
-        </p>
-        {delta != null && (
-          <p
-            className={cn(
-              "mt-2 flex items-center gap-1 text-sm",
-              delta >= 0 ? "text-primary" : "text-accent",
-            )}
-          >
-            <TrendingUp className={cn("size-4", delta < 0 && "rotate-180")} />
-            {Math.abs(delta).toFixed(1)}% vs previous period
+    <MetricPanel className="relative overflow-hidden">
+      <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-primary/10 blur-3xl" />
+      <div className="relative grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div>
+          <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+            Total spending
           </p>
-        )}
-        {partial ? (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Based on loaded transactions in this period
+          <p className="mt-2 font-mono text-5xl font-semibold tabular-nums tracking-tight metric-glow md:text-6xl">
+            {formatMoney(totalMinor, currency)}
           </p>
-        ) : null}
-        {budgetTotalMinor != null && budgetTotalMinor > 0 ? (
-          <div className="mt-4 space-y-2">
-            <div className="h-2 overflow-hidden rounded-full bg-muted/50">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  budgetStatus === "EXCEEDED"
-                    ? "bg-destructive"
-                    : budgetStatus === "NEAR_LIMIT"
-                      ? "bg-warning"
-                      : "bg-primary",
-                )}
-                style={{ width: `${Math.min(budgetUsagePercent ?? 0, 100)}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {formatMoney(budgetRemainingMinor ?? 0, currency)} remaining of{" "}
-              {formatMoney(budgetTotalMinor, currency)}
-              {budgetUsagePercent != null ? ` · ${budgetUsagePercent.toFixed(1)}%` : ""}
+          {delta != null ? (
+            <p
+              className={cn(
+                "mt-3 flex items-center gap-1.5 text-sm",
+                delta >= 0 ? "text-primary" : "text-accent",
+              )}
+            >
+              <TrendingUp className={cn("size-4", delta < 0 && "rotate-180")} />
+              {Math.abs(delta).toFixed(1)}% vs previous period
             </p>
-          </div>
-        ) : null}
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Metric label="Transactions" value={String(transactionCount)} />
-          <Metric label="Personal" value={String(personalCount)} />
-          <Metric label="Shared" value={String(sharedCount)} />
-          <Metric label="Pending" value={String(pendingCount)} accent />
+          ) : null}
+          {partial ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Based on loaded transactions in this period
+            </p>
+          ) : null}
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+          <StatChip label="Transactions" value={String(transactionCount)} />
+          <StatChip label="Personal" value={String(personalCount)} />
+          <StatChip label="Shared" value={String(sharedCount)} />
+          <StatChip label="Pending" value={String(pendingCount)} highlight={pendingCount > 0} />
         </div>
       </div>
-    </GlassCard>
+      {budgetTotalMinor != null && budgetTotalMinor > 0 ? (
+        <div className="relative mt-6 border-t border-hairline/50 pt-5">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <p className="text-[11px] tracking-[0.12em] text-muted-foreground uppercase">
+              Budget utilization
+            </p>
+            <p className="font-mono text-sm tabular-nums text-primary">
+              {budgetUsagePercent?.toFixed(1) ?? 0}%
+            </p>
+          </div>
+          <ProgressIndicator
+            percent={budgetUsagePercent ?? 0}
+            className="mt-3 h-2"
+          />
+          <p className="mt-2 text-xs text-muted-foreground">
+            {formatMoney(budgetRemainingMinor ?? 0, currency)} remaining of{" "}
+            {formatMoney(budgetTotalMinor, currency)}
+            {budgetStatus === "EXCEEDED" ? " · Over budget" : ""}
+          </p>
+        </div>
+      ) : null}
+    </MetricPanel>
   );
 }
 
-function Metric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function StatChip({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className="angular-clip-sm border border-hairline/50 bg-background/30 px-3 py-2.5">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className={cn("mt-0.5 text-lg font-semibold tabular-nums", accent && "text-accent")}>
+    <div className="angular-clip-sm border border-hairline/60 bg-background/20 px-3 py-2.5">
+      <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{label}</p>
+      <p
+        className={cn(
+          "mt-1 font-mono text-lg font-semibold tabular-nums",
+          highlight && "text-accent",
+        )}
+      >
         {value}
       </p>
     </div>
   );
 }
 
-export { deltaPercent };
+export { deltaPercent } from "@/lib/money";

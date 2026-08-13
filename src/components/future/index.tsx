@@ -188,7 +188,7 @@ export function FuturisticModalShell({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-background/85 p-0 backdrop-blur-md sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-background/90 p-0 backdrop-blur-md sm:items-center sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onBackdropClick?.();
       }}
@@ -202,5 +202,163 @@ export function FuturisticModalShell({
         {children}
       </div>
     </div>
+  );
+}
+
+/* ---------- Command center headers ---------- */
+
+export function SectionHeader({
+  system,
+  module,
+  title,
+  subtitle,
+  actions,
+}: {
+  system?: string;
+  module?: string;
+  title: string;
+  subtitle?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <header className="animate-hud-in flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        {system ? (
+          <p className="text-[10px] font-medium tracking-[0.22em] text-primary/80 uppercase">
+            {system}
+          </p>
+        ) : null}
+        {module ? (
+          <p className="mt-1 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
+            {module}
+          </p>
+        ) : null}
+        <h1 className="display-lg mt-2 truncate">{title}</h1>
+        {subtitle ? (
+          <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
+        ) : null}
+        <hr className="tech-divider mt-4 max-w-lg border-0" />
+      </div>
+      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+    </header>
+  );
+}
+
+export function MetricPanel({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("metric-panel p-5 md:p-6", className)}>
+      <div className="relative z-[1]">{children}</div>
+    </div>
+  );
+}
+
+export function DataPanel({
+  children,
+  className,
+  title,
+  action,
+}: {
+  children: ReactNode;
+  className?: string;
+  title?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className={cn("data-panel overflow-hidden", className)}>
+      {title ? (
+        <div className="flex items-center justify-between border-b border-hairline px-4 py-3 md:px-5">
+          <p className="label-eyebrow">{title}</p>
+          {action}
+        </div>
+      ) : null}
+      <div className="p-4 md:p-5">{children}</div>
+    </div>
+  );
+}
+
+export function InsightPanel({
+  signal,
+  children,
+  className,
+}: {
+  signal: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("insight-panel p-4 md:p-5", className)}>
+      <p className="text-[10px] font-medium tracking-[0.18em] text-primary uppercase">{signal}</p>
+      <p className="mt-2 text-sm leading-relaxed text-foreground/90">{children}</p>
+    </div>
+  );
+}
+
+export function ActivityItem({
+  title,
+  meta,
+  amount,
+  onClick,
+  active,
+}: {
+  title: string;
+  meta: string;
+  amount: string;
+  onClick?: () => void;
+  active?: boolean;
+}) {
+  const Comp = onClick ? "button" : "div";
+  return (
+    <Comp
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={cn(
+        "group flex w-full items-center gap-3 border-b border-hairline/40 py-3.5 text-left transition",
+        onClick && "hover:bg-primary/6",
+        active && "bg-primary/8",
+      )}
+    >
+      <span
+        className={cn(
+          "size-2 shrink-0 rounded-full",
+          active ? "bg-primary shadow-[0_0_8px_rgb(65_174_169/60%)]" : "bg-primary/50",
+        )}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{title}</p>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</p>
+      </div>
+      <span className="shrink-0 font-mono text-sm tabular-nums">{amount}</span>
+    </Comp>
+  );
+}
+
+export function PeriodChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "px-3 py-1.5 text-xs transition angular-clip-sm",
+        active
+          ? "bg-primary/15 font-medium text-primary shadow-[0_0_16px_rgb(65_174_169/15%)]"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
   );
 }

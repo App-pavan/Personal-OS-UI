@@ -258,15 +258,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 
                 <button
                   onClick={() => setOpen(true)}
-                  className="group flex h-9 min-w-0 flex-1 items-center gap-2.5 px-2.5 text-sm text-muted-foreground transition hover:bg-primary/8 angular-clip-sm md:max-w-sm"
+                  className="command-bar group w-full max-w-md text-left text-sm text-muted-foreground"
                 >
-                  <Search className="size-4 shrink-0" />
+                  <Search className="size-4 shrink-0 text-primary/70" />
                   <span className="truncate">
                     {current
-                      ? `Search ${current.label.toLowerCase()} and everything else…`
-                      : "Search tasks and checklists…"}
+                      ? `Search ${current.label.toLowerCase()}, transactions, tasks…`
+                      : "Search expenses, transactions, tasks, people…"}
                   </span>
-                  <kbd className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-md border border-hairline px-1.5 py-0.5 text-[10px] font-medium md:flex">
+                  <kbd className="ml-auto hidden shrink-0 items-center gap-0.5 rounded border border-hairline/60 px-1.5 py-0.5 text-[10px] font-medium md:flex">
                     <Command className="size-2.5" />K
                   </kbd>
                 </button>

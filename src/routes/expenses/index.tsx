@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ModuleHeader } from "@/components/os/primitives";
+import { InsightPanel, PeriodChip, SectionHeader } from "@/components/future";
 import { EmptyState, ErrorState } from "@/components/os/state-views";
 import { CategoryBreakdown } from "@/features/expenses/components/category-breakdown";
 import { RecentTransactions } from "@/features/expenses/components/recent-transactions";
@@ -8,7 +8,7 @@ import { SpendingSummary } from "@/features/expenses/components/spending-summary
 import { SpendingTrend } from "@/features/expenses/components/spending-trend";
 import { TransactionDetail } from "@/features/expenses/components/transaction-detail";
 import { monthRange, periodLabel, type PeriodKey } from "@/features/expenses/lib/analytics";
-import { GlassButton, GlassCard } from "@/features/expenses/components/glass";
+import { GlassButton } from "@/features/expenses/components/glass";
 import {
   useCategories,
   useExpenseDashboard,
@@ -52,36 +52,30 @@ function ExpenseOverviewPage() {
 
   return (
     <>
-      <ModuleHeader
-        eyebrow="Expenses"
-        moduleCode="01 / OVERVIEW"
-        title="Expense overview"
-        description={periodLabel(period)}
+      <SectionHeader
+        system="Expense system"
+        module="Module 01 / Overview"
+        title="Financial command center"
+        subtitle={periodLabel(period)}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex gap-1 rounded-lg border border-hairline/60 p-0.5">
+            <div className="flex gap-1 border border-hairline/60 p-0.5 angular-clip-sm">
               {(
                 [
                   ["this_month", "This month"],
                   ["last_month", "Last month"],
                 ] as const
               ).map(([key, label]) => (
-                <button
+                <PeriodChip
                   key={key}
-                  type="button"
+                  label={label}
+                  active={period === key}
                   onClick={() => setPeriod(key)}
-                  className={
-                    period === key
-                      ? "rounded-md bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
-                      : "rounded-md px-3 py-1.5 text-xs text-muted-foreground"
-                  }
-                >
-                  {label}
-                </button>
+                />
               ))}
             </div>
             <Link to="/expenses/budgets">
-              <GlassButton>Budget</GlassButton>
+              <GlassButton variant="ghost">Budget control</GlassButton>
             </Link>
           </div>
         }
@@ -91,10 +85,10 @@ function ExpenseOverviewPage() {
         <ErrorState
           error={dashboard.error}
           onRetry={() => dashboard.refetch()}
-          title="Couldn't load expenses"
+          title="Couldn't load expense intelligence"
         />
       ) : dashboard.isLoading ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="mt-6 space-y-4">
           <SpendingSummary
             loading
             totalMinor={0}
@@ -105,29 +99,33 @@ function ExpenseOverviewPage() {
             pendingCount={0}
             delta={null}
           />
-          <SpendingTrend loading daily={[]} currency="INR" />
+          <div className="grid gap-4 xl:grid-cols-2">
+            <SpendingTrend loading daily={[]} currency="INR" />
+            <CategoryBreakdown items={[]} total={0} currency="INR" loading />
+          </div>
         </div>
       ) : !dash || dash.transactionCount === 0 ? (
         <EmptyState
-          title="No expenses yet"
-          line="Your transactions will appear here as you start spending."
+          title="No financial signals yet"
+          line="Once transactions are recorded, your spending intelligence will appear here."
           action={
             <Link to="/expenses/transactions">
-              <GlassButton>Add expense</GlassButton>
+              <GlassButton>Add transaction</GlassButton>
             </Link>
           }
         />
       ) : (
-        <div className="space-y-4 animate-rise">
+        <div className="mt-6 space-y-5 animate-hud-in">
           {dash.budgetAlerts.length > 0 ? (
-            <div className="space-y-2">
+            <div className="grid gap-3 md:grid-cols-2">
               {dash.budgetAlerts.map((alert, i) => (
-                <GlassCard key={i} className="border-warning/30 text-sm">
+                <InsightPanel key={i} signal="Budget signal">
                   {alert.message}
-                </GlassCard>
+                </InsightPanel>
               ))}
             </div>
           ) : null}
+
           <SpendingSummary
             totalMinor={dash.totalSpentMinor}
             currency={dash.currency}
@@ -141,14 +139,20 @@ function ExpenseOverviewPage() {
             budgetUsagePercent={dash.budgetUsagePercent}
             budgetStatus={dash.budgetStatus}
           />
-          <div className="grid gap-4 lg:grid-cols-2">
-            <SpendingTrend daily={dash.weeklyTrend} currency={dash.currency} />
-            <CategoryBreakdown
-              items={breakdownItems}
-              total={dash.totalSpentMinor}
-              currency={dash.currency}
-            />
+
+          <div className="grid gap-4 xl:grid-cols-12">
+            <div className="xl:col-span-7">
+              <SpendingTrend daily={dash.weeklyTrend} currency={dash.currency} />
+            </div>
+            <div className="xl:col-span-5">
+              <CategoryBreakdown
+                items={breakdownItems}
+                total={dash.totalSpentMinor}
+                currency={dash.currency}
+              />
+            </div>
           </div>
+
           <RecentTransactions transactions={recent} onSelect={setSelectedId} />
         </div>
       )}
