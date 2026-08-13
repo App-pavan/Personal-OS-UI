@@ -89,7 +89,11 @@ export function CreateTransactionFlow({
       {step === "amount" && (
         <section className="animate-soft-in space-y-4">
           <p className="label-eyebrow">Amount</p>
-          <MoneyInput valueMinor={amountMinor} onChangeMinor={setAmountMinor} className="text-2xl font-mono" />
+          <MoneyInput
+            valueMinor={amountMinor}
+            onChangeMinor={setAmountMinor}
+            className="text-2xl font-mono"
+          />
           <p className="label-eyebrow">Merchant</p>
           <GlassInput
             placeholder="Swiggy, Uber, Amazon…"

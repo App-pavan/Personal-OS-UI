@@ -72,7 +72,7 @@ export function BudgetEditorModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-end justify-center bg-[#00092c]/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+        className="fixed inset-0 z-50 flex items-end justify-center bg-background/85 p-0 backdrop-blur-md sm:items-center sm:p-4"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
@@ -95,7 +95,7 @@ export function BudgetEditorModal({
           <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5 md:px-6">
             <section>
               <p className="label-eyebrow">Month</p>
-              <div className="mt-2 flex items-center gap-2 rounded-xl border border-hairline bg-[rgb(238_238_238/0.04)] px-4 py-3">
+              <div className="mt-2 flex items-center gap-2 rounded-xl border border-hairline bg-muted/20 px-4 py-3">
                 <span className="text-sm font-medium">{monthLabel}</span>
                 {isCurrent ? (
                   <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
@@ -151,9 +151,9 @@ export function BudgetEditorModal({
                   activeCategories.map((cat) => (
                     <div
                       key={cat.id}
-                      className="flex items-center gap-3 rounded-xl border border-hairline bg-[rgb(238_238_238/0.04)] px-3 py-2.5 transition hover:border-primary/20"
+                      className="flex items-center gap-3 rounded-xl border border-hairline bg-muted/20 px-3 py-2.5 transition hover:border-primary/20"
                     >
-                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[rgb(238_238_238/0.06)] text-base">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/30 text-base">
                         {cat.icon ?? "📁"}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-sm font-medium">
@@ -182,7 +182,7 @@ export function BudgetEditorModal({
               </div>
             </section>
 
-            <section className="rounded-xl border border-hairline bg-[rgb(238_238_238/0.04)] p-4">
+            <section className="rounded-xl border border-hairline bg-muted/20 p-4">
               <p className="label-eyebrow">Summary</p>
               <dl className="mt-3 space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
@@ -230,7 +230,7 @@ export function BudgetEditorModal({
               type="button"
               onClick={submit}
               disabled={saving || totalMinor <= 0}
-              className="bg-primary text-primary-foreground hover:bg-[#ff7722]"
+              className="btn-future"
             >
               {mode === "create" ? "Create budget" : "Save changes"}
             </GlassButton>

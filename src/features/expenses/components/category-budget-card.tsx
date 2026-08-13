@@ -27,10 +27,10 @@ export function CategoryBudgetCard({
   const over = remainingMinor < 0;
 
   return (
-    <GlassCard className="transition-all duration-200 hover:border-primary/20 hover:shadow-[0_0_24px_-8px_rgb(255_95_0/18%)]">
+    <GlassCard className="transition-all duration-200 hover:border-primary/25 hover:shadow-[0_0_24px_-8px_rgb(65_174_169/18%)]">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[rgb(238_238_238/0.06)] text-base">
+          <span className="grid size-10 shrink-0 place-items-center angular-clip-sm bg-muted/40 text-base">
             {categoryIcon ?? "📁"}
           </span>
           <div>

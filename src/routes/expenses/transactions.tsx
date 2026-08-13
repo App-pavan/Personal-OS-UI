@@ -26,7 +26,12 @@ export const Route = createFileRoute("/expenses/transactions")({
 });
 
 function TransactionsPage() {
-  const [query, setQuery] = useState<TransactionQuery>({ page: 1, limit: 20, sort: "occurredAt", order: "desc" });
+  const [query, setQuery] = useState<TransactionQuery>({
+    page: 1,
+    limit: 20,
+    sort: "occurredAt",
+    order: "desc",
+  });
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounced(search);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -70,11 +75,7 @@ function TransactionsPage() {
         />
       </div>
 
-      <ExpenseFilters
-        query={query}
-        onChange={setQuery}
-        categories={categories.data ?? []}
-      />
+      <ExpenseFilters query={query} onChange={setQuery} categories={categories.data ?? []} />
 
       {list.isError ? (
         <ErrorState error={list.error} onRetry={() => list.refetch()} />
@@ -83,7 +84,11 @@ function TransactionsPage() {
       ) : items.length === 0 ? (
         <EmptyState
           title="No transactions found"
-          line={debouncedSearch ? "Try a different search or clear filters." : "Add your first expense to get started."}
+          line={
+            debouncedSearch
+              ? "Try a different search or clear filters."
+              : "Add your first expense to get started."
+          }
           action={
             <GlassButton onClick={() => setCreateOpen(true)}>
               <Plus className="size-4" /> Add transaction
@@ -141,7 +146,8 @@ function TransactionsPage() {
         open={Boolean(selectedId)}
         onOpenChange={(open) => !open && setSelectedId(null)}
         onUpdate={(input) =>
-          selectedId && m.update.mutate({ id: selectedId, input }, { onSuccess: () => setSelectedId(null) })
+          selectedId &&
+          m.update.mutate({ id: selectedId, input }, { onSuccess: () => setSelectedId(null) })
         }
         onIgnore={(id) => m.ignore.mutate(id)}
         onUnignore={(id) => m.unignore.mutate(id)}

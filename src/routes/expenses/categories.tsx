@@ -39,7 +39,15 @@ function CategoriesPage() {
             e.preventDefault();
             const trimmed = name.trim();
             if (!trimmed) return;
-            m.create.mutate({ name: trimmed }, { onSuccess: () => { setName(""); setCreating(false); } });
+            m.create.mutate(
+              { name: trimmed },
+              {
+                onSuccess: () => {
+                  setName("");
+                  setCreating(false);
+                },
+              },
+            );
           }}
         >
           <GlassInput

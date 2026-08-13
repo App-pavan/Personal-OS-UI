@@ -42,7 +42,15 @@ function MembersPage() {
             e.preventDefault();
             const trimmed = name.trim();
             if (!trimmed) return;
-            m.create.mutate({ name: trimmed }, { onSuccess: () => { setName(""); setCreating(false); } });
+            m.create.mutate(
+              { name: trimmed },
+              {
+                onSuccess: () => {
+                  setName("");
+                  setCreating(false);
+                },
+              },
+            );
           }}
         >
           <GlassInput
@@ -115,7 +123,9 @@ function MembersPage() {
                       <GlassButton
                         variant="ghost"
                         className="px-2"
-                        onClick={() => m.update.mutate({ id: member.id, input: { archived: true } })}
+                        onClick={() =>
+                          m.update.mutate({ id: member.id, input: { archived: true } })
+                        }
                       >
                         <Archive className="size-4" />
                       </GlassButton>

@@ -39,12 +39,12 @@ function Rail({ onSignOut }: { onSignOut: () => void }) {
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       className={cn(
-        "sticky top-0 z-30 hidden h-screen shrink-0 flex-col gap-4 px-2.5 py-4 transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:flex",
+        "sticky top-0 z-30 hidden h-screen shrink-0 flex-col gap-4 border-r border-hairline/60 bg-sidebar/80 px-2.5 py-4 backdrop-blur-xl transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:flex",
         expanded ? "w-[236px]" : "w-[68px]",
       )}
     >
       <Link to="/" className="flex items-center gap-2.5 px-1.5 py-1">
-        <span className="gradient-primary grid size-9 shrink-0 place-items-center rounded-lg text-primary-foreground shadow-soft">
+        <span className="gradient-primary grid size-9 shrink-0 place-items-center angular-clip-sm text-primary-foreground shadow-soft">
           <Sparkles className="size-4" />
         </span>
         <span
@@ -82,10 +82,10 @@ function Rail({ onSignOut }: { onSignOut: () => void }) {
                     aria-label={m.label}
                     title={m.label}
                     className={cn(
-                      "rail-item group relative flex h-10 items-center gap-3 rounded-lg px-2.5 text-sm",
+                      "rail-item group relative flex h-10 items-center gap-3 px-2.5 text-sm angular-clip-sm",
                       active
-                        ? "bg-primary-soft font-semibold text-primary"
-                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                        ? "bg-primary/15 font-semibold text-primary shadow-[inset_0_0_0_1px_rgb(65_174_169/20%)]"
+                        : "text-muted-foreground hover:bg-primary/8 hover:text-foreground",
                     )}
                   >
                     {active ? (
@@ -133,7 +133,12 @@ function QuickActions({ trigger }: { trigger: ReactNode }) {
   const [open, setOpen] = useState(false);
   const actions = [
     { label: "Task", hint: "Something to do", kind: "task" as const, icon: ListChecks },
-    { label: "Checklist", hint: "A routine you repeat", kind: "checklist" as const, icon: ClipboardCheck },
+    {
+      label: "Checklist",
+      hint: "A routine you repeat",
+      kind: "checklist" as const,
+      icon: ClipboardCheck,
+    },
   ];
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -192,7 +197,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Rail onSignOut={() => void signOut()} />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-hairline bg-background/70 px-4 py-2.5 backdrop-blur-xl md:px-8">
+          <header className="sticky top-0 z-20 border-b border-hairline bg-background/75 px-4 py-2.5 backdrop-blur-xl md:px-8">
             <div className="mx-auto grid w-full max-w-[1500px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <div className="flex min-w-0 items-center gap-2">
                 <div className="md:hidden">
@@ -253,11 +258,13 @@ export function AppShell({ children }: { children: ReactNode }) {
 
                 <button
                   onClick={() => setOpen(true)}
-                  className="group flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 text-sm text-muted-foreground transition hover:bg-muted/70 md:max-w-sm"
+                  className="group flex h-9 min-w-0 flex-1 items-center gap-2.5 px-2.5 text-sm text-muted-foreground transition hover:bg-primary/8 angular-clip-sm md:max-w-sm"
                 >
                   <Search className="size-4 shrink-0" />
                   <span className="truncate">
-                    {current ? `Search ${current.label.toLowerCase()} and everything else…` : "Search tasks and checklists…"}
+                    {current
+                      ? `Search ${current.label.toLowerCase()} and everything else…`
+                      : "Search tasks and checklists…"}
                   </span>
                   <kbd className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-md border border-hairline px-1.5 py-0.5 text-[10px] font-medium md:flex">
                     <Command className="size-2.5" />K
@@ -281,12 +288,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={toggle}
                   className="grid size-9 place-items-center rounded-lg text-muted-foreground transition hover:bg-muted/70 hover:text-foreground"
                 >
-                  {theme === "dark" ? <Sun className="size-[17px]" /> : <Moon className="size-[17px]" />}
+                  {theme === "dark" ? (
+                    <Sun className="size-[17px]" />
+                  ) : (
+                    <Moon className="size-[17px]" />
+                  )}
                 </button>
                 <Link
                   to="/settings"
                   aria-label="Account"
-                  className="gradient-accent ml-1 grid size-8 place-items-center rounded-lg text-xs font-semibold text-accent-foreground"
+                  className="grid size-8 place-items-center angular-clip-sm text-xs font-semibold text-accent-foreground gradient-accent"
                 >
                   {user?.initials ?? "OS"}
                 </Link>
@@ -294,7 +305,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main key={pathname} className="animate-soft-in flex-1 px-4 pt-6 pb-32 md:px-8 md:pt-9 md:pb-14">
+          <main
+            key={pathname}
+            className="animate-soft-in flex-1 px-4 pt-6 pb-32 md:px-8 md:pt-9 md:pb-14"
+          >
             {children}
           </main>
         </div>
@@ -303,7 +317,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* mobile: floating glass bar + quick capture */}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
         <div className="pointer-events-auto mx-auto mb-3 flex max-w-md items-center gap-2 px-3">
-          <nav className="glass-panel flex flex-1 items-center justify-between rounded-xl px-1.5 py-1.5">
+          <nav className="hud-panel flex flex-1 items-center justify-between angular-clip px-1.5 py-1.5">
             {modules.map((n) => {
               const active = navIsActive(pathname, n.to);
               return (
@@ -312,8 +326,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={n.to}
                   aria-label={n.label}
                   className={cn(
-                    "rail-item flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg px-2.5",
-                    active ? "bg-primary-soft text-primary" : "text-muted-foreground",
+                    "rail-item flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 px-2.5 angular-clip-sm",
+                    active ? "bg-primary/15 text-primary" : "text-muted-foreground",
                   )}
                 >
                   <n.icon className="size-[17px]" />
@@ -326,7 +340,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             trigger={
               <button
                 aria-label="Create"
-                className="gradient-primary grid size-12 shrink-0 place-items-center rounded-xl text-primary-foreground shadow-float transition active:scale-95"
+                className="gradient-primary grid size-12 shrink-0 place-items-center angular-clip text-primary-foreground shadow-float transition active:scale-95"
               >
                 <Plus className="size-5" />
               </button>

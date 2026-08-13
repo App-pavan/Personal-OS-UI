@@ -41,9 +41,7 @@ export function MemberSelector({
           );
         })}
       </div>
-      {onCreate ? (
-        <InlineMemberCreate onCreate={onCreate} loading={creating} />
-      ) : null}
+      {onCreate ? <InlineMemberCreate onCreate={onCreate} loading={creating} /> : null}
     </div>
   );
 }

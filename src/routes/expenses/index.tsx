@@ -54,6 +54,7 @@ function ExpenseOverviewPage() {
     <>
       <ModuleHeader
         eyebrow="Expenses"
+        moduleCode="01 / OVERVIEW"
         title="Expense overview"
         description={periodLabel(period)}
         actions={
@@ -94,7 +95,16 @@ function ExpenseOverviewPage() {
         />
       ) : dashboard.isLoading ? (
         <div className="grid gap-4 lg:grid-cols-2">
-          <SpendingSummary loading totalMinor={0} currency="INR" transactionCount={0} personalCount={0} sharedCount={0} pendingCount={0} delta={null} />
+          <SpendingSummary
+            loading
+            totalMinor={0}
+            currency="INR"
+            transactionCount={0}
+            personalCount={0}
+            sharedCount={0}
+            pendingCount={0}
+            delta={null}
+          />
           <SpendingTrend loading daily={[]} currency="INR" />
         </div>
       ) : !dash || dash.transactionCount === 0 ? (
@@ -151,10 +161,7 @@ function ExpenseOverviewPage() {
         onOpenChange={(open) => !open && setSelectedId(null)}
         onUpdate={(input) =>
           selectedId &&
-          m.update.mutate(
-            { id: selectedId, input },
-            { onSuccess: () => setSelectedId(null) },
-          )
+          m.update.mutate({ id: selectedId, input }, { onSuccess: () => setSelectedId(null) })
         }
         onIgnore={(id) => m.ignore.mutate(id)}
         onUnignore={(id) => m.unignore.mutate(id)}

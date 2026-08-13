@@ -44,7 +44,12 @@ export function RecentTransactions({
         <>
           <div className="hidden md:block px-4 md:px-5">
             {transactions.map((tx) => (
-              <TransactionRow key={tx.id} transaction={tx} onClick={() => onSelect(tx.id)} compact />
+              <TransactionRow
+                key={tx.id}
+                transaction={tx}
+                onClick={() => onSelect(tx.id)}
+                compact
+              />
             ))}
           </div>
           <div className="space-y-2 p-4 md:hidden">

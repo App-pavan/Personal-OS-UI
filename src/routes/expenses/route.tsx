@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { ExpenseNav } from "@/features/expenses/components/expense-nav";
-import "@/features/expenses/expense-theme.css";
 
 export const Route = createFileRoute("/expenses")({
   component: ExpensesLayout,
@@ -8,7 +7,7 @@ export const Route = createFileRoute("/expenses")({
 
 function ExpensesLayout() {
   return (
-    <div className="expense-module mx-auto w-full max-w-[1500px] space-y-6 md:space-y-8">
+    <div className="mx-auto w-full max-w-[1500px] space-y-6 md:space-y-8">
       <ExpenseNav />
       <Outlet />
     </div>

@@ -6,13 +6,7 @@ import type {
   TransactionSource,
   TransactionStatus,
 } from "@/lib/api/expense-types";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { GlassButton, GlassInput } from "./glass";
 
 const statuses: TransactionStatus[] = ["pending", "managed", "ignored", "archived"];
@@ -42,9 +36,7 @@ export function ExpenseFilters({
     query.maxAmount,
   ].filter(Boolean).length;
 
-  const fields = (
-    <FilterFields query={query} onChange={onChange} categories={categories} />
-  );
+  const fields = <FilterFields query={query} onChange={onChange} categories={categories} />;
 
   return (
     <>
@@ -118,10 +110,7 @@ function FilterFields({
       <SelectField
         label="Ownership"
         value={query.ownership ?? ""}
-        options={[
-          { value: "", label: "All" },
-          ...ownerships.map((o) => ({ value: o, label: o })),
-        ]}
+        options={[{ value: "", label: "All" }, ...ownerships.map((o) => ({ value: o, label: o }))]}
         onChange={(v) => merge({ ownership: (v as TransactionOwnership) || undefined })}
       />
       <SelectField
@@ -167,7 +156,10 @@ function FilterFields({
         />
       </Field>
       {activeFilters(query) > 0 && (
-        <GlassButton variant="ghost" onClick={() => onChange({ page: 1, limit: query.limit ?? 20 })}>
+        <GlassButton
+          variant="ghost"
+          onClick={() => onChange({ page: 1, limit: query.limit ?? 20 })}
+        >
           <X className="size-4" /> Clear filters
         </GlassButton>
       )}

@@ -1,7 +1,6 @@
 import { Plus, PiggyBank } from "lucide-react";
-import { GlassButton } from "./glass";
+import { FuturisticButton } from "@/components/future";
 import { currentMonthKey, formatMonthLabel } from "../lib/budget-utils";
-import { cn } from "@/lib/utils";
 
 export function BudgetEmptyState({
   month,
@@ -18,51 +17,38 @@ export function BudgetEmptyState({
 
   if (locked) {
     return (
-      <div className="expense-empty-state flex min-h-[420px] flex-col items-center justify-center px-6 py-16 text-center">
-        <span className="grid size-14 place-items-center rounded-2xl border border-hairline bg-[rgb(238_238_238/0.04)] text-muted-foreground">
+      <div className="animate-hud-in flex min-h-[420px] flex-col items-center justify-center px-6 py-16 text-center">
+        <span className="grid size-14 place-items-center angular-clip-sm border border-hairline bg-muted/30 text-muted-foreground">
           <PiggyBank className="size-7" strokeWidth={1.5} />
         </span>
-        <p className="mt-6 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="mt-6 text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
           {monthLabel}
         </p>
         <h2 className="mt-2 text-xl font-semibold tracking-tight">Budget finalized</h2>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-          Historical budgets cannot be modified. This month&apos;s spending was tracked against
-          whatever budget was active at the time.
+          Historical budgets cannot be modified.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="expense-empty-state flex min-h-[420px] flex-col items-center justify-center px-6 py-16 text-center">
-      <span className="grid size-14 place-items-center rounded-2xl border border-primary/25 bg-primary/10 text-primary shadow-[0_0_40px_-12px_rgb(255_95_0/35%)]">
+    <div className="animate-hud-in flex min-h-[420px] flex-col items-center justify-center px-6 py-16 text-center">
+      <span className="grid size-14 place-items-center angular-clip-sm border border-primary/30 bg-primary/10 text-primary shadow-[0_0_40px_-12px_rgb(65_174_169/35%)]">
         <PiggyBank className="size-7" strokeWidth={1.5} />
       </span>
-      <p className="mt-6 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      <p className="mt-6 text-xs font-medium tracking-[0.14em] text-muted-foreground uppercase">
         {monthLabel}
-        {isCurrent ? (
-          <>
-            {" "}
-            <span className="text-primary">· Current</span>
-          </>
-        ) : null}
+        {isCurrent ? <span className="text-primary"> · Current</span> : null}
       </p>
       <h2 className="mt-2 text-xl font-semibold tracking-tight">No budget yet</h2>
       <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
         Start with a monthly spending limit and optionally divide it across your categories.
       </p>
-      <GlassButton
-        type="button"
-        onClick={onCreate}
-        className={cn(
-          "mt-8 h-11 px-6 text-sm font-semibold shadow-[0_0_32px_-8px_rgb(255_95_0/50%)]",
-          "bg-primary text-primary-foreground hover:bg-[#ff7722]",
-        )}
-      >
+      <FuturisticButton type="button" onClick={onCreate} className="mt-8 h-11 px-6">
         <Plus className="size-4" />
         Create {shortMonth} budget
-      </GlassButton>
+      </FuturisticButton>
     </div>
   );
 }
