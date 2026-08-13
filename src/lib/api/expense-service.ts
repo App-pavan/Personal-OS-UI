@@ -322,6 +322,22 @@ export const expenseApi = {
         normalizeCategoryAnalytics,
       );
     },
+    async merchants(limit = 8, from?: string, to?: string): Promise<import("./expense-types").MerchantAnalyticsRow[]> {
+      const params: Record<string, string | number> = { limit };
+      if (from) params.from = from;
+      if (to) params.to = to;
+      return listOf((await api.get<unknown>(`${BASE}/insights/merchants`, params)).data).map(
+        normalizeMerchantAnalytics,
+      );
+    },
+    async members(from?: string, to?: string): Promise<import("./expense-types").MemberAnalyticsRow[]> {
+      const params: Record<string, string> = {};
+      if (from) params.from = from;
+      if (to) params.to = to;
+      return listOf((await api.get<unknown>(`${BASE}/insights/members`, params)).data).map(
+        normalizeMemberAnalytics,
+      );
+    },
   },
 };
 
@@ -350,6 +366,11 @@ function normalizeBudgetSummary(raw: Raw): BudgetSummary {
     status: str(pick(raw, ["status"]), "SAFE") as BudgetSummary["status"],
     transactionCount: num(pick(raw, ["transactionCount"])),
     categoryBudgets: cats,
+    editable: pick(raw, ["editable"]) === true || pick(raw, ["editable"]) === false ? Boolean(pick(raw, ["editable"])) : undefined,
+    locked: pick(raw, ["locked"]) === true,
+    allocatedMinor: num(pick(raw, ["allocatedMinor"]), undefined as unknown as number) || undefined,
+    unallocatedMinor: num(pick(raw, ["unallocatedMinor"]), undefined as unknown as number) || undefined,
+    overAllocationMinor: num(pick(raw, ["overAllocationMinor"]), undefined as unknown as number) || undefined,
   };
 }
 
@@ -385,6 +406,8 @@ function normalizeCategoryAnalytics(raw: Raw): CategoryAnalyticsRow {
     percentage: Number(pick(raw, ["percentage"]) ?? 0),
     transactionCount: num(pick(raw, ["transactionCount"])),
     budgetLimitMinor: num(pick(raw, ["budgetLimitMinor"]), undefined as unknown as number) || undefined,
+    budgetSpentMinor: num(pick(raw, ["budgetSpentMinor"]), undefined as unknown as number) || undefined,
+    budgetRemainingMinor: num(pick(raw, ["budgetRemainingMinor"]), undefined as unknown as number) || undefined,
     budgetUsagePercent: pick(raw, ["budgetUsagePercent"]) != null ? Number(pick(raw, ["budgetUsagePercent"])) : undefined,
     budgetStatus: pick(raw, ["budgetStatus"]) ? str(pick(raw, ["budgetStatus"])) as CategoryAnalyticsRow["budgetStatus"] : undefined,
   };
@@ -411,6 +434,24 @@ function normalizeDashboard(raw: Raw): ExpenseDashboard {
     recentTransactions: asList(pick(raw, ["recentTransactions"])).map(normalizeTransaction),
     weeklyTrend: asList(pick(raw, ["weeklyTrend"])).map(normalizeDailySpending),
     budgetAlerts: asList(pick(raw, ["budgetAlerts"])).map(normalizeBudgetAlert),
+    transactionCount: num(pick(raw, ["transactionCount"])),
+  };
+}
+
+function normalizeMerchantAnalytics(raw: Raw): import("./expense-types").MerchantAnalyticsRow {
+  return {
+    merchant: str(pick(raw, ["merchant"]), "Unknown"),
+    amountMinor: num(pick(raw, ["amountMinor"])),
+    transactionCount: num(pick(raw, ["transactionCount"])),
+    averageMinor: num(pick(raw, ["averageMinor"]), undefined as unknown as number) || undefined,
+  };
+}
+
+function normalizeMemberAnalytics(raw: Raw): import("./expense-types").MemberAnalyticsRow {
+  return {
+    memberId: str(pick(raw, ["memberId"])),
+    memberName: str(pick(raw, ["memberName"]), "Member"),
+    amountMinor: num(pick(raw, ["amountMinor"])),
     transactionCount: num(pick(raw, ["transactionCount"])),
   };
 }
