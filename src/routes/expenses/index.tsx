@@ -119,7 +119,7 @@ function ExpenseOverviewPage() {
           {dash.budgetAlerts.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2">
               {dash.budgetAlerts.map((alert, i) => (
-                <InsightPanel key={i} signal="Budget signal">
+                <InsightPanel key={i} signal="Budget signal" kind="budget-alert">
                   {alert.message}
                 </InsightPanel>
               ))}

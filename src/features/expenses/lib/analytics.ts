@@ -37,10 +37,7 @@ export function inRange(iso: string, from: Date, to: Date) {
 /** Derive stats from loaded transactions only — not a global total. */
 export function deriveSummary(transactions: ExpenseTransaction[], from: Date, to: Date) {
   const active = transactions.filter(
-    (tx) =>
-      tx.status !== "archived" &&
-      tx.status !== "ignored" &&
-      inRange(tx.occurredAt, from, to),
+    (tx) => tx.status !== "archived" && tx.status !== "ignored" && inRange(tx.occurredAt, from, to),
   );
   const currency = active[0]?.currency ?? "INR";
   const totalMinor = sumMinor(active.map((tx) => tx.amountMinor));
@@ -116,12 +113,20 @@ export function comparePeriods(
 
   const curTotal = sumMinor(
     current
-      .filter((tx) => tx.status !== "archived" && tx.status !== "ignored" && inRange(tx.occurredAt, from, to))
+      .filter(
+        (tx) =>
+          tx.status !== "archived" && tx.status !== "ignored" && inRange(tx.occurredAt, from, to),
+      )
       .map((tx) => tx.amountMinor),
   );
   const prevTotal = sumMinor(
     previous
-      .filter((tx) => tx.status !== "archived" && tx.status !== "ignored" && inRange(tx.occurredAt, prevFrom, prevTo))
+      .filter(
+        (tx) =>
+          tx.status !== "archived" &&
+          tx.status !== "ignored" &&
+          inRange(tx.occurredAt, prevFrom, prevTo),
+      )
       .map((tx) => tx.amountMinor),
   );
   return deltaPercent(curTotal, prevTotal);

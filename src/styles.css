@@ -2,6 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 @import "./styles/jarvis-system.css";
+@import "./lib/design/semantic-colors.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -108,11 +109,11 @@
   --accent-foreground: #213e3b;
   --accent-soft: rgb(166 246 241 / 20%);
 
-  --destructive: #2a6662;
-  --destructive-foreground: #e8ffff;
-  --success: #41aea9;
-  --warning: #41aea9;
-  --info: rgb(33 62 59 / 55%);
+  --destructive: #fb7185;
+  --destructive-foreground: #213e3b;
+  --success: #4ade80;
+  --warning: #facc15;
+  --info: #4d8dff;
 
   --border: rgb(33 62 59 / 10%);
   --hairline: rgb(33 62 59 / 12%);
@@ -120,10 +121,10 @@
   --ring: #41aea9;
 
   --chart-1: #41aea9;
-  --chart-2: #a6f6f1;
-  --chart-3: #213e3b;
-  --chart-4: rgb(33 62 59 / 45%);
-  --chart-5: rgb(166 246 241 / 55%);
+  --chart-2: #9b7cff;
+  --chart-3: #4d8dff;
+  --chart-4: #4ade80;
+  --chart-5: #fb923c;
 
   --sidebar: #e0f7f5;
   --sidebar-foreground: #213e3b;
@@ -174,11 +175,11 @@
   --accent-foreground: #00092c;
   --accent-soft: rgb(166 246 241 / 12%);
 
-  --destructive: #2a6662;
+  --destructive: #fb7185;
   --destructive-foreground: #e8ffff;
-  --success: rgb(232 255 255 / 75%);
-  --warning: #41aea9;
-  --info: rgb(232 255 255 / 55%);
+  --success: #4ade80;
+  --warning: #facc15;
+  --info: #4d8dff;
 
   --border: rgb(166 246 241 / 10%);
   --hairline: rgb(166 246 241 / 12%);
@@ -186,10 +187,10 @@
   --ring: #41aea9;
 
   --chart-1: #41aea9;
-  --chart-2: #a6f6f1;
-  --chart-3: rgb(100 180 255 / 45%);
-  --chart-4: rgb(232 255 255 / 28%);
-  --chart-5: #213e3b;
+  --chart-2: #9b7cff;
+  --chart-3: #4d8dff;
+  --chart-4: #4ade80;
+  --chart-5: #fb923c;
 
   --sidebar: rgb(0 9 44 / 72%);
   --sidebar-foreground: #e8ffff;

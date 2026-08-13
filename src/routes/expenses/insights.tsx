@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { InsightPanel, MetricPanel, PeriodChip, SectionHeader } from "@/components/future";
+import type { SemanticTone } from "@/lib/design/semantic";
+import { navAccentStyle, semanticTextClasses } from "@/lib/design/semantic";
 import { EmptyState, ErrorState } from "@/components/os/state-views";
 import { CategoryBreakdown } from "@/features/expenses/components/category-breakdown";
 import { SpendingTrend } from "@/features/expenses/components/spending-trend";
@@ -93,7 +95,10 @@ function InsightsPage() {
       ) : (
         <div className="mt-6 space-y-5 animate-hud-in">
           {mon?.changePercent != null ? (
-            <InsightPanel signal="Spending signal">
+            <InsightPanel
+              signal="Spending signal"
+              kind={mon.changePercent >= 0 ? "over-budget" : "positive"}
+            >
               Total spending {mon.changePercent >= 0 ? "increased" : "decreased"}{" "}
               {Math.abs(mon.changePercent).toFixed(1)}% compared with last month.
             </InsightPanel>
@@ -102,6 +107,7 @@ function InsightsPage() {
             <SummaryTile
               label="Total spending"
               value={formatMoney(dash.totalSpentMinor, dash.currency)}
+              tone="primary"
             />
             <SummaryTile
               label="Avg per transaction"
@@ -115,10 +121,12 @@ function InsightsPage() {
                       )
                     : "—"
               }
+              tone="purple"
             />
             <SummaryTile
               label="Personal / Shared"
               value={`${formatMoney(mon?.personalSpentMinor ?? 0, dash.currency)} / ${formatMoney(mon?.sharedSpentMinor ?? 0, dash.currency)}`}
+              tone="aqua"
             />
             <SummaryTile
               label="vs last month"
@@ -127,7 +135,7 @@ function InsightsPage() {
                   ? `${mon.changePercent >= 0 ? "+" : ""}${mon.changePercent.toFixed(1)}%`
                   : "—"
               }
-              accent={mon?.changePercent != null && mon.changePercent > 0}
+              tone={mon?.changePercent != null && mon.changePercent > 0 ? "danger" : "success"}
             />
           </div>
 
@@ -237,11 +245,21 @@ function InsightsPage() {
   );
 }
 
-function SummaryTile({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function SummaryTile({
+  label,
+  value,
+  tone = "primary",
+}: {
+  label: string;
+  value: string;
+  tone?: SemanticTone;
+}) {
   return (
-    <GlassCard>
+    <div className="hud-panel angular-clip p-4 card-accent-top" style={navAccentStyle(tone)}>
       <p className="label-eyebrow">{label}</p>
-      <p className={cn("mt-2 font-mono text-xl tabular-nums", accent && "text-primary")}>{value}</p>
-    </GlassCard>
+      <p className={cn("mt-2 font-mono text-xl tabular-nums", semanticTextClasses(tone))}>
+        {value}
+      </p>
+    </div>
   );
 }

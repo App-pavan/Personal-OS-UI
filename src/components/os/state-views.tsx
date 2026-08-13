@@ -40,9 +40,9 @@ export function ErrorState({
     error instanceof ApiRequestError ? error.message : "Unable to retrieve data from the backend.";
 
   return (
-    <div className="hud-panel angular-clip flex flex-col items-start gap-4 p-6">
+    <div className="hud-panel angular-clip flex flex-col items-start gap-4 p-6 card-accent-top tone-danger-border">
       <div className="relative z-[1] flex flex-col items-start gap-4">
-        <span className="grid size-10 place-items-center angular-clip-sm border border-destructive/30 bg-destructive/10 text-accent">
+        <span className="grid size-10 place-items-center angular-clip-sm border tone-danger-border tone-danger-bg tone-danger-text">
           {offline ? <WifiOff className="size-4" /> : <AlertTriangle className="size-4" />}
         </span>
         <div>
@@ -67,11 +67,13 @@ export function EmptyState({
   line,
   action,
   icon,
+  tone = "primary",
 }: {
   title: string;
   line: string;
   action?: ReactNode;
   icon?: ReactNode;
+  tone?: "primary" | "aqua" | "secondary" | "info" | "purple";
 }) {
   return (
     <FuturisticEmpty
@@ -79,6 +81,7 @@ export function EmptyState({
       line={line}
       action={action}
       icon={icon ?? <Inbox className="size-5" />}
+      tone={tone}
     />
   );
 }
@@ -86,11 +89,11 @@ export function EmptyState({
 /** Honest placeholder for modules whose backend doesn't exist yet. */
 export function FutureState({ title, line }: { title: string; line: string }) {
   return (
-    <div className="hud-panel angular-clip p-5">
+    <div className="hud-panel angular-clip p-5 card-accent-top">
       <div className="relative z-[1]">
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium">{title}</p>
-          <span className="border border-hairline px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground angular-clip-sm">
+          <span className="semantic-badge tone-muted-bg tone-muted-border tone-muted-text">
             Not connected yet
           </span>
         </div>

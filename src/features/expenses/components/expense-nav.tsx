@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { BarChart3, LayoutGrid, List, PiggyBank, Tags, Users } from "lucide-react";
+import { expenseTabAccent, navAccentStyle, semanticTextClasses } from "@/lib/design/semantic";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -20,6 +21,7 @@ export function ExpenseNav() {
         <p className="sr-only">Expense module navigation</p>
         {tabs.map((tab) => {
           const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+          const accent = expenseTabAccent[tab.to] ?? "primary";
           return (
             <Link
               key={tab.to}
@@ -27,14 +29,25 @@ export function ExpenseNav() {
               className={cn(
                 "group relative flex shrink-0 items-center gap-2 px-3 py-2.5 text-sm transition-all duration-200 angular-clip-sm",
                 active
-                  ? "bg-primary/15 font-medium text-primary shadow-[inset_0_0_0_1px_rgb(65_174_169/25%)]"
+                  ? cn("font-medium nav-active-glow", semanticTextClasses(accent))
                   : "text-muted-foreground hover:bg-primary/8 hover:text-foreground",
               )}
+              style={active ? navAccentStyle(accent) : undefined}
             >
               {active ? (
-                <span className="absolute bottom-0 left-2 right-2 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+                <span
+                  className="absolute bottom-0 left-2 right-2 h-px opacity-60"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, var(--nav-accent), transparent)`,
+                  }}
+                />
               ) : null}
-              <tab.icon className="size-4 shrink-0" />
+              <tab.icon
+                className={cn(
+                  "size-4 shrink-0 transition",
+                  active ? semanticTextClasses(accent) : "opacity-65 group-hover:opacity-100",
+                )}
+              />
               <span className="hidden sm:inline">{tab.label}</span>
               <span className="hidden text-[9px] tracking-widest text-muted-foreground/60 lg:inline">
                 {tab.code}
