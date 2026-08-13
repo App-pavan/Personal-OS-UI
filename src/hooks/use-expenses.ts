@@ -29,7 +29,12 @@ export const expenseKeys = {
   budgets: ["expenses", "budgets"] as const,
   budget: (id: string) => ["expenses", "budgets", id] as const,
   budgetSummary: (id: string) => ["expenses", "budgets", "summary", id] as const,
+  budgetAlerts: (month: string) => ["expenses", "budgets", "alerts", month] as const,
   dashboard: (month: string) => ["expenses", "insights", "dashboard", month] as const,
+  monthlyInsights: (month: string) => ["expenses", "insights", "monthly", month] as const,
+  categoryInsights: (month: string) => ["expenses", "insights", "categories", month] as const,
+  merchantInsights: (month: string) => ["expenses", "insights", "merchants", month] as const,
+  memberInsights: (month: string) => ["expenses", "insights", "members", month] as const,
   insights: ["expenses", "insights"] as const,
 };
 
@@ -122,6 +127,55 @@ export function useBudgetMutations() {
         toast.error(errorMessage(error, "The budget could not be updated.")),
     }),
   };
+}
+
+export function useMonthlyInsights(month: string) {
+  return useQuery({
+    queryKey: expenseKeys.monthlyInsights(month),
+    queryFn: () => expenseApi.insights.monthly(month),
+    retry: 1,
+  });
+}
+
+export function useCategoryInsights(month: string) {
+  return useQuery({
+    queryKey: expenseKeys.categoryInsights(month),
+    queryFn: () => expenseApi.insights.categories(month),
+    retry: 1,
+  });
+}
+
+export function useMerchantInsights(month: string) {
+  const { from, to } = monthIsoRange(month);
+  return useQuery({
+    queryKey: expenseKeys.merchantInsights(month),
+    queryFn: () => expenseApi.insights.merchants(10, from, to),
+    retry: 1,
+  });
+}
+
+export function useMemberInsights(month: string) {
+  const { from, to } = monthIsoRange(month);
+  return useQuery({
+    queryKey: expenseKeys.memberInsights(month),
+    queryFn: () => expenseApi.insights.members(from, to),
+    retry: 1,
+  });
+}
+
+function monthIsoRange(month: string): { from: string; to: string } {
+  const [y, m] = month.split("-").map(Number);
+  const start = new Date(Date.UTC(y, m - 1, 1));
+  const end = new Date(Date.UTC(y, m, 1));
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+export function useBudgetAlerts(month: string) {
+  return useQuery({
+    queryKey: expenseKeys.budgetAlerts(month),
+    queryFn: () => expenseApi.budgets.alerts(month),
+    retry: 1,
+  });
 }
 
 /** Debounce for search inputs so typing doesn't hammer the API. */

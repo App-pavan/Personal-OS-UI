@@ -17,6 +17,7 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
 import { Route as ExpensesBudgetsRouteImport } from './routes/expenses/budgets'
 import { Route as ExpensesCategoriesRouteImport } from './routes/expenses/categories'
+import { Route as ExpensesInsightsRouteImport } from './routes/expenses/insights'
 import { Route as ExpensesMembersRouteImport } from './routes/expenses/members'
 import { Route as ExpensesTransactionsRouteImport } from './routes/expenses/transactions'
 
@@ -60,6 +61,11 @@ const ExpensesCategoriesRoute = ExpensesCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => ExpensesRouteRoute,
 } as any)
+const ExpensesInsightsRoute = ExpensesInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => ExpensesRouteRoute,
+} as any)
 const ExpensesMembersRoute = ExpensesMembersRouteImport.update({
   id: '/members',
   path: '/members',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof TasksRoute
   '/expenses/budgets': typeof ExpensesBudgetsRoute
   '/expenses/categories': typeof ExpensesCategoriesRoute
+  '/expenses/insights': typeof ExpensesInsightsRoute
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/expenses/': typeof ExpensesIndexRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof TasksRoute
   '/expenses/budgets': typeof ExpensesBudgetsRoute
   '/expenses/categories': typeof ExpensesCategoriesRoute
+  '/expenses/insights': typeof ExpensesInsightsRoute
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/expenses': typeof ExpensesIndexRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/tasks': typeof TasksRoute
   '/expenses/budgets': typeof ExpensesBudgetsRoute
   '/expenses/categories': typeof ExpensesCategoriesRoute
+  '/expenses/insights': typeof ExpensesInsightsRoute
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/expenses/': typeof ExpensesIndexRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/expenses/budgets'
     | '/expenses/categories'
+    | '/expenses/insights'
     | '/expenses/members'
     | '/expenses/transactions'
     | '/expenses/'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/expenses/budgets'
     | '/expenses/categories'
+    | '/expenses/insights'
     | '/expenses/members'
     | '/expenses/transactions'
     | '/expenses'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/expenses/budgets'
     | '/expenses/categories'
+    | '/expenses/insights'
     | '/expenses/members'
     | '/expenses/transactions'
     | '/expenses/'
@@ -211,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExpensesCategoriesRouteImport
       parentRoute: typeof ExpensesRouteRoute
     }
+    '/expenses/insights': {
+      id: '/expenses/insights'
+      path: '/insights'
+      fullPath: '/expenses/insights'
+      preLoaderRoute: typeof ExpensesInsightsRouteImport
+      parentRoute: typeof ExpensesRouteRoute
+    }
     '/expenses/members': {
       id: '/expenses/members'
       path: '/members'
@@ -231,6 +250,7 @@ declare module '@tanstack/react-router' {
 interface ExpensesRouteRouteChildren {
   ExpensesBudgetsRoute: typeof ExpensesBudgetsRoute
   ExpensesCategoriesRoute: typeof ExpensesCategoriesRoute
+  ExpensesInsightsRoute: typeof ExpensesInsightsRoute
   ExpensesMembersRoute: typeof ExpensesMembersRoute
   ExpensesTransactionsRoute: typeof ExpensesTransactionsRoute
   ExpensesIndexRoute: typeof ExpensesIndexRoute
@@ -239,6 +259,7 @@ interface ExpensesRouteRouteChildren {
 const ExpensesRouteRouteChildren: ExpensesRouteRouteChildren = {
   ExpensesBudgetsRoute: ExpensesBudgetsRoute,
   ExpensesCategoriesRoute: ExpensesCategoriesRoute,
+  ExpensesInsightsRoute: ExpensesInsightsRoute,
   ExpensesMembersRoute: ExpensesMembersRoute,
   ExpensesTransactionsRoute: ExpensesTransactionsRoute,
   ExpensesIndexRoute: ExpensesIndexRoute,

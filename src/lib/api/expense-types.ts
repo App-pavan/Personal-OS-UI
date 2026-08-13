@@ -151,6 +151,25 @@ export type BudgetSummary = {
   status: BudgetStatus;
   transactionCount: number;
   categoryBudgets: CategoryBudgetView[];
+  editable?: boolean;
+  locked?: boolean;
+  allocatedMinor?: number;
+  unallocatedMinor?: number;
+  overAllocationMinor?: number;
+};
+
+export type MerchantAnalyticsRow = {
+  merchant: string;
+  amountMinor: number;
+  transactionCount: number;
+  averageMinor?: number;
+};
+
+export type MemberAnalyticsRow = {
+  memberId: string;
+  memberName: string;
+  amountMinor: number;
+  transactionCount: number;
 };
 
 export type BudgetAlert = {
