@@ -52,7 +52,7 @@ export function SpendingSummary({
           <p
             className={cn(
               "mt-2 flex items-center gap-1 text-sm",
-              delta >= 0 ? "text-warning" : "text-success",
+              delta >= 0 ? "text-primary" : "text-accent",
             )}
           >
             <TrendingUp className={cn("size-4", delta < 0 && "rotate-180")} />
@@ -97,17 +97,9 @@ export function SpendingSummary({
   );
 }
 
-function Metric({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
+function Metric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="rounded-lg border border-hairline/50 bg-background/30 px-3 py-2.5">
+    <div className="angular-clip-sm border border-hairline/50 bg-background/30 px-3 py-2.5">
       <p className="text-[11px] text-muted-foreground">{label}</p>
       <p className={cn("mt-0.5 text-lg font-semibold tabular-nums", accent && "text-accent")}>
         {value}

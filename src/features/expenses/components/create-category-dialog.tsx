@@ -33,7 +33,7 @@ export function CreateCategoryDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-[#00092c]/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-background/85 p-4 backdrop-blur-md"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -73,7 +73,7 @@ export function CreateCategoryDialog({
           <GlassButton
             type="submit"
             disabled={mutations.create.isPending || !name.trim()}
-            className="bg-primary text-primary-foreground hover:bg-[#ff7722]"
+            className="btn-future"
           >
             Create category
           </GlassButton>

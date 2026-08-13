@@ -20,7 +20,7 @@ export function TransactionRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "group flex w-full items-center gap-3 border-b border-hairline/50 py-3.5 text-left transition hover:bg-muted/30",
+        "group flex w-full items-center gap-3 border-b border-hairline/50 py-3.5 text-left transition hover:bg-primary/8 angular-clip-sm px-1",
         compact && "py-3",
       )}
     >
@@ -60,7 +60,7 @@ export function TransactionCard({
     <button
       type="button"
       onClick={onClick}
-      className="glass-panel w-full rounded-xl border border-hairline/60 p-4 text-left transition hover:border-primary/25"
+      className="hud-panel w-full angular-clip-sm p-4 text-left transition hover:border-primary/30"
     >
       <div className="flex items-start justify-between gap-3">
         <div>

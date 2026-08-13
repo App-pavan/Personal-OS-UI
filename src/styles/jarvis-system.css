@@ -1,0 +1,220 @@
+/*
+ * JARVIS design system — futuristic command-center UI
+ * Palette: #213E3B · #41AEA9 · #A6F6F1 · #E8FFFF
+ */
+
+/* ---------- angular geometry ---------- */
+
+@utility angular-clip {
+  clip-path: polygon(
+    10px 0,
+    100% 0,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0 100%,
+    0 10px
+  );
+}
+
+@utility angular-clip-sm {
+  clip-path: polygon(
+    6px 0,
+    100% 0,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    0 100%,
+    0 6px
+  );
+}
+
+@utility angular-clip-nav {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+/* ---------- HUD panels ---------- */
+
+@utility hud-panel {
+  position: relative;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: var(--elevation-1);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      135deg,
+      rgb(166 246 241 / 6%) 0%,
+      transparent 40%,
+      transparent 60%,
+      rgb(65 174 169 / 4%) 100%
+    );
+  }
+}
+
+@utility hud-panel-glow {
+  box-shadow:
+    var(--glow-primary),
+    var(--elevation-2);
+}
+
+@utility hud-corners {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(var(--primary), var(--primary)) 0 0 / 12px 1px no-repeat,
+      linear-gradient(var(--primary), var(--primary)) 0 0 / 1px 12px no-repeat,
+      linear-gradient(var(--primary), var(--primary)) 100% 100% / 12px 1px no-repeat,
+      linear-gradient(var(--primary), var(--primary)) 100% 100% / 1px 12px no-repeat;
+    opacity: 0.35;
+  }
+}
+
+@utility tech-divider {
+  height: 1px;
+  border: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(65 174 169 / 35%) 20%,
+    rgb(166 246 241 / 25%) 50%,
+    rgb(65 174 169 / 35%) 80%,
+    transparent
+  );
+}
+
+@utility scan-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(166 246 241 / 6%);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(65 174 169 / 18%) 45%,
+      rgb(166 246 241 / 22%) 50%,
+      rgb(65 174 169 / 18%) 55%,
+      transparent 100%
+    );
+    animation: scan-line 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes hud-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-hud-in {
+  animation: hud-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility metric-glow {
+  text-shadow: 0 0 24px rgb(65 174 169 / 25%);
+}
+
+/* ---------- futuristic buttons (utility classes) ---------- */
+
+@utility btn-future {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border: 1px solid rgb(166 246 241 / 25%);
+  clip-path: polygon(
+    8px 0,
+    100% 0,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    0 100%,
+    0 8px
+  );
+  box-shadow:
+    0 0 0 1px rgb(65 174 169 / 15%) inset,
+    0 4px 20px rgb(65 174 169 / 20%);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--primary) 88%, var(--accent));
+    box-shadow:
+      0 0 0 1px rgb(166 246 241 / 30%) inset,
+      0 6px 28px rgb(65 174 169 / 28%);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+@utility btn-future-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid rgb(65 174 169 / 35%);
+  clip-path: polygon(
+    6px 0,
+    100% 0,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    0 100%,
+    0 6px
+  );
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgb(65 174 169 / 10%);
+    border-color: rgb(166 246 241 / 40%);
+  }
+}

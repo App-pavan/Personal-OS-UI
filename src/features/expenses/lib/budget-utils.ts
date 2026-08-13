@@ -58,7 +58,7 @@ export function progressBarTone(status: BudgetStatus): string {
     case "WARNING":
       return "bg-primary";
     default:
-      return "bg-[rgb(238_238_238/0.35)]";
+      return "bg-muted/50";
   }
 }
 

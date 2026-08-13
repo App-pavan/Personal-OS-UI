@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 import { AlertTriangle, Inbox, RefreshCw, WifiOff } from "lucide-react";
+import { FuturisticButton, FuturisticEmpty, ScanSkeleton } from "@/components/future";
 import { ApiRequestError } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
 
 /* Shared loading / empty / error / retry surfaces for API-backed screens. */
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-md bg-muted/70", className)} />;
+  return <ScanSkeleton className={cn("h-4", className)} />;
 }
 
 export function RowsSkeleton({ rows = 5 }: { rows?: number }) {
@@ -28,7 +29,7 @@ export function RowsSkeleton({ rows = 5 }: { rows?: number }) {
 export function ErrorState({
   error,
   onRetry,
-  title = "Something didn't load",
+  title = "System connection interrupted",
 }: {
   error: unknown;
   onRetry?: () => void;
@@ -36,25 +37,27 @@ export function ErrorState({
 }) {
   const offline = error instanceof ApiRequestError && error.kind === "network";
   const message =
-    error instanceof ApiRequestError ? error.message : "The backend didn't respond as expected.";
+    error instanceof ApiRequestError ? error.message : "Unable to retrieve data from the backend.";
 
   return (
-    <div className="surface-quiet flex flex-col items-start gap-3 p-6">
-      <span className="grid size-9 place-items-center rounded-lg bg-destructive/10 text-destructive">
-        {offline ? <WifiOff className="size-4" /> : <AlertTriangle className="size-4" />}
-      </span>
-      <div>
-        <p className="text-sm font-medium">{offline ? "Network unavailable" : title}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{message}</p>
+    <div className="hud-panel angular-clip flex flex-col items-start gap-4 p-6">
+      <div className="relative z-[1] flex flex-col items-start gap-4">
+        <span className="grid size-10 place-items-center angular-clip-sm border border-destructive/30 bg-destructive/10 text-accent">
+          {offline ? <WifiOff className="size-4" /> : <AlertTriangle className="size-4" />}
+        </span>
+        <div>
+          <p className="text-xs tracking-[0.14em] text-muted-foreground uppercase">
+            {offline ? "Network offline" : "Connection error"}
+          </p>
+          <p className="mt-1 text-sm font-medium">{offline ? "Network unavailable" : title}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{message}</p>
+        </div>
+        {onRetry ? (
+          <FuturisticButton variant="ghost" onClick={onRetry} className="text-xs">
+            <RefreshCw className="size-3.5" /> Retry connection
+          </FuturisticButton>
+        ) : null}
       </div>
-      {onRetry ? (
-        <button
-          onClick={onRetry}
-          className="mt-1 flex items-center gap-2 rounded-md border border-hairline px-3 py-1.5 text-xs font-medium transition hover:bg-muted/70"
-        >
-          <RefreshCw className="size-3.5" /> Retry
-        </button>
-      ) : null}
     </div>
   );
 }
@@ -71,30 +74,28 @@ export function EmptyState({
   icon?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 py-12">
-      <span className="grid size-9 place-items-center rounded-lg bg-primary-soft text-primary">
-        {icon ?? <Inbox className="size-4" />}
-      </span>
-      <div>
-        <p className="text-sm font-medium">{title}</p>
-        <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">{line}</p>
-      </div>
-      {action}
-    </div>
+    <FuturisticEmpty
+      title={title}
+      line={line}
+      action={action}
+      icon={icon ?? <Inbox className="size-5" />}
+    />
   );
 }
 
 /** Honest placeholder for modules whose backend doesn't exist yet. */
 export function FutureState({ title, line }: { title: string; line: string }) {
   return (
-    <div className="surface-quiet p-5">
-      <div className="flex items-center gap-2">
-        <p className="text-sm font-medium">{title}</p>
-        <span className="rounded-md border border-hairline px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-          Not connected yet
-        </span>
+    <div className="hud-panel angular-clip p-5">
+      <div className="relative z-[1]">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">{title}</p>
+          <span className="border border-hairline px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground angular-clip-sm">
+            Not connected yet
+          </span>
+        </div>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{line}</p>
       </div>
-      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{line}</p>
     </div>
   );
 }

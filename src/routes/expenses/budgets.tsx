@@ -144,7 +144,7 @@ function BudgetsPage() {
       ) : (
         <div className="space-y-6 animate-soft-in">
           {locked ? (
-            <GlassCard className="border-hairline bg-[rgb(238_238_238/0.04)]">
+            <GlassCard className="border-hairline bg-muted/20">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Lock className="size-4 text-muted-foreground" />
                 <span>
@@ -157,7 +157,7 @@ function BudgetsPage() {
 
           {summary.data ? (
             <GlassCard glow className="relative overflow-hidden">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/12 via-transparent to-[rgb(255_95_0/0.04)]" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/12 via-transparent to-accent/5" />
               <div className="relative">
                 <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                   {formatMonthLabel(month).toUpperCase()}
@@ -264,7 +264,7 @@ function BudgetsPage() {
 
 function HeroMetric({ label, value, warn }: { label: string; value: string; warn?: boolean }) {
   return (
-    <div className="rounded-xl border border-hairline bg-[rgb(238_238_238/0.04)] px-4 py-3">
+    <div className="angular-clip-sm border border-hairline bg-muted/20 px-4 py-3">
       <p className="text-[11px] text-muted-foreground">{label}</p>
       <p
         className={cn(
@@ -282,7 +282,7 @@ function AllocationTile({ label, value, warn }: { label: string; value: string; 
   return (
     <div
       className={cn(
-        "rounded-xl border border-hairline bg-[rgb(238_238_238/0.04)] px-4 py-3",
+        "rounded-xl border border-hairline bg-muted/20 px-4 py-3",
         warn && "border-destructive/30 bg-destructive/5",
       )}
     >
@@ -297,11 +297,11 @@ function AllocationTile({ label, value, warn }: { label: string; value: string; 
 function BudgetSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="glass-panel h-48 rounded-2xl bg-[rgb(238_238_238/0.06)]" />
+      <div className="scan-skeleton h-48 angular-clip" />
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="glass-panel h-32 rounded-xl bg-[rgb(238_238_238/0.04)]" />
-        <div className="glass-panel h-32 rounded-xl bg-[rgb(238_238_238/0.04)]" />
-        <div className="glass-panel h-32 rounded-xl bg-[rgb(238_238_238/0.04)]" />
+        <div className="scan-skeleton h-32 angular-clip-sm" />
+        <div className="scan-skeleton h-32 angular-clip-sm" />
+        <div className="scan-skeleton h-32 angular-clip-sm" />
       </div>
     </div>
   );

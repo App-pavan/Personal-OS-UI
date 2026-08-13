@@ -64,10 +64,15 @@ export function SplitEditor({
 
       <div className="space-y-2">
         {rows.map((row) => (
-          <div key={row.id} className="flex items-center justify-between gap-3 rounded-lg border border-hairline/60 px-3 py-2">
+          <div
+            key={row.id}
+            className="flex items-center justify-between gap-3 rounded-lg border border-hairline/60 px-3 py-2"
+          >
             <span className="text-sm">{row.name}</span>
             {mode === "equal" ? (
-              <span className="font-mono text-sm tabular-nums">{formatMoney(row.amountMinor, currency)}</span>
+              <span className="font-mono text-sm tabular-nums">
+                {formatMoney(row.amountMinor, currency)}
+              </span>
             ) : (
               <MoneyInput
                 className="w-28 text-right font-mono"

@@ -1,6 +1,11 @@
 import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { GlassButton } from "./glass";
-import { formatMonthLabel, isMonthEditable, shiftMonth, currentMonthKey } from "../lib/budget-utils";
+import {
+  formatMonthLabel,
+  isMonthEditable,
+  shiftMonth,
+  currentMonthKey,
+} from "../lib/budget-utils";
 import { cn } from "@/lib/utils";
 
 export function BudgetMonthSelector({

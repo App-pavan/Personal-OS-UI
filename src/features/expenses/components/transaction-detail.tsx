@@ -1,10 +1,4 @@
-import {
-  Archive,
-  Ban,
-  CheckCircle2,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import { Archive, Ban, CheckCircle2, RotateCcw, X } from "lucide-react";
 import type { ExpenseCategory, ExpenseMember, ExpenseTransaction } from "@/lib/api/expense-types";
 import { formatMoney } from "@/lib/money";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -63,7 +57,9 @@ export function TransactionDetail({
               {formatMoney(transaction.amountMinor, transaction.currency)}
             </p>
             <p className="mt-1 text-lg">{transaction.merchant}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{formatWhen(transaction.occurredAt)}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {formatWhen(transaction.occurredAt)}
+            </p>
           </div>
           {transaction.categoryName ? (
             <p className="text-sm">

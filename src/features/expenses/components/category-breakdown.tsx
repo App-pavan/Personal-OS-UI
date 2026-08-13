@@ -9,12 +9,12 @@ import {
 import { GlassCard } from "./glass";
 
 const COLORS = [
-  "#FF5F00",
-  "#FF8533",
-  "#FFAA66",
-  "rgba(238,238,238,0.45)",
-  "rgba(238,238,238,0.30)",
-  "#B20600",
+  "#41AEA9",
+  "#A6F6F1",
+  "#E8FFFF",
+  "rgba(232,255,255,0.45)",
+  "rgba(232,255,255,0.30)",
+  "#213E3B",
 ];
 
 export function CategoryBreakdown({

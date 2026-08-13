@@ -15,22 +15,34 @@ export function ModuleHeader({
   title,
   description,
   actions,
+  moduleCode,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
+  moduleCode?: string;
 }) {
   return (
-    <header className="animate-rise grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between">
+    <header className="animate-hud-in grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:flex-wrap sm:justify-between">
       <div className="min-w-0">
-        {eyebrow ? <p className="label-eyebrow">{eyebrow}</p> : null}
+        {eyebrow ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="label-eyebrow">{eyebrow}</p>
+            {moduleCode ? (
+              <span className="text-[10px] tracking-[0.16em] text-primary/70 uppercase">
+                MODULE {moduleCode}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         <h1 className="display-lg mt-2 truncate">{title}</h1>
         {description ? (
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             {description}
           </p>
         ) : null}
+        <hr className="tech-divider mt-4 max-w-md border-0" />
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
     </header>
@@ -210,7 +222,9 @@ export function ListRow({
       {leading ? <div className="shrink-0">{leading}</div> : null}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm">{title}</p>
-        {subtitle ? <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p> : null}
+        {subtitle ? (
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
+        ) : null}
       </div>
       {trailing ? <div className="shrink-0 text-right">{trailing}</div> : null}
     </Comp>
@@ -268,7 +282,13 @@ export function AIBar({
           placeholder={placeholder}
           className="h-9 min-w-0 flex-1 border-transparent bg-transparent px-1 text-sm shadow-none focus-visible:ring-0"
         />
-        <Button type="submit" size="icon" variant="ghost" aria-label="Ask AI" className="size-9 rounded-md">
+        <Button
+          type="submit"
+          size="icon"
+          variant="ghost"
+          aria-label="Ask AI"
+          className="size-9 rounded-md"
+        >
           <ArrowUpRight className="size-4" />
         </Button>
       </form>

@@ -49,7 +49,8 @@ export function ManageTransaction({
 
   const splitAmounts = useMemo(() => {
     if (ownership !== "split" || !selectedMembers.length) return [];
-    if (splitMode === "equal") return splitEqualMinor(transaction.amountMinor, selectedMembers.length);
+    if (splitMode === "equal")
+      return splitEqualMinor(transaction.amountMinor, selectedMembers.length);
     return selectedMembers.map((id) => customAmounts[id] ?? 0);
   }, [ownership, selectedMembers, splitMode, customAmounts, transaction.amountMinor]);
 
@@ -172,7 +173,12 @@ export function ManageTransaction({
             onChange={(e) => setNote(e.target.value)}
           />
           <ReceiptField value={billUrl} onChange={setBillUrl} />
-          <GlassButton type="button" className="w-full" disabled={!canRecord || saving} onClick={record}>
+          <GlassButton
+            type="button"
+            className="w-full"
+            disabled={!canRecord || saving}
+            onClick={record}
+          >
             Record expense
           </GlassButton>
         </section>
