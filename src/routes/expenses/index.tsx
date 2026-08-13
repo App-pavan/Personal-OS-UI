@@ -153,7 +153,11 @@ function ExpenseOverviewPage() {
             </div>
           </div>
 
-          <RecentTransactions transactions={recent} onSelect={setSelectedId} />
+          <RecentTransactions
+            transactions={recent}
+            categories={categories.data ?? []}
+            onSelect={setSelectedId}
+          />
         </div>
       )}
 

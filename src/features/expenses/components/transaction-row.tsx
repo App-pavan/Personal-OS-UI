@@ -1,113 +1,195 @@
 import { ChevronRight } from "lucide-react";
-import type { ExpenseTransaction } from "@/lib/api/expense-types";
+import type {
+  ExpenseCategory,
+  ExpenseTransaction,
+  TransactionPatchInput,
+} from "@/lib/api/expense-types";
 import { IconBadge } from "@/components/future";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { displayCategoryLabel } from "../lib/category-resolve";
 import { getCategoryMeta } from "../lib/category-meta";
-import {
-  formatWhen,
-  ownershipLabel,
-  ownershipTone,
-  sourceLabel,
-  sourceTone,
-  statusLabel,
-  statusTone,
-} from "../lib/labels";
+import { formatWhenDetailed, sourceLabel, sourceTone } from "../lib/labels";
 import { GlassBadge } from "./glass";
+import { OwnershipChip, StatusChip, TransactionCategoryChip } from "./transaction-chips";
+
+type RowProps = {
+  transaction: ExpenseTransaction;
+  categories: ExpenseCategory[];
+  onClick?: () => void;
+  onQuickUpdate?: (input: TransactionPatchInput) => void;
+  onOpenSplit?: () => void;
+};
+
+function useRowHandlers(
+  transaction: ExpenseTransaction,
+  onQuickUpdate?: (input: TransactionPatchInput) => void,
+  onOpenSplit?: () => void,
+) {
+  const canEdit = Boolean(onQuickUpdate);
+
+  const handleOwnership = (ownership: ExpenseTransaction["ownership"]) => {
+    if (!onQuickUpdate) return;
+    if (ownership === "split") {
+      onOpenSplit?.();
+      return;
+    }
+    onQuickUpdate({ ownership });
+  };
+
+  const handleStatus = (status: ExpenseTransaction["status"]) => {
+    if (!onQuickUpdate) return;
+    if (status === "managed") {
+      onQuickUpdate({ markManaged: true, status: "managed" });
+    } else {
+      onQuickUpdate({ status });
+    }
+  };
+
+  return { canEdit, handleOwnership, handleStatus };
+}
 
 export function TransactionRow({
   transaction,
+  categories,
   onClick,
-  compact,
-}: {
-  transaction: ExpenseTransaction;
-  onClick?: () => void;
-  compact?: boolean;
-}) {
-  const tone = statusTone[transaction.status];
-  const cat = getCategoryMeta(transaction.categoryName, transaction.categoryId);
+  onQuickUpdate,
+  onOpenSplit,
+}: RowProps) {
+  const categoryLabel = displayCategoryLabel(transaction, categories);
+  const cat = getCategoryMeta(
+    categoryLabel,
+    transaction.categoryId ?? transaction.suggestedCategoryId,
+  );
+  const { canEdit, handleOwnership, handleStatus } = useRowHandlers(
+    transaction,
+    onQuickUpdate,
+    onOpenSplit,
+  );
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
       className={cn(
-        "group flex w-full items-center gap-3 border-b border-hairline/50 py-3.5 text-left transition hover:bg-primary/6 angular-clip-sm px-1",
-        compact && "py-3",
+        "group grid w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-hairline/40 px-1 py-4 text-left transition last:border-b-0",
+        "hover:bg-primary/6 hover:shadow-[inset_0_0_0_1px_rgb(65_174_169/12%)]",
       )}
     >
       <IconBadge
         icon={cat.icon}
         tone={cat.tone}
         size="sm"
-        className="transition group-hover:tone-orange-glow"
+        className="transition group-hover:tone-primary-glow"
       />
-      <div className="min-w-0 flex-1">
+
+      <div className="min-w-0 space-y-1.5">
         <p className="truncate text-sm font-medium">{transaction.merchant}</p>
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-          {transaction.categoryName ?? "Uncategorised"} · {formatWhen(transaction.occurredAt)}
-        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <TransactionCategoryChip
+            transaction={transaction}
+            categories={categories}
+            onSelect={
+              canEdit
+                ? (categoryId) => onQuickUpdate?.({ categoryId, markManaged: true })
+                : undefined
+            }
+          />
+          <span className="text-[11px] text-muted-foreground">
+            {formatWhenDetailed(transaction.occurredAt)}
+          </span>
+          <GlassBadge tone={sourceTone[transaction.source]} className="text-[10px]">
+            {sourceLabel[transaction.source]}
+          </GlassBadge>
+        </div>
+        {transaction.note ? (
+          <p className="truncate text-[11px] text-muted-foreground/80">{transaction.note}</p>
+        ) : null}
       </div>
-      {!compact && (
-        <GlassBadge tone={tone} dot className="hidden sm:inline-flex">
-          {statusLabel[transaction.status]}
-        </GlassBadge>
-      )}
-      {!compact && (
-        <GlassBadge tone={ownershipTone[transaction.ownership]} className="hidden md:inline-flex">
-          {ownershipLabel[transaction.ownership]}
-        </GlassBadge>
-      )}
-      <span className="font-mono text-sm tabular-nums">
-        {formatMoney(transaction.amountMinor, transaction.currency)}
-      </span>
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
-    </button>
+
+      <div className="flex shrink-0 items-center gap-2">
+        <div className="hidden items-center gap-1.5 sm:flex" onClick={(e) => e.stopPropagation()}>
+          <StatusChip status={transaction.status} onChange={canEdit ? handleStatus : undefined} />
+          <OwnershipChip
+            ownership={transaction.ownership}
+            onChange={canEdit ? handleOwnership : undefined}
+          />
+        </div>
+        <span className="min-w-[72px] text-right font-mono text-sm tabular-nums">
+          {formatMoney(transaction.amountMinor, transaction.currency)}
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
+      </div>
+    </div>
   );
 }
 
 export function TransactionCard({
   transaction,
+  categories,
   onClick,
-}: {
-  transaction: ExpenseTransaction;
-  onClick?: () => void;
-}) {
-  const tone = statusTone[transaction.status];
-  const cat = getCategoryMeta(transaction.categoryName, transaction.categoryId);
+  onQuickUpdate,
+  onOpenSplit,
+}: RowProps) {
+  const categoryLabel = displayCategoryLabel(transaction, categories);
+  const cat = getCategoryMeta(
+    categoryLabel,
+    transaction.categoryId ?? transaction.suggestedCategoryId,
+  );
+  const { canEdit, handleOwnership, handleStatus } = useRowHandlers(
+    transaction,
+    onQuickUpdate,
+    onOpenSplit,
+  );
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="hud-panel w-full angular-clip-sm p-4 text-left transition hover:border-primary/30 card-accent-top"
+      className="hud-panel w-full angular-clip-sm p-3 text-left transition hover:border-primary/30 card-accent-top"
       style={{ ["--card-accent" as string]: cat.color }}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <IconBadge icon={cat.icon} tone={cat.tone} size="sm" />
-          <div>
-            <p className="font-medium">{transaction.merchant}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {transaction.categoryName ?? "Uncategorised"}
-            </p>
+      <div className="flex items-start gap-3">
+        <IconBadge icon={cat.icon} tone={cat.tone} size="sm" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="truncate font-medium">{transaction.merchant}</p>
+            <span className="shrink-0 font-mono text-sm tabular-nums">
+              {formatMoney(transaction.amountMinor, transaction.currency)}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <TransactionCategoryChip
+              transaction={transaction}
+              categories={categories}
+              onSelect={
+                canEdit
+                  ? (categoryId) => onQuickUpdate?.({ categoryId, markManaged: true })
+                  : undefined
+              }
+            />
+            <span className="text-[11px] text-muted-foreground">
+              {formatWhenDetailed(transaction.occurredAt)}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <StatusChip status={transaction.status} onChange={canEdit ? handleStatus : undefined} />
+            <OwnershipChip
+              ownership={transaction.ownership}
+              onChange={canEdit ? handleOwnership : undefined}
+            />
+            <GlassBadge tone={sourceTone[transaction.source]} className="text-[10px]">
+              {sourceLabel[transaction.source]}
+            </GlassBadge>
           </div>
         </div>
-        <p className="font-mono text-sm tabular-nums">
-          {formatMoney(transaction.amountMinor, transaction.currency)}
-        </p>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <GlassBadge tone={tone} dot>
-          {statusLabel[transaction.status]}
-        </GlassBadge>
-        <GlassBadge tone={ownershipTone[transaction.ownership]}>
-          {ownershipLabel[transaction.ownership]}
-        </GlassBadge>
-        <GlassBadge tone={sourceTone[transaction.source]} dot>
-          {sourceLabel[transaction.source]}
-        </GlassBadge>
-        <span className="text-xs text-muted-foreground">{formatWhen(transaction.occurredAt)}</span>
       </div>
     </button>
   );

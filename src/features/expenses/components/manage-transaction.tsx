@@ -43,7 +43,7 @@ export function ManageTransaction({
   const [ownership, setOwnership] = useState<TransactionOwnership>("personal");
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [splitMode, setSplitMode] = useState<SplitMode>("equal");
-  const [customAmounts, setCustomAmounts] = useState<Record<string, number>>({});
+  const [customAmounts, setCustomAmounts] = useState<Record<string, number | null | undefined>>({});
   const [note, setNote] = useState(transaction.note ?? "");
   const [billUrl, setBillUrl] = useState(transaction.billUrl ?? "");
 

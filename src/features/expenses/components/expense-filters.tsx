@@ -89,7 +89,7 @@ function FilterFields({
         label="Status"
         value={query.status?.[0] ?? ""}
         options={[{ value: "", label: "All" }, ...statuses.map((s) => ({ value: s, label: s }))]}
-        onChange={(v) => merge({ status: v ? [v as TransactionStatus] : undefined })}
+        onChange={(v) => onChange(merge({ status: v ? [v as TransactionStatus] : undefined }))}
       />
       <SelectField
         label="Category"
@@ -98,33 +98,35 @@ function FilterFields({
           { value: "", label: "All" },
           ...categories.map((c) => ({ value: c.id, label: c.name })),
         ]}
-        onChange={(v) => merge({ category: v || undefined })}
+        onChange={(v) => onChange(merge({ category: v || undefined }))}
       />
       <Field label="Merchant">
         <GlassInput
           placeholder="Merchant"
           value={query.merchant ?? ""}
-          onChange={(e) => merge({ merchant: e.target.value || undefined })}
+          onChange={(e) => onChange(merge({ merchant: e.target.value || undefined }))}
         />
       </Field>
       <SelectField
         label="Ownership"
         value={query.ownership ?? ""}
         options={[{ value: "", label: "All" }, ...ownerships.map((o) => ({ value: o, label: o }))]}
-        onChange={(v) => merge({ ownership: (v as TransactionOwnership) || undefined })}
+        onChange={(v) => onChange(merge({ ownership: (v as TransactionOwnership) || undefined }))}
       />
       <SelectField
         label="Source"
         value={query.source ?? ""}
         options={[{ value: "", label: "All" }, ...sources.map((s) => ({ value: s, label: s }))]}
-        onChange={(v) => merge({ source: (v as TransactionSource) || undefined })}
+        onChange={(v) => onChange(merge({ source: (v as TransactionSource) || undefined }))}
       />
       <Field label="From">
         <GlassInput
           type="datetime-local"
           value={query.from ? query.from.slice(0, 16) : ""}
           onChange={(e) =>
-            merge({ from: e.target.value ? new Date(e.target.value).toISOString() : undefined })
+            onChange(
+              merge({ from: e.target.value ? new Date(e.target.value).toISOString() : undefined }),
+            )
           }
         />
       </Field>
@@ -133,7 +135,9 @@ function FilterFields({
           type="datetime-local"
           value={query.to ? query.to.slice(0, 16) : ""}
           onChange={(e) =>
-            merge({ to: e.target.value ? new Date(e.target.value).toISOString() : undefined })
+            onChange(
+              merge({ to: e.target.value ? new Date(e.target.value).toISOString() : undefined }),
+            )
           }
         />
       </Field>
@@ -142,7 +146,7 @@ function FilterFields({
           type="number"
           value={query.minAmount ?? ""}
           onChange={(e) =>
-            merge({ minAmount: e.target.value ? Number(e.target.value) : undefined })
+            onChange(merge({ minAmount: e.target.value ? Number(e.target.value) : undefined }))
           }
         />
       </Field>
@@ -151,7 +155,7 @@ function FilterFields({
           type="number"
           value={query.maxAmount ?? ""}
           onChange={(e) =>
-            merge({ maxAmount: e.target.value ? Number(e.target.value) : undefined })
+            onChange(merge({ maxAmount: e.target.value ? Number(e.target.value) : undefined }))
           }
         />
       </Field>
