@@ -25,8 +25,8 @@ export function ExpenseNav() {
             className={cn(
               "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-200",
               active
-                ? "bg-primary/15 font-medium text-primary shadow-soft"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                ? "bg-primary/15 font-medium text-primary shadow-[inset_0_0_0_1px_rgb(255_95_0/20%)]"
+                : "text-muted-foreground hover:bg-[rgb(238_238_238/0.06)] hover:text-foreground",
             )}
           >
             <tab.icon className="size-4" />

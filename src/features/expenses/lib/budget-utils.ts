@@ -41,13 +41,12 @@ export function budgetHealthLabel(status: BudgetStatus): BudgetHealthLabel {
 export function budgetStatusTone(status: BudgetStatus): string {
   switch (status) {
     case "EXCEEDED":
-      return "text-destructive border-destructive/40 bg-destructive/10";
+      return "text-destructive";
     case "NEAR_LIMIT":
-      return "text-warning border-warning/40 bg-warning/10";
     case "WARNING":
-      return "text-accent border-accent/40 bg-accent/10";
+      return "text-primary";
     default:
-      return "text-success border-success/40 bg-success/10";
+      return "text-muted-foreground";
   }
 }
 
@@ -56,10 +55,21 @@ export function progressBarTone(status: BudgetStatus): string {
     case "EXCEEDED":
       return "bg-destructive";
     case "NEAR_LIMIT":
-      return "bg-warning";
     case "WARNING":
-      return "bg-accent";
-    default:
       return "bg-primary";
+    default:
+      return "bg-[rgb(238_238_238/0.35)]";
+  }
+}
+
+export function budgetBadgeTone(status: BudgetStatus): "danger" | "primary" | "muted" {
+  switch (status) {
+    case "EXCEEDED":
+      return "danger";
+    case "NEAR_LIMIT":
+    case "WARNING":
+      return "primary";
+    default:
+      return "muted";
   }
 }

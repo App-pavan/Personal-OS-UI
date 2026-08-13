@@ -6,7 +6,11 @@ import { CategoryBreakdown } from "@/features/expenses/components/category-break
 import { SpendingTrend } from "@/features/expenses/components/spending-trend";
 import { BudgetProgressBar } from "@/features/expenses/components/budget-progress-bar";
 import { GlassCard } from "@/features/expenses/components/glass";
-import { currentMonthKey, formatMonthLabel, shiftMonth } from "@/features/expenses/lib/budget-utils";
+import {
+  currentMonthKey,
+  formatMonthLabel,
+  shiftMonth,
+} from "@/features/expenses/lib/budget-utils";
 import {
   useCategoryInsights,
   useExpenseDashboard,
@@ -31,8 +35,7 @@ function InsightsPage() {
   const merchants = useMerchantInsights(month);
   const members = useMemberInsights(month);
 
-  const loading =
-    dashboard.isLoading || monthly.isLoading || categories.isLoading;
+  const loading = dashboard.isLoading || monthly.isLoading || categories.isLoading;
 
   const breakdownItems = useMemo(
     () =>
@@ -59,10 +62,16 @@ function InsightsPage() {
         description={formatMonthLabel(month)}
         actions={
           <div className="flex gap-1 rounded-lg border border-hairline/60 p-0.5">
-            <MonthChip active={month === currentMonthKey()} onClick={() => setMonth(currentMonthKey())}>
+            <MonthChip
+              active={month === currentMonthKey()}
+              onClick={() => setMonth(currentMonthKey())}
+            >
               This month
             </MonthChip>
-            <MonthChip active={month === shiftMonth(currentMonthKey(), -1)} onClick={() => setMonth(shiftMonth(currentMonthKey(), -1))}>
+            <MonthChip
+              active={month === shiftMonth(currentMonthKey(), -1)}
+              onClick={() => setMonth(shiftMonth(currentMonthKey(), -1))}
+            >
               Last month
             </MonthChip>
           </div>
@@ -72,20 +81,33 @@ function InsightsPage() {
       {loading ? (
         <div className="glass-panel h-48 animate-pulse rounded-2xl bg-muted/30" />
       ) : dashboard.isError ? (
-        <ErrorState error={dashboard.error} onRetry={() => dashboard.refetch()} title="Couldn't load insights" />
+        <ErrorState
+          error={dashboard.error}
+          onRetry={() => dashboard.refetch()}
+          title="Couldn't load insights"
+        />
       ) : !dash ? (
-        <EmptyState title="No insights yet" message="Once you track expenses, your spending picture will appear here." />
+        <EmptyState
+          title="No insights yet"
+          line="Once you track expenses, your spending picture will appear here."
+        />
       ) : (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryTile label="Total spending" value={formatMoney(dash.totalSpentMinor, dash.currency)} />
+            <SummaryTile
+              label="Total spending"
+              value={formatMoney(dash.totalSpentMinor, dash.currency)}
+            />
             <SummaryTile
               label="Avg per transaction"
               value={
                 mon?.averageTransactionMinor
                   ? formatMoney(mon.averageTransactionMinor, dash.currency)
                   : dash.transactionCount
-                    ? formatMoney(Math.round(dash.totalSpentMinor / dash.transactionCount), dash.currency)
+                    ? formatMoney(
+                        Math.round(dash.totalSpentMinor / dash.transactionCount),
+                        dash.currency,
+                      )
                     : "—"
               }
             />
@@ -108,7 +130,8 @@ function InsightsPage() {
             <GlassCard glow>
               <p className="label-eyebrow">Budget usage</p>
               <p className="mt-2 font-mono text-2xl tabular-nums">
-                {formatMoney(dash.totalSpentMinor, dash.currency)} / {formatMoney(dash.budgetTotalMinor, dash.currency)}
+                {formatMoney(dash.totalSpentMinor, dash.currency)} /{" "}
+                {formatMoney(dash.budgetTotalMinor, dash.currency)}
               </p>
               <BudgetProgressBar
                 className="mt-4"
@@ -177,7 +200,9 @@ function InsightsPage() {
                   {merchants.data?.map((m) => (
                     <li key={m.merchant} className="flex justify-between text-sm">
                       <span>{m.merchant}</span>
-                      <span className="font-mono tabular-nums">{formatMoney(m.amountMinor, dash.currency)}</span>
+                      <span className="font-mono tabular-nums">
+                        {formatMoney(m.amountMinor, dash.currency)}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -192,7 +217,9 @@ function InsightsPage() {
                   {members.data?.map((m) => (
                     <li key={m.memberId} className="flex justify-between text-sm">
                       <span>{m.memberName}</span>
-                      <span className="font-mono tabular-nums">{formatMoney(m.amountMinor, dash.currency)}</span>
+                      <span className="font-mono tabular-nums">
+                        {formatMoney(m.amountMinor, dash.currency)}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -205,19 +232,11 @@ function InsightsPage() {
   );
 }
 
-function SummaryTile({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
+function SummaryTile({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <GlassCard>
       <p className="label-eyebrow">{label}</p>
-      <p className={cn("mt-2 font-mono text-xl tabular-nums", accent && "text-warning")}>{value}</p>
+      <p className={cn("mt-2 font-mono text-xl tabular-nums", accent && "text-primary")}>{value}</p>
     </GlassCard>
   );
 }
@@ -237,7 +256,9 @@ function MonthChip({
       onClick={onClick}
       className={cn(
         "rounded-md px-3 py-1.5 text-xs transition",
-        active ? "bg-primary/15 font-medium text-primary" : "text-muted-foreground hover:text-foreground",
+        active
+          ? "bg-primary/15 font-medium text-primary"
+          : "text-muted-foreground hover:text-foreground",
       )}
     >
       {children}

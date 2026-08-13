@@ -7,7 +7,7 @@ import { deriveTrend } from "../lib/analytics";
 import { GlassCard } from "./glass";
 
 const chartConfig = {
-  spend: { label: "Spending", color: "hsl(var(--chart-1))" },
+  spend: { label: "Spending", color: "#FF5F00" },
 };
 
 export function SpendingTrend({
@@ -73,8 +73,8 @@ export function SpendingTrend({
           <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+                <stop offset="0%" stopColor="#FF5F00" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#FF5F00" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -87,15 +87,13 @@ export function SpendingTrend({
             />
             <ChartTooltip
               content={
-                <ChartTooltipContent
-                  formatter={(value) => formatMoney(Number(value), currency)}
-                />
+                <ChartTooltipContent formatter={(value) => formatMoney(Number(value), currency)} />
               }
             />
             <Area
               type="monotone"
               dataKey="amountMinor"
-              stroke="hsl(var(--chart-1))"
+              stroke="#FF5F00"
               fill="url(#spendFill)"
               strokeWidth={2}
               isAnimationActive

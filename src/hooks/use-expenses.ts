@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { formatMonthLabel } from "@/features/expenses/lib/budget-utils";
 import { expenseApi } from "@/lib/api/expense-service";
 import { errorMessage } from "@/lib/api/errors";
+import { toast } from "sonner";
 import type {
   CreateBudgetInput,
   CreateCategoryInput,
@@ -108,9 +109,11 @@ export function useBudgetMutations() {
   return {
     create: useMutation({
       mutationFn: (input: CreateBudgetInput) => expenseApi.budgets.create(input),
-      onSuccess: () => {
+      onSuccess: (_, input) => {
         invalidate();
-        toast.success("Budget saved.");
+        toast.success("Budget created", {
+          description: `${formatMonthLabel(input.month)} budget is now active.`,
+        });
       },
       onError: (error: unknown) =>
         toast.error(errorMessage(error, "The budget could not be saved.")),
@@ -195,8 +198,7 @@ export function useTransactionMutations() {
     qc.invalidateQueries({ queryKey: expenseKeys.insights });
     qc.invalidateQueries({ queryKey: expenseKeys.budgets });
   };
-  const fail = (fallback: string) => (error: unknown) =>
-    toast.error(errorMessage(error, fallback));
+  const fail = (fallback: string) => (error: unknown) => toast.error(errorMessage(error, fallback));
 
   /** Ignore/unignore are safe to flip optimistically; money edits are not. */
   const optimisticStatus = (id: string, status: ExpenseTransaction["status"]) => {
@@ -209,9 +211,7 @@ export function useTransactionMutations() {
         current
           ? {
               ...current,
-              items: current.items.map((item) =>
-                item.id === id ? { ...item, status } : item,
-              ),
+              items: current.items.map((item) => (item.id === id ? { ...item, status } : item)),
             }
           : current,
     );
