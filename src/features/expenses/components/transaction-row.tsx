@@ -11,7 +11,7 @@ import { displayCategoryLabel } from "../lib/category-resolve";
 import { getCategoryMeta } from "../lib/category-meta";
 import { formatWhenDetailed, sourceLabel, sourceTone } from "../lib/labels";
 import { GlassBadge } from "./glass";
-import { OwnershipChip, StatusChip, TransactionCategoryChip } from "./transaction-chips";
+import { OwnershipChip, StatusChip, TransactionCategoryChip, DirectionChip } from "./transaction-chips";
 
 type RowProps = {
   transaction: ExpenseTransaction;
@@ -121,6 +121,7 @@ export function TransactionRow({
             ownership={transaction.ownership}
             onChange={canEdit ? handleOwnership : undefined}
           />
+          <DirectionChip direction={transaction.direction} />
         </div>
         <span className="min-w-[72px] text-right font-mono text-sm tabular-nums">
           {formatMoney(transaction.amountMinor, transaction.currency)}
@@ -185,6 +186,7 @@ export function TransactionCard({
               ownership={transaction.ownership}
               onChange={canEdit ? handleOwnership : undefined}
             />
+            <DirectionChip direction={transaction.direction} />
             <GlassBadge tone={sourceTone[transaction.source]} className="text-[10px]">
               {sourceLabel[transaction.source]}
             </GlassBadge>

@@ -2,6 +2,7 @@ import type {
   TransactionOwnership,
   TransactionSource,
   TransactionStatus,
+  TransactionDirection,
 } from "@/lib/api/expense-types";
 import type { SemanticTone } from "@/lib/design/semantic";
 
@@ -47,6 +48,24 @@ export const sourceTone: Record<TransactionSource, SemanticTone> = {
   ai: "purple",
   ocr: "accent",
   api: "success",
+};
+
+export const directionLabel: Record<TransactionDirection, string> = {
+  debit: "Debit",
+  credit: "Credit",
+  unknown: "Unknown",
+};
+
+export const directionTone: Record<TransactionDirection, SemanticTone> = {
+  debit: "orange",
+  credit: "success",
+  unknown: "muted",
+};
+
+export const directionIcon: Record<TransactionDirection, string> = {
+  debit: "↓",
+  credit: "↑",
+  unknown: "·",
 };
 
 export function formatWhen(iso: string) {

@@ -5,6 +5,7 @@
 
 export type TransactionStatus = "pending" | "managed" | "ignored" | "archived";
 export type TransactionSource = "manual" | "sms" | "bank" | "import" | "ai" | "ocr" | "api";
+export type TransactionDirection = "debit" | "credit" | "unknown";
 export type TransactionOwnership = "personal" | "split";
 export type SplitMode = "equal" | "custom";
 
@@ -46,6 +47,14 @@ export type TransactionSplitShare = {
   amountMinor: number;
 };
 
+export type TransactionSmsSource = {
+  id?: string;
+  rawContent: string;
+  sender?: string;
+  receivedAt?: string;
+  classification?: string;
+};
+
 export type ExpenseTransaction = {
   id: string;
   merchant: string;
@@ -56,6 +65,7 @@ export type ExpenseTransaction = {
   status: TransactionStatus;
   source: TransactionSource;
   ownership: TransactionOwnership;
+  direction?: TransactionDirection;
   categoryId?: string;
   suggestedCategoryId?: string;
   categoryName?: string;
@@ -63,6 +73,7 @@ export type ExpenseTransaction = {
   billUrl?: string;
   splitMode?: SplitMode;
   splits: TransactionSplitShare[];
+  sms?: TransactionSmsSource;
   createdAt?: string;
   updatedAt?: string;
 };

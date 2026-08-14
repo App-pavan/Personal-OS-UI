@@ -8,6 +8,8 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { displayCategoryLabel } from "../lib/category-resolve";
 import { getCategoryMeta } from "../lib/category-meta";
 import {
+  directionIcon,
+  directionLabel,
   formatWhenDetailed,
   ownershipLabel,
   ownershipTone,
@@ -17,7 +19,9 @@ import {
   statusTone,
 } from "../lib/labels";
 import { GlassBadge, GlassButton } from "./glass";
+import { DirectionChip } from "./transaction-chips";
 import { ManageTransaction } from "./manage-transaction";
+import { SourceSmsDisclosure } from "./source-sms-disclosure";
 
 export function TransactionDetail({
   transaction,
@@ -63,7 +67,30 @@ export function TransactionDetail({
         <GlassBadge tone={sourceTone[transaction.source]} dot>
           {sourceLabel[transaction.source]}
         </GlassBadge>
+        <DirectionChip direction={transaction.direction} />
       </div>
+
+      <section className="space-y-2 rounded-lg border border-hairline/50 p-3 text-sm">
+        <p className="label-eyebrow">Financial information</p>
+        <div className="flex justify-between gap-4">
+          <span className="text-muted-foreground">Amount</span>
+          <span className="font-mono tabular-nums">
+            {formatMoney(transaction.amountMinor, transaction.currency)}
+          </span>
+        </div>
+        {transaction.direction && transaction.direction !== "unknown" ? (
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Direction</span>
+            <span>
+              {directionIcon[transaction.direction]} {directionLabel[transaction.direction]}
+            </span>
+          </div>
+        ) : null}
+        <div className="flex justify-between gap-4">
+          <span className="text-muted-foreground">Source</span>
+          <span>{sourceLabel[transaction.source]}</span>
+        </div>
+      </section>
 
       {transaction.status === "pending" ? (
         <ManageTransaction
@@ -114,6 +141,8 @@ export function TransactionDetail({
           )}
         </>
       )}
+
+      <SourceSmsDisclosure transaction={transaction} />
 
       <div className="flex flex-wrap gap-2 border-t border-hairline/60 pt-4">
         {transaction.status === "pending" && (

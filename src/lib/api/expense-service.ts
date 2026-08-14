@@ -17,6 +17,8 @@ import type {
   MonthlySummary,
   TransactionPatchInput,
   TransactionQuery,
+  TransactionDirection,
+  TransactionSmsSource,
   TransactionSource,
   TransactionStatus,
   TransactionWriteInput,
@@ -48,18 +50,43 @@ const pick = (raw: Raw, keys: string[]): unknown => {
   return undefined;
 };
 
-const asRaw = (value: unknown): Raw =>
-  value && typeof value === "object" ? (value as Raw) : {};
+const asRaw = (value: unknown): Raw => (value && typeof value === "object" ? (value as Raw) : {});
 
-const asList = (value: unknown): Raw[] =>
-  Array.isArray(value) ? value.map(asRaw) : [];
+const asList = (value: unknown): Raw[] => (Array.isArray(value) ? value.map(asRaw) : []);
 
 /** Backends differ on `id` vs `_id`; both are accepted. */
 const idOf = (raw: Raw) => str(pick(raw, ["id", "_id", "ID"]));
 
+function normalizeDirection(raw: Raw, detection: Raw): TransactionDirection | undefined {
+  const direct = str(pick(raw, ["direction"]));
+  if (direct === "debit" || direct === "credit" || direct === "unknown") return direct;
+  const fromDetection = str(pick(detection, ["transactionType", "transaction_type"]));
+  if (fromDetection === "debit" || fromDetection === "credit") return fromDetection;
+  return undefined;
+}
+
+function normalizeSms(raw: Raw): TransactionSmsSource | undefined {
+  const content = str(pick(raw, ["rawContent", "raw_content", "body"]));
+  if (!content) return undefined;
+  return {
+    ...(str(pick(raw, ["id", "_id"])) ? { id: str(pick(raw, ["id", "_id"])) } : {}),
+    rawContent: content,
+    ...(str(pick(raw, ["sender"])) ? { sender: str(pick(raw, ["sender"])) } : {}),
+    ...(str(pick(raw, ["receivedAt", "received_at"]))
+      ? { receivedAt: str(pick(raw, ["receivedAt", "received_at"])) }
+      : {}),
+    ...(str(pick(raw, ["classification"]))
+      ? { classification: str(pick(raw, ["classification"])) }
+      : {}),
+  };
+}
+
 function normalizeTransaction(input: unknown): ExpenseTransaction {
   const raw = asRaw(input);
+  const detection = asRaw(pick(raw, ["detection"]));
   const category = asRaw(pick(raw, ["category"]));
+  const sms = normalizeSms(asRaw(pick(raw, ["sms"])));
+  const direction = normalizeDirection(raw, detection);
   const categoryId = str(pick(raw, ["categoryId", "category_id"]) ?? idOf(category));
   const suggestedCategoryId = str(pick(raw, ["suggestedCategoryId", "suggested_category_id"]));
   const categoryName = str(pick(category, ["name", "title"]) ?? pick(raw, ["categoryName"]));
@@ -79,7 +106,9 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
   const ownership = str(pick(raw, ["ownership"]), "personal") === "split" ? "split" : "personal";
   const note = str(pick(raw, ["note", "notes", "description"]));
   const bill = asRaw(pick(raw, ["bill"]));
-  const billUrl = str(pick(bill, ["storageKey", "attachmentId"]) ?? pick(raw, ["billUrl", "receiptUrl"]));
+  const billUrl = str(
+    pick(bill, ["storageKey", "attachmentId"]) ?? pick(raw, ["billUrl", "receiptUrl"]),
+  );
   const splitMode = str(pick(splitObj, ["mode"]) ?? pick(raw, ["splitMode", "split_mode"]));
 
   return {
@@ -88,7 +117,14 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
     amountMinor: num(pick(raw, ["amountMinor", "amount_minor", "amount"])),
     currency: str(pick(raw, ["currency"]), "INR").toUpperCase(),
     occurredAt: str(
-      pick(raw, ["transactionDate", "occurredAt", "occurred_at", "date", "transactedAt", "createdAt"]),
+      pick(raw, [
+        "transactionDate",
+        "occurredAt",
+        "occurred_at",
+        "date",
+        "transactedAt",
+        "createdAt",
+      ]),
       new Date().toISOString(),
     ),
     status,
@@ -109,7 +145,11 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
     ...(categoryName ? { categoryName } : {}),
     ...(note ? { note } : {}),
     ...(billUrl ? { billUrl } : {}),
-    ...(splitMode === "custom" || splitMode === "equal" ? { splitMode: splitMode as "custom" | "equal" } : {}),
+    ...(splitMode === "custom" || splitMode === "equal"
+      ? { splitMode: splitMode as "custom" | "equal" }
+      : {}),
+    ...(direction ? { direction } : {}),
+    ...(sms ? { sms } : {}),
     ...(str(pick(raw, ["createdAt"])) ? { createdAt: str(pick(raw, ["createdAt"])) } : {}),
     ...(str(pick(raw, ["updatedAt"])) ? { updatedAt: str(pick(raw, ["updatedAt"])) } : {}),
   };
@@ -298,7 +338,9 @@ export const expenseApi = {
   insights: {
     async dashboard(month?: string): Promise<ExpenseDashboard> {
       const params = month ? { month } : undefined;
-      return normalizeDashboard((await api.get<unknown>(`${BASE}/insights/dashboard`, params)).data);
+      return normalizeDashboard(
+        (await api.get<unknown>(`${BASE}/insights/dashboard`, params)).data,
+      );
     },
     async monthly(month?: string, currency = "INR"): Promise<MonthlySummary> {
       return normalizeMonthly(
@@ -321,7 +363,11 @@ export const expenseApi = {
         normalizeCategoryAnalytics,
       );
     },
-    async merchants(limit = 8, from?: string, to?: string): Promise<import("./expense-types").MerchantAnalyticsRow[]> {
+    async merchants(
+      limit = 8,
+      from?: string,
+      to?: string,
+    ): Promise<import("./expense-types").MerchantAnalyticsRow[]> {
       const params: Record<string, string | number> = { limit };
       if (from) params.from = from;
       if (to) params.to = to;
@@ -329,7 +375,10 @@ export const expenseApi = {
         normalizeMerchantAnalytics,
       );
     },
-    async members(from?: string, to?: string): Promise<import("./expense-types").MemberAnalyticsRow[]> {
+    async members(
+      from?: string,
+      to?: string,
+    ): Promise<import("./expense-types").MemberAnalyticsRow[]> {
       const params: Record<string, string> = {};
       if (from) params.from = from;
       if (to) params.to = to;
@@ -365,11 +414,16 @@ function normalizeBudgetSummary(raw: Raw): BudgetSummary {
     status: str(pick(raw, ["status"]), "SAFE") as BudgetSummary["status"],
     transactionCount: num(pick(raw, ["transactionCount"])),
     categoryBudgets: cats,
-    editable: pick(raw, ["editable"]) === true || pick(raw, ["editable"]) === false ? Boolean(pick(raw, ["editable"])) : undefined,
+    editable:
+      pick(raw, ["editable"]) === true || pick(raw, ["editable"]) === false
+        ? Boolean(pick(raw, ["editable"]))
+        : undefined,
     locked: pick(raw, ["locked"]) === true,
     allocatedMinor: num(pick(raw, ["allocatedMinor"]), undefined as unknown as number) || undefined,
-    unallocatedMinor: num(pick(raw, ["unallocatedMinor"]), undefined as unknown as number) || undefined,
-    overAllocationMinor: num(pick(raw, ["overAllocationMinor"]), undefined as unknown as number) || undefined,
+    unallocatedMinor:
+      num(pick(raw, ["unallocatedMinor"]), undefined as unknown as number) || undefined,
+    overAllocationMinor:
+      num(pick(raw, ["overAllocationMinor"]), undefined as unknown as number) || undefined,
   };
 }
 
@@ -404,11 +458,19 @@ function normalizeCategoryAnalytics(raw: Raw): CategoryAnalyticsRow {
     amountMinor: num(pick(raw, ["amountMinor"])),
     percentage: Number(pick(raw, ["percentage"]) ?? 0),
     transactionCount: num(pick(raw, ["transactionCount"])),
-    budgetLimitMinor: num(pick(raw, ["budgetLimitMinor"]), undefined as unknown as number) || undefined,
-    budgetSpentMinor: num(pick(raw, ["budgetSpentMinor"]), undefined as unknown as number) || undefined,
-    budgetRemainingMinor: num(pick(raw, ["budgetRemainingMinor"]), undefined as unknown as number) || undefined,
-    budgetUsagePercent: pick(raw, ["budgetUsagePercent"]) != null ? Number(pick(raw, ["budgetUsagePercent"])) : undefined,
-    budgetStatus: pick(raw, ["budgetStatus"]) ? str(pick(raw, ["budgetStatus"])) as CategoryAnalyticsRow["budgetStatus"] : undefined,
+    budgetLimitMinor:
+      num(pick(raw, ["budgetLimitMinor"]), undefined as unknown as number) || undefined,
+    budgetSpentMinor:
+      num(pick(raw, ["budgetSpentMinor"]), undefined as unknown as number) || undefined,
+    budgetRemainingMinor:
+      num(pick(raw, ["budgetRemainingMinor"]), undefined as unknown as number) || undefined,
+    budgetUsagePercent:
+      pick(raw, ["budgetUsagePercent"]) != null
+        ? Number(pick(raw, ["budgetUsagePercent"]))
+        : undefined,
+    budgetStatus: pick(raw, ["budgetStatus"])
+      ? (str(pick(raw, ["budgetStatus"])) as CategoryAnalyticsRow["budgetStatus"])
+      : undefined,
   };
 }
 
@@ -425,10 +487,17 @@ function normalizeDashboard(raw: Raw): ExpenseDashboard {
     month: str(pick(raw, ["month"])),
     currency: str(pick(raw, ["currency"]), "INR"),
     totalSpentMinor: num(pick(raw, ["totalSpentMinor"])),
-    budgetTotalMinor: num(pick(raw, ["budgetTotalMinor"]), undefined as unknown as number) || undefined,
-    budgetRemainingMinor: num(pick(raw, ["budgetRemainingMinor"]), undefined as unknown as number) || undefined,
-    budgetUsagePercent: pick(raw, ["budgetUsagePercent"]) != null ? Number(pick(raw, ["budgetUsagePercent"])) : undefined,
-    budgetStatus: pick(raw, ["budgetStatus"]) ? str(pick(raw, ["budgetStatus"])) as ExpenseDashboard["budgetStatus"] : undefined,
+    budgetTotalMinor:
+      num(pick(raw, ["budgetTotalMinor"]), undefined as unknown as number) || undefined,
+    budgetRemainingMinor:
+      num(pick(raw, ["budgetRemainingMinor"]), undefined as unknown as number) || undefined,
+    budgetUsagePercent:
+      pick(raw, ["budgetUsagePercent"]) != null
+        ? Number(pick(raw, ["budgetUsagePercent"]))
+        : undefined,
+    budgetStatus: pick(raw, ["budgetStatus"])
+      ? (str(pick(raw, ["budgetStatus"])) as ExpenseDashboard["budgetStatus"])
+      : undefined,
     topCategories: asList(pick(raw, ["topCategories"])).map(normalizeCategoryAnalytics),
     recentTransactions: asList(pick(raw, ["recentTransactions"])).map(normalizeTransaction),
     weeklyTrend: asList(pick(raw, ["weeklyTrend"])).map(normalizeDailySpending),
@@ -463,7 +532,9 @@ function normalizeMonthly(raw: Raw): MonthlySummary {
     personalSpentMinor: num(pick(raw, ["personalSpentMinor"])),
     sharedSpentMinor: num(pick(raw, ["sharedSpentMinor"])),
     transactionCount: num(pick(raw, ["transactionCount"])),
-    monthlyBudgetMinor: num(pick(raw, ["monthlyBudgetMinor"]), undefined as unknown as number) || undefined,
-    changePercent: pick(raw, ["changePercent"]) != null ? Number(pick(raw, ["changePercent"])) : null,
+    monthlyBudgetMinor:
+      num(pick(raw, ["monthlyBudgetMinor"]), undefined as unknown as number) || undefined,
+    changePercent:
+      pick(raw, ["changePercent"]) != null ? Number(pick(raw, ["changePercent"])) : null,
   };
 }
