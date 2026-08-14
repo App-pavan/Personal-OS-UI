@@ -7,6 +7,7 @@ import { SemanticBadge } from "@/components/future";
 import type { SemanticTone } from "@/lib/design/semantic";
 import { getCategoryMeta } from "../lib/category-meta";
 import { displayCategoryLabel } from "../lib/category-resolve";
+import { directionIcon, directionLabel, directionTone } from "../lib/labels";
 import { cn } from "@/lib/utils";
 
 export function CategoryChip({
@@ -156,5 +157,27 @@ export function StatusChip({
     <SemanticBadge tone={tones[status]} dot>
       {labels[status]}
     </SemanticBadge>
+  );
+}
+
+export function DirectionChip({
+  direction,
+}: {
+  direction?: import("@/lib/api/expense-types").TransactionDirection;
+}) {
+  if (!direction || direction === "unknown") return null;
+  const tone = directionTone[direction];
+  const label = directionLabel[direction];
+  const icon = directionIcon[direction];
+  return (
+    <span
+      className={cn(
+        "semantic-badge border text-[10px] font-medium",
+        `tone-${tone}-border tone-${tone}-text`,
+      )}
+      aria-label={label}
+    >
+      {icon} {label}
+    </span>
   );
 }
