@@ -9,6 +9,40 @@ export type TransactionDirection = "debit" | "credit" | "unknown";
 export type TransactionOwnership = "personal" | "split";
 export type SplitMode = "equal" | "custom";
 
+export type PaymentMethod =
+  | "cash"
+  | "upi"
+  | "debit_card"
+  | "credit_card"
+  | "bank_transfer"
+  | "wallet"
+  | "other";
+
+export type TransactionKind =
+  | "purchase"
+  | "transfer"
+  | "payment"
+  | "bill_payment"
+  | "other";
+
+export const PAYMENT_METHODS: PaymentMethod[] = [
+  "cash",
+  "upi",
+  "debit_card",
+  "credit_card",
+  "bank_transfer",
+  "wallet",
+  "other",
+];
+
+export const TRANSACTION_KINDS: TransactionKind[] = [
+  "purchase",
+  "transfer",
+  "payment",
+  "bill_payment",
+  "other",
+];
+
 export const TRANSACTION_STATUSES: TransactionStatus[] = [
   "pending",
   "managed",
@@ -59,6 +93,8 @@ export type ExpenseTransaction = {
   id: string;
   merchant: string;
   merchantNormalized?: string;
+  counterparty?: string;
+  displayName?: string;
   amountMinor: number;
   currency: string;
   occurredAt: string;
@@ -66,6 +102,8 @@ export type ExpenseTransaction = {
   source: TransactionSource;
   ownership: TransactionOwnership;
   direction?: TransactionDirection;
+  paymentMethod?: PaymentMethod;
+  transactionKind?: TransactionKind;
   categoryId?: string;
   suggestedCategoryId?: string;
   categoryName?: string;
@@ -76,6 +114,25 @@ export type ExpenseTransaction = {
   sms?: TransactionSmsSource;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type TransactionWriteInput = {
+  merchant?: string;
+  counterparty?: string;
+  amountMinor: number;
+  currency: string;
+  direction?: TransactionDirection;
+  paymentMethod?: PaymentMethod;
+  transactionKind?: TransactionKind;
+  occurredAt?: string;
+  categoryId?: string;
+  ownership?: TransactionOwnership;
+  splitMode?: SplitMode;
+  splits?: { memberId: string; amountMinor: number }[];
+  note?: string;
+  billUrl?: string;
+  status?: TransactionStatus;
+  source?: TransactionSource;
 };
 
 export type TransactionSort =
@@ -101,21 +158,6 @@ export type TransactionQuery = {
   limit?: number;
   sort?: TransactionSort;
   order?: "asc" | "desc";
-};
-
-export type TransactionWriteInput = {
-  merchant: string;
-  amountMinor: number;
-  currency: string;
-  occurredAt?: string;
-  categoryId?: string;
-  ownership?: TransactionOwnership;
-  splitMode?: SplitMode;
-  splits?: { memberId: string; amountMinor: number }[];
-  note?: string;
-  billUrl?: string;
-  status?: TransactionStatus;
-  source?: TransactionSource;
 };
 
 export type TransactionPatchInput = Partial<TransactionWriteInput> & {

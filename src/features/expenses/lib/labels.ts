@@ -68,6 +68,39 @@ export const directionIcon: Record<TransactionDirection, string> = {
   unknown: "·",
 };
 
+export const paymentMethodLabel: Record<import("@/lib/api/expense-types").PaymentMethod, string> = {
+  cash: "Cash",
+  upi: "UPI",
+  debit_card: "Debit card",
+  credit_card: "Credit card",
+  bank_transfer: "Bank transfer",
+  wallet: "Wallet",
+  other: "Other",
+};
+
+export const transactionKindLabel: Record<import("@/lib/api/expense-types").TransactionKind, string> = {
+  purchase: "Purchase",
+  transfer: "Transfer",
+  payment: "Payment",
+  bill_payment: "Bill payment",
+  other: "Other",
+};
+
+export function transactionDisplayName(input: {
+  displayName?: string;
+  counterparty?: string;
+  merchant?: string;
+  note?: string;
+}) {
+  return (
+    input.displayName?.trim() ||
+    input.counterparty?.trim() ||
+    input.merchant?.trim() ||
+    input.note?.trim() ||
+    "Expense"
+  );
+}
+
 export function formatWhen(iso: string) {
   const d = new Date(iso);
   const now = new Date();
