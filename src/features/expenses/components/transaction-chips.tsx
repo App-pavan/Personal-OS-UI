@@ -160,6 +160,26 @@ export function StatusChip({
   );
 }
 
+export function DirectionArrow({
+  direction,
+}: {
+  direction?: import("@/lib/api/expense-types").TransactionDirection;
+}) {
+  if (!direction || direction === "unknown") return null;
+  const isDebit = direction === "debit";
+  return (
+    <span
+      className={cn(
+        "shrink-0 text-[11px] font-semibold leading-none",
+        isDebit ? "text-orange-400/85" : "text-emerald-400/85",
+      )}
+      aria-label={directionLabel[direction]}
+    >
+      {isDebit ? "↑" : "↓"}
+    </span>
+  );
+}
+
 export function DirectionChip({
   direction,
 }: {
