@@ -1,6 +1,12 @@
-import { Archive, Ban, CheckCircle2, RotateCcw, X } from "lucide-react";
+import { Archive, Ban, CheckCircle2, Pencil, RotateCcw, X } from "lucide-react";
+import { useState } from "react";
 import { IconBadge } from "@/components/future";
-import type { ExpenseCategory, ExpenseMember, ExpenseTransaction } from "@/lib/api/expense-types";
+import type {
+  ExpenseCategory,
+  ExpenseMember,
+  ExpenseTransaction,
+  TransactionPatchInput,
+} from "@/lib/api/expense-types";
 import { formatMoney } from "@/lib/money";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -13,12 +19,16 @@ import {
   formatWhenDetailed,
   ownershipLabel,
   ownershipTone,
+  paymentMethodLabel,
   sourceLabel,
   sourceTone,
   statusLabel,
   statusTone,
+  transactionDisplayName,
+  transactionKindLabel,
 } from "../lib/labels";
 import type { ManageStep } from "../lib/manage-steps";
+import { EditManualTransaction } from "./edit-manual-transaction";
 import { GlassBadge, GlassButton } from "./glass";
 import { DirectionChip } from "./transaction-chips";
 import { ManageTransaction } from "./manage-transaction";
@@ -36,6 +46,7 @@ export function TransactionDetail({
   onArchive,
   updating,
   manageStep,
+  onPatch,
 }: {
   transaction: ExpenseTransaction | null;
   categories: ExpenseCategory[];
@@ -43,6 +54,7 @@ export function TransactionDetail({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: Parameters<typeof ManageTransaction>[0]["onSave"];
+  onPatch?: (input: TransactionPatchInput) => void;
   onIgnore: (id: string) => void;
   onUnignore: (id: string) => void;
   onArchive: (id: string) => void;
@@ -50,6 +62,7 @@ export function TransactionDetail({
   manageStep?: ManageStep;
 }) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const [editingManual, setEditingManual] = useState(false);
   if (!transaction) return null;
 
   const cat = getCategoryMeta(
@@ -57,6 +70,8 @@ export function TransactionDetail({
     transaction.categoryId ?? transaction.suggestedCategoryId,
   );
   const CatIcon = cat.icon;
+  const title = transactionDisplayName(transaction);
+  const canEditManual = transaction.source === "manual" && onPatch;
 
   const body = (
     <div className="space-y-6 overflow-y-auto p-4 md:p-6">
@@ -89,11 +104,42 @@ export function TransactionDetail({
             </span>
           </div>
         ) : null}
+        {transaction.transactionKind ? (
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Type</span>
+            <span>{transactionKindLabel[transaction.transactionKind]}</span>
+          </div>
+        ) : null}
+        {transaction.counterparty ? (
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Recipient</span>
+            <span>{transaction.counterparty}</span>
+          </div>
+        ) : null}
+        {transaction.paymentMethod ? (
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Payment method</span>
+            <span>{paymentMethodLabel[transaction.paymentMethod]}</span>
+          </div>
+        ) : null}
         <div className="flex justify-between gap-4">
           <span className="text-muted-foreground">Source</span>
           <span>{sourceLabel[transaction.source]}</span>
         </div>
       </section>
+
+      {canEditManual && editingManual ? (
+        <EditManualTransaction
+          transaction={transaction}
+          categories={categories}
+          members={members}
+          saving={updating}
+          onSave={(input) => {
+            onPatch?.(input);
+            setEditingManual(false);
+          }}
+        />
+      ) : null}
 
       {transaction.status === "pending" ? (
         <ManageTransaction
@@ -112,7 +158,7 @@ export function TransactionDetail({
               <p className="display-lg font-mono tabular-nums">
                 {formatMoney(transaction.amountMinor, transaction.currency)}
               </p>
-              <p className="mt-1 text-lg">{transaction.merchant}</p>
+              <p className="mt-1 text-lg">{title}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {formatWhenDetailed(transaction.occurredAt)}
               </p>
@@ -149,6 +195,11 @@ export function TransactionDetail({
       <SourceSmsDisclosure transaction={transaction} />
 
       <div className="flex flex-wrap gap-2 border-t border-hairline/60 pt-4">
+        {canEditManual && !editingManual ? (
+          <GlassButton variant="ghost" onClick={() => setEditingManual(true)}>
+            <Pencil className="size-4" /> Edit
+          </GlassButton>
+        ) : null}
         {transaction.status === "pending" && (
           <GlassButton variant="ghost" onClick={() => onIgnore(transaction.id)}>
             <Ban className="size-4" /> Ignore

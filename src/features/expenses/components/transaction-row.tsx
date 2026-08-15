@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { displayCategoryLabel } from "../lib/category-resolve";
 import { getCategoryMeta } from "../lib/category-meta";
-import { formatWhenDetailed, sourceLabel, sourceTone } from "../lib/labels";
+import { formatWhenDetailed, paymentMethodLabel, sourceLabel, sourceTone, transactionDisplayName } from "../lib/labels";
 import { GlassBadge } from "./glass";
 import {
   DirectionArrow,
@@ -73,6 +73,7 @@ export function TransactionRow({
     onQuickUpdate,
     onOpenEditor,
   );
+  const title = transactionDisplayName(transaction);
 
   return (
     <div
@@ -100,7 +101,7 @@ export function TransactionRow({
       <div className="min-w-0 space-y-1.5">
         <p className="flex min-w-0 items-center gap-1.5 truncate text-sm font-medium">
           <DirectionArrow direction={transaction.direction} />
-          <span className="truncate">{transaction.merchant}</span>
+          <span className="truncate">{title}</span>
         </p>
         <div className="flex flex-wrap items-center gap-1.5">
           <div onClick={(e) => e.stopPropagation()}>
@@ -116,6 +117,11 @@ export function TransactionRow({
           <GlassBadge tone={sourceTone[transaction.source]} className="text-[10px]">
             {sourceLabel[transaction.source]}
           </GlassBadge>
+          {transaction.paymentMethod ? (
+            <GlassBadge tone="secondary" className="text-[10px]">
+              {paymentMethodLabel[transaction.paymentMethod]}
+            </GlassBadge>
+          ) : null}
         </div>
         {transaction.note ? (
           <p className="truncate text-[11px] text-muted-foreground/80">{transaction.note}</p>
@@ -155,6 +161,7 @@ export function TransactionCard({
     onQuickUpdate,
     onOpenEditor,
   );
+  const title = transactionDisplayName(transaction);
 
   return (
     <button
@@ -169,7 +176,7 @@ export function TransactionCard({
           <div className="flex items-start justify-between gap-2">
             <p className="flex min-w-0 flex-1 items-center gap-1.5 truncate font-medium">
               <DirectionArrow direction={transaction.direction} />
-              <span className="truncate">{transaction.merchant}</span>
+              <span className="truncate">{title}</span>
             </p>
             <span className="shrink-0 font-mono text-sm tabular-nums">
               {formatMoney(transaction.amountMinor, transaction.currency)}
@@ -186,6 +193,14 @@ export function TransactionCard({
             <span className="text-[11px] text-muted-foreground">
               {formatWhenDetailed(transaction.occurredAt)}
             </span>
+            <GlassBadge tone={sourceTone[transaction.source]} className="text-[10px]">
+              {sourceLabel[transaction.source]}
+            </GlassBadge>
+            {transaction.paymentMethod ? (
+              <GlassBadge tone="secondary" className="text-[10px]">
+                {paymentMethodLabel[transaction.paymentMethod]}
+              </GlassBadge>
+            ) : null}
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
             <StatusChip status={transaction.status} onChange={canEdit ? handleStatus : undefined} />
@@ -193,9 +208,6 @@ export function TransactionCard({
               ownership={transaction.ownership}
               onChange={canEdit ? handleOwnership : undefined}
             />
-            <GlassBadge tone={sourceTone[transaction.source]} className="text-[10px]">
-              {sourceLabel[transaction.source]}
-            </GlassBadge>
           </div>
         </div>
       </div>

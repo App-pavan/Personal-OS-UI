@@ -94,8 +94,14 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
   const merchantRaw = str(
     pick(merchantObj, ["normalizedName", "rawName", "name"]) ??
       pick(raw, ["merchant", "merchantName", "payee", "title"]),
-    "Unknown merchant",
+    "",
   );
+  const counterparty = str(pick(raw, ["counterparty"]));
+  const displayName =
+    counterparty ||
+    merchantRaw ||
+    str(pick(raw, ["note", "notes", "description"])) ||
+    "Expense";
   const merchantNormalized = str(pick(merchantObj, ["normalizedName"]));
   const splitObj = asRaw(pick(raw, ["split"]));
   const splitsRaw = asList(
@@ -110,10 +116,31 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
     pick(bill, ["storageKey", "attachmentId"]) ?? pick(raw, ["billUrl", "receiptUrl"]),
   );
   const splitMode = str(pick(splitObj, ["mode"]) ?? pick(raw, ["splitMode", "split_mode"]));
+  const paymentMethodRaw = str(pick(raw, ["paymentMethod", "payment_method"]));
+  const paymentMethod =
+    paymentMethodRaw === "cash" ||
+    paymentMethodRaw === "upi" ||
+    paymentMethodRaw === "debit_card" ||
+    paymentMethodRaw === "credit_card" ||
+    paymentMethodRaw === "bank_transfer" ||
+    paymentMethodRaw === "wallet" ||
+    paymentMethodRaw === "other"
+      ? paymentMethodRaw
+      : undefined;
+  const kindRaw = str(pick(raw, ["transactionKind", "transaction_kind", "transactionType"]));
+  const transactionKind =
+    kindRaw === "purchase" ||
+    kindRaw === "transfer" ||
+    kindRaw === "payment" ||
+    kindRaw === "bill_payment" ||
+    kindRaw === "other"
+      ? kindRaw
+      : undefined;
 
   return {
     id: idOf(raw),
-    merchant: merchantRaw,
+    merchant: merchantRaw || displayName,
+    displayName,
     amountMinor: num(pick(raw, ["amountMinor", "amount_minor", "amount"])),
     currency: str(pick(raw, ["currency"]), "INR").toUpperCase(),
     occurredAt: str(
@@ -140,6 +167,7 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
       };
     }),
     ...(merchantNormalized ? { merchantNormalized } : {}),
+    ...(counterparty ? { counterparty } : {}),
     ...(categoryId ? { categoryId } : {}),
     ...(suggestedCategoryId ? { suggestedCategoryId } : {}),
     ...(categoryName ? { categoryName } : {}),
@@ -149,6 +177,8 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
       ? { splitMode: splitMode as "custom" | "equal" }
       : {}),
     ...(direction ? { direction } : {}),
+    ...(paymentMethod ? { paymentMethod } : {}),
+    ...(transactionKind ? { transactionKind } : {}),
     ...(sms ? { sms } : {}),
     ...(str(pick(raw, ["createdAt"])) ? { createdAt: str(pick(raw, ["createdAt"])) } : {}),
     ...(str(pick(raw, ["updatedAt"])) ? { updatedAt: str(pick(raw, ["updatedAt"])) } : {}),
@@ -218,10 +248,14 @@ function queryParams(query: TransactionQuery): Record<string, string | number | 
 
 function writeBody(input: TransactionWriteInput | TransactionPatchInput): Raw {
   const body: Raw = {};
-  if (input.merchant !== undefined)
-    body["merchant"] = { rawName: input.merchant, normalizedName: input.merchant };
+  if (input.merchant !== undefined && input.merchant.trim())
+    body["merchant"] = { rawName: input.merchant.trim(), normalizedName: input.merchant.trim() };
+  if (input.counterparty !== undefined) body["counterparty"] = input.counterparty.trim();
   if (input.amountMinor !== undefined) body["amountMinor"] = Math.trunc(input.amountMinor);
   if (input.currency !== undefined) body["currency"] = input.currency;
+  if (input.direction !== undefined) body["direction"] = input.direction;
+  if (input.paymentMethod !== undefined) body["paymentMethod"] = input.paymentMethod;
+  if (input.transactionKind !== undefined) body["transactionKind"] = input.transactionKind;
   if (input.occurredAt !== undefined) body["transactionDate"] = input.occurredAt;
   if (input.categoryId !== undefined) body["categoryId"] = input.categoryId;
   if (input.ownership !== undefined) body["ownership"] = input.ownership;
@@ -293,6 +327,12 @@ export const expenseApi = {
   categories: {
     async list(): Promise<ExpenseCategory[]> {
       return listOf((await api.get<unknown>(`${BASE}/categories`)).data).map(normalizeCategory);
+    },
+    async suggest(merchant: string): Promise<string | undefined> {
+      const res = await api.get<unknown>(`${BASE}/categories/suggest`, { merchant });
+      const raw = asRaw(res.data);
+      const categoryId = str(pick(raw, ["categoryId", "category_id"]));
+      return categoryId || undefined;
     },
     async create(input: CreateCategoryInput) {
       return normalizeCategory((await api.post<unknown>(`${BASE}/categories`, input)).data);

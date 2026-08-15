@@ -217,6 +217,7 @@ function TransactionsPage() {
             },
           )
         }
+        onPatch={(input) => selectedId && m.update.mutate({ id: selectedId, input })}
         manageStep={manageStep}
         onIgnore={(id) => m.ignore.mutate(id)}
         onUnignore={(id) => m.unignore.mutate(id)}
