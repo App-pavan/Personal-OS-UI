@@ -7,13 +7,15 @@ import type {
   TransactionOwnership,
 } from "@/lib/api/expense-types";
 import { formatMoney, splitEqualMinor } from "@/lib/money";
+import { cn } from "@/lib/utils";
+import { initialManageStep, type ManageStep } from "../lib/manage-steps";
 import { CategorySelector } from "./category-selector";
 import { GlassButton } from "./glass";
 import { MemberSelector } from "./member-selector";
 import { ReceiptField } from "./receipt-field";
 import { splitIsBalanced, SplitEditor } from "./split-editor";
 
-type Step = "category" | "ownership" | "split" | "note" | "done";
+type Step = ManageStep;
 
 export function ManageTransaction({
   transaction,
@@ -21,6 +23,7 @@ export function ManageTransaction({
   members,
   onSave,
   saving = false,
+  initialStep,
 }: {
   transaction: ExpenseTransaction;
   categories: ExpenseCategory[];
@@ -35,15 +38,28 @@ export function ManageTransaction({
     markManaged: boolean;
   }) => void;
   saving?: boolean;
+  initialStep?: Step;
 }) {
-  const [step, setStep] = useState<Step>("category");
+  const [step, setStep] = useState<Step>(() => initialStep ?? initialManageStep(transaction));
   const [categoryId, setCategoryId] = useState(
     transaction.categoryId ?? transaction.suggestedCategoryId ?? "",
   );
-  const [ownership, setOwnership] = useState<TransactionOwnership>("personal");
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [splitMode, setSplitMode] = useState<SplitMode>("equal");
-  const [customAmounts, setCustomAmounts] = useState<Record<string, number | null | undefined>>({});
+  const [ownership, setOwnership] = useState<TransactionOwnership>(() =>
+    initialStep === "split" ? "split" : transaction.ownership,
+  );
+  const [selectedMembers, setSelectedMembers] = useState<string[]>(() =>
+    transaction.splits.map((s) => s.memberId),
+  );
+  const [splitMode, setSplitMode] = useState<SplitMode>(transaction.splitMode ?? "equal");
+  const [customAmounts, setCustomAmounts] = useState<Record<string, number | null | undefined>>(
+    () => {
+      const amounts: Record<string, number | null | undefined> = {};
+      for (const split of transaction.splits) {
+        amounts[split.memberId] = split.amountMinor;
+      }
+      return amounts;
+    },
+  );
   const [note, setNote] = useState(transaction.note ?? "");
   const [billUrl, setBillUrl] = useState(transaction.billUrl ?? "");
 
@@ -116,12 +132,18 @@ export function ManageTransaction({
                   setOwnership(o);
                   setStep(o === "split" ? "split" : "note");
                 }}
-                className="rounded-xl border border-hairline/70 py-4 text-sm font-medium transition hover:border-primary/30"
+                className={cn(
+                  "rounded-xl border py-4 text-sm font-medium transition hover:border-primary/30",
+                  ownership === o ? "border-primary/50 bg-primary/10" : "border-hairline/70",
+                )}
               >
                 {o === "personal" ? "Just me" : "Split"}
               </button>
             ))}
           </div>
+          <GlassButton type="button" variant="ghost" onClick={() => setStep("category")}>
+            Change category
+          </GlassButton>
         </section>
       )}
 
@@ -160,6 +182,9 @@ export function ManageTransaction({
               </GlassButton>
             </>
           )}
+          <GlassButton type="button" variant="ghost" onClick={() => setStep("ownership")}>
+            Back
+          </GlassButton>
         </section>
       )}
 
