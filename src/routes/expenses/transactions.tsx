@@ -18,6 +18,7 @@ import {
   useTransactions,
 } from "@/hooks/use-expenses";
 import type { TransactionQuery } from "@/lib/api/expense-types";
+import type { ManageStep } from "@/features/expenses/lib/manage-steps";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 type TransactionsSearch = {
@@ -48,7 +49,13 @@ function TransactionsPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounced(search);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [manageStep, setManageStep] = useState<ManageStep | undefined>();
   const [createOpen, setCreateOpen] = useState(false);
+
+  const openEditor = (id: string, step?: ManageStep) => {
+    setSelectedId(id);
+    setManageStep(step);
+  };
 
   useEffect(() => {
     setQuery((q) => ({
@@ -139,9 +146,11 @@ function TransactionsPage() {
                 <TransactionRow
                   transaction={tx}
                   categories={categories.data ?? []}
-                  onClick={() => setSelectedId(tx.id)}
+                  onClick={() => openEditor(tx.id)}
                   onQuickUpdate={(input) => quickUpdate(tx.id, input)}
-                  onOpenSplit={() => setSelectedId(tx.id)}
+                  onOpenEditor={(intent) =>
+                    openEditor(tx.id, intent === "split" ? "split" : undefined)
+                  }
                 />
               </div>
             ))}
@@ -152,9 +161,11 @@ function TransactionsPage() {
                 key={tx.id}
                 transaction={tx}
                 categories={categories.data ?? []}
-                onClick={() => setSelectedId(tx.id)}
+                onClick={() => openEditor(tx.id)}
                 onQuickUpdate={(input) => quickUpdate(tx.id, input)}
-                onOpenSplit={() => setSelectedId(tx.id)}
+                onOpenEditor={(intent) =>
+                  openEditor(tx.id, intent === "split" ? "split" : undefined)
+                }
               />
             ))}
           </div>
@@ -188,11 +199,25 @@ function TransactionsPage() {
         categories={categories.data ?? []}
         members={members.data ?? []}
         open={Boolean(selectedId)}
-        onOpenChange={(open) => !open && setSelectedId(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedId(null);
+            setManageStep(undefined);
+          }
+        }}
         onUpdate={(input) =>
           selectedId &&
-          m.update.mutate({ id: selectedId, input }, { onSuccess: () => setSelectedId(null) })
+          m.update.mutate(
+            { id: selectedId, input },
+            {
+              onSuccess: () => {
+                setSelectedId(null);
+                setManageStep(undefined);
+              },
+            },
+          )
         }
+        manageStep={manageStep}
         onIgnore={(id) => m.ignore.mutate(id)}
         onUnignore={(id) => m.unignore.mutate(id)}
         onArchive={(id) => {
