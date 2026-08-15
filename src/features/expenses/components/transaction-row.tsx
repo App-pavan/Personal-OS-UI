@@ -11,7 +11,7 @@ import { displayCategoryLabel } from "../lib/category-resolve";
 import { getCategoryMeta } from "../lib/category-meta";
 import { formatWhenDetailed, sourceLabel, sourceTone } from "../lib/labels";
 import { GlassBadge } from "./glass";
-import { OwnershipChip, StatusChip, TransactionCategoryChip, DirectionChip } from "./transaction-chips";
+import { OwnershipChip, StatusChip, TransactionCategoryChip, DirectionArrow } from "./transaction-chips";
 
 type RowProps = {
   transaction: ExpenseTransaction;
@@ -91,7 +91,10 @@ export function TransactionRow({
       />
 
       <div className="min-w-0 space-y-1.5">
-        <p className="truncate text-sm font-medium">{transaction.merchant}</p>
+        <p className="flex min-w-0 items-center gap-1.5 truncate text-sm font-medium">
+          <DirectionArrow direction={transaction.direction} />
+          <span className="truncate">{transaction.merchant}</span>
+        </p>
         <div className="flex flex-wrap items-center gap-1.5">
           <TransactionCategoryChip
             transaction={transaction}
@@ -121,7 +124,6 @@ export function TransactionRow({
             ownership={transaction.ownership}
             onChange={canEdit ? handleOwnership : undefined}
           />
-          <DirectionChip direction={transaction.direction} />
         </div>
         <span className="min-w-[72px] text-right font-mono text-sm tabular-nums">
           {formatMoney(transaction.amountMinor, transaction.currency)}
@@ -161,7 +163,10 @@ export function TransactionCard({
         <IconBadge icon={cat.icon} tone={cat.tone} size="sm" />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <p className="truncate font-medium">{transaction.merchant}</p>
+            <p className="flex min-w-0 flex-1 items-center gap-1.5 truncate font-medium">
+              <DirectionArrow direction={transaction.direction} />
+              <span className="truncate">{transaction.merchant}</span>
+            </p>
             <span className="shrink-0 font-mono text-sm tabular-nums">
               {formatMoney(transaction.amountMinor, transaction.currency)}
             </span>
@@ -186,7 +191,6 @@ export function TransactionCard({
               ownership={transaction.ownership}
               onChange={canEdit ? handleOwnership : undefined}
             />
-            <DirectionChip direction={transaction.direction} />
             <GlassBadge tone={sourceTone[transaction.source]} className="text-[10px]">
               {sourceLabel[transaction.source]}
             </GlassBadge>
