@@ -8,6 +8,10 @@ import { SpendingSummary } from "@/features/expenses/components/spending-summary
 import { SpendingTrend } from "@/features/expenses/components/spending-trend";
 import { TransactionDetail } from "@/features/expenses/components/transaction-detail";
 import { monthRange, periodLabel, type PeriodKey } from "@/features/expenses/lib/analytics";
+import {
+  collapseSmsDuplicates,
+  resolveCanonicalTransactionId,
+} from "@/features/expenses/lib/sms-duplicate-matcher";
 import { GlassButton } from "@/features/expenses/components/glass";
 import {
   useCategories,
@@ -16,6 +20,10 @@ import {
   useTransaction,
   useTransactionMutations,
 } from "@/hooks/use-expenses";
+import {
+  useSmsDuplicateCleanup,
+  useSmsDuplicateCleanupPool,
+} from "@/hooks/use-sms-duplicate-cleanup";
 
 export const Route = createFileRoute("/expenses/")({
   head: () => ({ meta: [{ title: "Expenses — Personal OS" }] }),
@@ -29,13 +37,24 @@ function ExpenseOverviewPage() {
   const monthKey = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, "0")}`;
 
   const dashboard = useExpenseDashboard(monthKey);
+  const cleanupQuery = useSmsDuplicateCleanupPool();
   const categories = useCategories();
   const members = useMembers();
   const detail = useTransaction(selectedId);
   const m = useTransactionMutations();
 
+  const cleanupPool = cleanupQuery.data?.items ?? [];
+  useSmsDuplicateCleanup(cleanupPool);
+
   const dash = dashboard.data;
-  const recent = dash?.recentTransactions ?? [];
+  const recent = useMemo(
+    () => collapseSmsDuplicates(dash?.recentTransactions ?? []),
+    [dash?.recentTransactions],
+  );
+  const pendingCount = useMemo(
+    () => collapseSmsDuplicates(cleanupPool).filter((tx) => tx.status === "pending").length,
+    [cleanupPool],
+  );
   const breakdownItems = useMemo(
     () =>
       (dash?.topCategories ?? []).map((c) => ({
@@ -96,7 +115,7 @@ function ExpenseOverviewPage() {
             transactionCount={0}
             personalCount={0}
             sharedCount={0}
-            pendingCount={0}
+            pendingCount={pendingCount}
             delta={null}
           />
           <div className="grid gap-4 xl:grid-cols-2">
@@ -132,7 +151,7 @@ function ExpenseOverviewPage() {
             transactionCount={dash.transactionCount}
             personalCount={0}
             sharedCount={0}
-            pendingCount={0}
+            pendingCount={pendingCount}
             delta={null}
             budgetTotalMinor={dash.budgetTotalMinor}
             budgetRemainingMinor={dash.budgetRemainingMinor}
@@ -156,7 +175,9 @@ function ExpenseOverviewPage() {
           <RecentTransactions
             transactions={recent}
             categories={categories.data ?? []}
-            onSelect={setSelectedId}
+            onSelect={(id) =>
+              setSelectedId(resolveCanonicalTransactionId(id, cleanupPool))
+            }
           />
         </div>
       )}

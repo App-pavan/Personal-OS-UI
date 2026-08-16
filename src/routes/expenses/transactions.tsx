@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SectionHeader } from "@/components/future";
 import { EmptyState, ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { CreateTransactionFlow } from "@/features/expenses/components/create-transaction";
@@ -8,6 +8,10 @@ import { ExpenseFilters } from "@/features/expenses/components/expense-filters";
 import { GlassButton, GlassInput } from "@/features/expenses/components/glass";
 import { TransactionCard, TransactionRow } from "@/features/expenses/components/transaction-row";
 import { TransactionDetail } from "@/features/expenses/components/transaction-detail";
+import {
+  collapseSmsDuplicates,
+  resolveCanonicalTransactionId,
+} from "@/features/expenses/lib/sms-duplicate-matcher";
 import {
   useCategories,
   useDebounced,
@@ -17,6 +21,10 @@ import {
   useTransactionMutations,
   useTransactions,
 } from "@/hooks/use-expenses";
+import {
+  useSmsDuplicateCleanup,
+  useSmsDuplicateCleanupPool,
+} from "@/hooks/use-sms-duplicate-cleanup";
 import type { TransactionQuery } from "@/lib/api/expense-types";
 import type { ManageStep } from "@/features/expenses/lib/manage-steps";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -52,11 +60,6 @@ function TransactionsPage() {
   const [manageStep, setManageStep] = useState<ManageStep | undefined>();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const openEditor = (id: string, step?: ManageStep) => {
-    setSelectedId(id);
-    setManageStep(step);
-  };
-
   useEffect(() => {
     setQuery((q) => ({
       ...q,
@@ -76,15 +79,28 @@ function TransactionsPage() {
   }, [debouncedSearch]);
 
   const list = useTransactions(query);
+  const cleanupQuery = useSmsDuplicateCleanupPool();
   const categories = useCategories();
   const members = useMembers();
   const detail = useTransaction(selectedId);
   const m = useTransactionMutations();
   const memberM = useMemberMutations();
 
-  const items = list.data?.items ?? [];
+  const cleanupPool = cleanupQuery.data?.items ?? [];
+  useSmsDuplicateCleanup(cleanupPool);
+
+  const items = useMemo(
+    () => collapseSmsDuplicates(list.data?.items ?? []),
+    [list.data?.items],
+  );
   const meta = list.data?.meta;
   const totalPages = meta?.totalPages ?? 1;
+
+  const openEditor = (id: string, step?: ManageStep) => {
+    const canonicalId = resolveCanonicalTransactionId(id, cleanupPool);
+    setSelectedId(canonicalId);
+    setManageStep(step);
+  };
 
   const quickUpdate = (id: string, input: Parameters<typeof m.update.mutate>[0]["input"]) => {
     m.update.mutate({ id, input });
