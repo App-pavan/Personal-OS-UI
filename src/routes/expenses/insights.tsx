@@ -22,10 +22,13 @@ import {
   shiftMonth,
 } from "@/features/expenses/lib/budget-utils";
 import { collapseSmsDuplicates } from "@/features/expenses/lib/sms-duplicate-matcher";
+import { enrichMemberAnalytics } from "@/features/expenses/lib/insights-utils";
+import { transactionDisplayName } from "@/features/expenses/lib/labels";
 import {
   useCategoryInsights,
   useExpenseDashboard,
   useMemberInsights,
+  useMembers,
   useMerchantInsights,
   useMonthlyInsights,
 } from "@/hooks/use-expenses";
@@ -50,6 +53,7 @@ function InsightsPage() {
   const categories = useCategoryInsights(month);
   const merchants = useMerchantInsights(month);
   const members = useMemberInsights(month);
+  const memberDirectory = useMembers();
 
   const loading = dashboard.isLoading || monthly.isLoading || categories.isLoading;
 
@@ -83,6 +87,10 @@ function InsightsPage() {
           collapsedRecent[0]!,
         )
       : undefined;
+  const memberRows = useMemo(
+    () => enrichMemberAnalytics(members.data ?? [], memberDirectory.data ?? []),
+    [members.data, memberDirectory.data],
+  );
 
   return (
     <>
@@ -199,7 +207,7 @@ function InsightsPage() {
               </GlassCard>
               <GlassCard accent="secondary">
                 <p className="label-eyebrow mb-3">Shared by member</p>
-                <MemberBarChart items={members.data ?? []} currency={dash.currency} />
+                <MemberBarChart items={memberRows} currency={dash.currency} />
               </GlassCard>
             </div>
           </InsightSection>
@@ -292,7 +300,7 @@ function InsightsPage() {
                 <p className="label-eyebrow">Largest transaction</p>
                 {largest ? (
                   <>
-                    <p className="mt-2 font-medium">{largest.merchant}</p>
+                    <p className="mt-2 font-medium">{transactionDisplayName(largest)}</p>
                     <p className="mt-1 font-mono text-lg tabular-nums">
                       {formatMoney(largest.amountMinor, dash.currency)}
                     </p>
@@ -316,11 +324,11 @@ function InsightsPage() {
               </GlassCard>
               <GlassCard>
                 <p className="label-eyebrow">Top spending member</p>
-                {members.data?.[0] ? (
+                {memberRows[0] ? (
                   <>
-                    <p className="mt-2 font-medium">{members.data[0].memberName}</p>
+                    <p className="mt-2 font-medium">{memberRows[0].memberName}</p>
                     <p className="mt-1 font-mono tabular-nums">
-                      {formatMoney(members.data[0].amountMinor, dash.currency)}
+                      {formatMoney(memberRows[0].amountMinor, dash.currency)}
                     </p>
                   </>
                 ) : (

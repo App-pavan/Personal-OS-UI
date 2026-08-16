@@ -167,6 +167,15 @@ export const insightTone: Record<InsightKind, SemanticTone> = {
   neutral: "primary",
 };
 
+/** Chart fill colors — hex values because Recharts SVG fills don't always resolve CSS vars. */
+export const insightChartColors = {
+  member: "#9b7cff",
+  merchant: "#4d8dff",
+  weekly: "#5ce1e6",
+  personal: "#41aea9",
+  shared: "#4d8dff",
+} as const;
+
 /** Chart color tokens (CSS var references) */
 export const chartColors = {
   primary: "var(--chart-line-primary)",

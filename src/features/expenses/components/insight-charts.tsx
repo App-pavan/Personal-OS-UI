@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   Pie,
   PieChart,
@@ -15,12 +16,37 @@ import type {
   MerchantAnalyticsRow,
   MemberAnalyticsRow,
 } from "@/lib/api/expense-types";
+import { insightChartColors } from "@/lib/design/semantic";
 import { getCategoryColor } from "../lib/category-meta";
+import { truncateLabel } from "../lib/insights-utils";
 import { formatMoney } from "@/lib/money";
 import { GlassCard } from "./glass";
 
 function ChartEmpty({ message }: { message: string }) {
   return <p className="py-10 text-center text-sm text-muted-foreground">{message}</p>;
+}
+
+function ChartTooltip({
+  active,
+  payload,
+  currency,
+  labelKey = "name",
+}: {
+  active?: boolean;
+  payload?: { payload?: Record<string, unknown>; value?: number }[];
+  currency: string;
+  labelKey?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0]?.payload ?? {};
+  const label = String(row[labelKey] ?? row.name ?? "");
+  const amount = Number(payload[0]?.value ?? row.amount ?? 0);
+  return (
+    <div className="rounded-md border border-hairline/60 bg-popover px-3 py-2 text-xs shadow-md">
+      <p className="font-medium">{label}</p>
+      <p className="mt-1 font-mono tabular-nums">{formatMoney(amount, currency)}</p>
+    </div>
+  );
 }
 
 export function CategoryBarChart({
@@ -42,11 +68,18 @@ export function CategoryBarChart({
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 8 }}>
+    <ResponsiveContainer width="100%" height={Math.max(240, data.length * 28)}>
+      <BarChart data={data} layout="vertical" margin={{ left: 4, right: 12, top: 4, bottom: 4 }}>
+        <CartesianGrid stroke="rgb(65 174 169 / 8%)" strokeDasharray="3 3" horizontal={false} />
         <XAxis type="number" hide />
-        <YAxis type="category" dataKey="name" width={88} tick={{ fontSize: 11 }} />
-        <Tooltip formatter={(v) => formatMoney(Number(v), currency)} />
+        <YAxis
+          type="category"
+          dataKey="name"
+          width={112}
+          tick={{ fontSize: 11, fill: "currentColor" }}
+          tickFormatter={(value) => truncateLabel(String(value), 16)}
+        />
+        <Tooltip content={<ChartTooltip currency={currency} labelKey="name" />} />
         <Bar dataKey="amount" radius={4} onClick={(d) => onCategoryClick?.(d.id)}>
           {data.map((entry) => (
             <Cell key={entry.id} fill={entry.color} className="cursor-pointer" />
@@ -69,21 +102,28 @@ export function MerchantBarChart({
   if (!items.length) return <ChartEmpty message="No merchant data for this period." />;
 
   const data = items.slice(0, 10).map((m) => ({
-    name: m.merchant,
+    name: m.merchant.trim() || "Unknown",
     amount: m.amountMinor,
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 8 }}>
+    <ResponsiveContainer width="100%" height={Math.max(260, data.length * 30)}>
+      <BarChart data={data} layout="vertical" margin={{ left: 4, right: 12, top: 4, bottom: 4 }}>
+        <CartesianGrid stroke="rgb(65 174 169 / 8%)" strokeDasharray="3 3" horizontal={false} />
         <XAxis type="number" hide />
-        <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 11 }} />
-        <Tooltip formatter={(v) => formatMoney(Number(v), currency)} />
+        <YAxis
+          type="category"
+          dataKey="name"
+          width={148}
+          tick={{ fontSize: 11, fill: "currentColor" }}
+          tickFormatter={(value) => truncateLabel(String(value), 22)}
+        />
+        <Tooltip content={<ChartTooltip currency={currency} labelKey="name" />} />
         <Bar
           dataKey="amount"
-          fill="var(--semantic-info)"
+          fill={insightChartColors.merchant}
           radius={4}
-          onClick={(d) => onMerchantClick?.(d.name)}
+          onClick={(d) => onMerchantClick?.(String(d.name))}
           className="cursor-pointer"
         />
       </BarChart>
@@ -105,17 +145,30 @@ export function MemberBarChart({
   }
 
   const data = items.map((m) => ({
-    name: m.memberName,
+    name: m.memberName.trim() || "Unknown member",
     amount: m.amountMinor,
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={data}>
-        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-        <YAxis tickFormatter={(v) => formatMoney(v, currency, { compact: true })} width={56} />
-        <Tooltip formatter={(v) => formatMoney(Number(v), currency)} />
-        <Bar dataKey="amount" fill="var(--semantic-secondary)" radius={4} />
+    <ResponsiveContainer width="100%" height={260}>
+      <BarChart data={data} margin={{ left: 4, right: 8, top: 8, bottom: 28 }}>
+        <CartesianGrid stroke="rgb(65 174 169 / 8%)" strokeDasharray="3 3" vertical={false} />
+        <XAxis
+          dataKey="name"
+          tick={{ fontSize: 11, fill: "currentColor" }}
+          interval={0}
+          angle={-22}
+          textAnchor="end"
+          height={56}
+          tickFormatter={(value) => truncateLabel(String(value), 14)}
+        />
+        <YAxis
+          tickFormatter={(v) => formatMoney(v, currency, { compact: true })}
+          width={56}
+          tick={{ fontSize: 11, fill: "currentColor" }}
+        />
+        <Tooltip content={<ChartTooltip currency={currency} labelKey="name" />} />
+        <Bar dataKey="amount" fill={insightChartColors.member} radius={4} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -134,8 +187,8 @@ export function PersonalSharedDonut({
   if (!total) return <ChartEmpty message="No personal or shared spending yet." />;
 
   const data = [
-    { name: "Personal", value: personalMinor, color: "var(--semantic-primary)" },
-    { name: "Shared", value: sharedMinor, color: "var(--semantic-info)" },
+    { name: "Personal", value: personalMinor, color: insightChartColors.personal },
+    { name: "Shared", value: sharedMinor, color: insightChartColors.shared },
   ];
 
   return (
@@ -181,12 +234,17 @@ export function WeeklyPatternChart({
   }
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={byWeekday}>
-        <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-        <YAxis tickFormatter={(v) => formatMoney(v, currency, { compact: true })} width={56} />
-        <Tooltip formatter={(v) => formatMoney(Number(v), currency)} />
-        <Bar dataKey="amount" fill="var(--semantic-aqua)" radius={4} />
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart data={byWeekday} margin={{ left: 4, right: 8, top: 8, bottom: 4 }}>
+        <CartesianGrid stroke="rgb(65 174 169 / 8%)" strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey="day" tick={{ fontSize: 11, fill: "currentColor" }} />
+        <YAxis
+          tickFormatter={(v) => formatMoney(v, currency, { compact: true })}
+          width={56}
+          tick={{ fontSize: 11, fill: "currentColor" }}
+        />
+        <Tooltip content={<ChartTooltip currency={currency} labelKey="day" />} />
+        <Bar dataKey="amount" fill={insightChartColors.weekly} radius={4} />
       </BarChart>
     </ResponsiveContainer>
   );
