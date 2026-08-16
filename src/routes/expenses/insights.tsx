@@ -21,6 +21,7 @@ import {
   formatMonthLabel,
   shiftMonth,
 } from "@/features/expenses/lib/budget-utils";
+import { collapseSmsDuplicates } from "@/features/expenses/lib/sms-duplicate-matcher";
 import {
   useCategoryInsights,
   useExpenseDashboard,
@@ -28,6 +29,10 @@ import {
   useMerchantInsights,
   useMonthlyInsights,
 } from "@/hooks/use-expenses";
+import {
+  useSmsDuplicateCleanup,
+  useSmsDuplicateCleanupPool,
+} from "@/hooks/use-sms-duplicate-cleanup";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +45,7 @@ function InsightsPage() {
   const [month, setMonth] = useState(currentMonthKey());
 
   const dashboard = useExpenseDashboard(month);
+  const cleanupQuery = useSmsDuplicateCleanupPool();
   const monthly = useMonthlyInsights(month);
   const categories = useCategoryInsights(month);
   const merchants = useMerchantInsights(month);
@@ -62,12 +68,19 @@ function InsightsPage() {
   );
 
   const dash = dashboard.data;
+  const cleanupPool = cleanupQuery.data?.items ?? [];
+  useSmsDuplicateCleanup(cleanupPool);
+
   const mon = monthly.data;
+  const collapsedRecent = useMemo(
+    () => collapseSmsDuplicates(dash?.recentTransactions ?? []),
+    [dash?.recentTransactions],
+  );
   const largest =
-    dash?.recentTransactions && dash.recentTransactions.length > 0
-      ? dash.recentTransactions.reduce(
+    collapsedRecent.length > 0
+      ? collapsedRecent.reduce(
           (max, tx) => (tx.amountMinor > max.amountMinor ? tx : max),
-          dash.recentTransactions[0]!,
+          collapsedRecent[0]!,
         )
       : undefined;
 

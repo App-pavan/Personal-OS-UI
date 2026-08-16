@@ -1,5 +1,6 @@
 import type { ExpenseTransaction } from "@/lib/api/expense-types";
 import { deltaPercent, sumMinor } from "@/lib/money";
+import { collapseSmsDuplicates } from "./sms-duplicate-matcher";
 
 export type PeriodKey = "this_month" | "last_month" | "custom";
 
@@ -36,14 +37,15 @@ export function inRange(iso: string, from: Date, to: Date) {
 
 /** Derive stats from loaded transactions only — not a global total. */
 export function deriveSummary(transactions: ExpenseTransaction[], from: Date, to: Date) {
-  const active = transactions.filter(
+  const collapsed = collapseSmsDuplicates(transactions);
+  const active = collapsed.filter(
     (tx) => tx.status !== "archived" && tx.status !== "ignored" && inRange(tx.occurredAt, from, to),
   );
   const currency = active[0]?.currency ?? "INR";
   const totalMinor = sumMinor(active.map((tx) => tx.amountMinor));
   const personal = active.filter((tx) => tx.ownership === "personal").length;
   const shared = active.filter((tx) => tx.ownership === "split").length;
-  const pending = transactions.filter((tx) => tx.status === "pending").length;
+  const pending = collapsed.filter((tx) => tx.status === "pending").length;
   return { totalMinor, currency, count: active.length, personal, shared, pending, partial: true };
 }
 
@@ -67,7 +69,7 @@ export function deriveTrend(
     };
   });
 
-  for (const tx of transactions) {
+  for (const tx of collapseSmsDuplicates(transactions)) {
     if (tx.status === "archived" || tx.status === "ignored") continue;
     const d = new Date(tx.occurredAt);
     if (d < start || d > end) continue;
@@ -85,7 +87,7 @@ export function deriveCategoryBreakdown(
   categoryNames: Map<string, string>,
 ) {
   const map = new Map<string, { id: string; name: string; amountMinor: number }>();
-  for (const tx of transactions) {
+  for (const tx of collapseSmsDuplicates(transactions)) {
     if (tx.status === "archived" || tx.status === "ignored") continue;
     if (!inRange(tx.occurredAt, from, to)) continue;
     const id = tx.categoryId ?? "uncategorised";
@@ -112,7 +114,7 @@ export function comparePeriods(
   prevTo.setTime(from.getTime() - 1);
 
   const curTotal = sumMinor(
-    current
+    collapseSmsDuplicates(current)
       .filter(
         (tx) =>
           tx.status !== "archived" && tx.status !== "ignored" && inRange(tx.occurredAt, from, to),
@@ -120,7 +122,7 @@ export function comparePeriods(
       .map((tx) => tx.amountMinor),
   );
   const prevTotal = sumMinor(
-    previous
+    collapseSmsDuplicates(previous)
       .filter(
         (tx) =>
           tx.status !== "archived" &&
