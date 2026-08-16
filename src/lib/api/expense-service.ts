@@ -50,6 +50,35 @@ const pick = (raw: Raw, keys: string[]): unknown => {
   return undefined;
 };
 
+/** Pull a display string from a plain string or nested object field. */
+function labelFrom(value: unknown, objectKeys: string[] = []): string {
+  if (typeof value === "string") return value.trim();
+  if (value == null) return "";
+  if (typeof value === "object") {
+    const nested = value as Raw;
+    for (const key of objectKeys) {
+      const part = nested[key];
+      if (typeof part === "string" && part.trim()) return part.trim();
+    }
+  }
+  return "";
+}
+
+function merchantLabel(raw: Raw): string {
+  const merchantField = pick(raw, ["merchant"]);
+  const merchantObj = asRaw(merchantField);
+  return (
+    labelFrom(merchantObj, ["normalizedName", "rawName", "name"]) ||
+    labelFrom(merchantField) ||
+    str(pick(raw, ["merchantName", "payee", "title"]), "")
+  );
+}
+
+function memberLabel(raw: Raw): string {
+  const memberObj = asRaw(pick(raw, ["member"]));
+  return labelFrom(pick(raw, ["memberName"])) || labelFrom(memberObj, ["name"]);
+}
+
 const asRaw = (value: unknown): Raw => (value && typeof value === "object" ? (value as Raw) : {});
 
 const asList = (value: unknown): Raw[] => (Array.isArray(value) ? value.map(asRaw) : []);
@@ -91,11 +120,7 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
   const suggestedCategoryId = str(pick(raw, ["suggestedCategoryId", "suggested_category_id"]));
   const categoryName = str(pick(category, ["name", "title"]) ?? pick(raw, ["categoryName"]));
   const merchantObj = asRaw(pick(raw, ["merchant"]));
-  const merchantRaw = str(
-    pick(merchantObj, ["normalizedName", "rawName", "name"]) ??
-      pick(raw, ["merchant", "merchantName", "payee", "title"]),
-    "",
-  );
+  const merchantRaw = merchantLabel(raw);
   const counterparty = str(pick(raw, ["counterparty"]));
   const displayName =
     counterparty ||
@@ -548,7 +573,7 @@ function normalizeDashboard(raw: Raw): ExpenseDashboard {
 
 function normalizeMerchantAnalytics(raw: Raw): import("./expense-types").MerchantAnalyticsRow {
   return {
-    merchant: str(pick(raw, ["merchant"]), "Unknown"),
+    merchant: merchantLabel(raw) || "Unknown",
     amountMinor: num(pick(raw, ["amountMinor"])),
     transactionCount: num(pick(raw, ["transactionCount"])),
     averageMinor: num(pick(raw, ["averageMinor"]), undefined as unknown as number) || undefined,
@@ -556,9 +581,11 @@ function normalizeMerchantAnalytics(raw: Raw): import("./expense-types").Merchan
 }
 
 function normalizeMemberAnalytics(raw: Raw): import("./expense-types").MemberAnalyticsRow {
+  const memberId = str(pick(raw, ["memberId", "member_id"]) ?? idOf(asRaw(pick(raw, ["member"]))));
+  const resolvedName = memberLabel(raw);
   return {
-    memberId: str(pick(raw, ["memberId"])),
-    memberName: str(pick(raw, ["memberName"]), "Member"),
+    memberId,
+    memberName: resolvedName || "Member",
     amountMinor: num(pick(raw, ["amountMinor"])),
     transactionCount: num(pick(raw, ["transactionCount"])),
   };
