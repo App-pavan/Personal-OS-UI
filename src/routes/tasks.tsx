@@ -1,275 +1,251 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { LayoutGrid, ListTree, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
-import { toast } from "sonner";
-import { TaskBoardColumn, TaskTimelineSection } from "@/features/tasks/components/task-board-column";
-import { TaskCard } from "@/features/tasks/components/task-card";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useMemo, useState } from "react";
+import { List, Rows3 } from "lucide-react";
+import { SectionHeader } from "@/components/future";
+import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useTask, useTaskMutations, useTasks } from "@/hooks/use-tasks";
+import { TaskExecutionTimeline } from "@/features/tasks/components/task-execution-timeline";
+import { TaskListView } from "@/features/tasks/components/task-list-view";
+import {
+  TaskDateNavigator,
+  TaskQuickCreate,
+  TaskSummaryBar,
+} from "@/features/tasks/components/task-controls";
 import { TaskDetailPane } from "@/features/tasks/components/task-detail-pane";
 import {
-  boardColumns,
-  dateGroupLabels,
-  groupByBoard,
-  groupByDate,
-  isOverdue,
-} from "@/features/tasks/lib/task-buckets";
-import { EmptyState, ErrorState, RowsSkeleton, Skeleton } from "@/components/os/state-views";
-import { useTask, useTaskMutations, useTasks } from "@/hooks/use-tasks";
-import type { TaskListQuery, TaskStatus } from "@/lib/api/types";
-import { cn } from "@/lib/utils";
+  buildDateTimeline,
+  dateKey,
+  defaultDueForDate,
+  startOfDay,
+  summarizeTasks,
+  type TimelineFilter,
+} from "@/features/tasks/lib/task-timeline";
+import type { TaskSummary } from "@/lib/api/types";
+import { z } from "zod";
+
+const tasksSearchSchema = z.object({
+  taskId: z.string().optional(),
+  filter: z.enum(["all", "today", "upcoming", "overdue"]).optional(),
+});
 
 export const Route = createFileRoute("/tasks")({
-  head: () => ({
-    meta: [{ title: "Tasks — Personal OS" }],
-  }),
+  validateSearch: (search) => tasksSearchSchema.parse(search),
+  head: () => ({ meta: [{ title: "Tasks — Personal OS" }] }),
   component: TasksPage,
 });
 
-const startOfTomorrow = () => {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  return d.toISOString();
-};
-
-const views: { key: string; label: string; line: string; query: TaskListQuery }[] = [
-  { key: "all", label: "All", line: "Your commitments across capture, focus, and flow.", query: {} },
-  { key: "inbox", label: "Inbox", line: "Captured, not yet decided.", query: { status: ["inbox"] } },
-  {
-    key: "today",
-    label: "Today",
-    line: "What needs you before the day ends.",
-    query: { dueBefore: startOfTomorrow() },
-  },
-  {
-    key: "upcoming",
-    label: "Upcoming",
-    line: "Scheduled ahead without crowding today.",
-    query: { dueAfter: startOfTomorrow() },
-  },
-  {
-    key: "in_progress",
-    label: "In progress",
-    line: "Already in motion.",
-    query: { status: ["in_progress"] },
-  },
-  { key: "waiting", label: "Waiting", line: "Held by someone else.", query: { status: ["waiting"] } },
-  { key: "blocked", label: "Blocked", line: "Something must clear first.", query: { status: ["blocked"] } },
-  { key: "completed", label: "Completed", line: "Closed and done.", query: { status: ["completed"] } },
-  { key: "archived", label: "Archived", line: "Out of the way, still yours.", query: { archived: true } },
-];
-
-const openStatus = (status: TaskStatus) => status !== "completed" && status !== "cancelled";
-
-type LayoutMode = "board" | "timeline";
+type ViewMode = "timeline" | "list";
 
 function TasksPage() {
-  const [view, setView] = useState(views[0]!);
-  const [layout, setLayout] = useState<LayoutMode>("board");
-  const [draft, setDraft] = useState("");
-  const [openId, setOpenId] = useState<string | null>(null);
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { taskId: selectedTaskId = null, filter: searchFilter } = Route.useSearch();
+  const filter: TimelineFilter = searchFilter ?? "all";
 
-  const list = useTasks({ perPage: 100, ...view.query });
-  const detail = useTask(openId);
-  const m = useTaskMutations();
+  const tasksQuery = useTasks({ perPage: 200 });
+  const tasks = useMemo(() => tasksQuery.data?.items ?? [], [tasksQuery.data]);
+  const mutations = useTaskMutations();
+  const detailQuery = useTask(selectedTaskId);
 
-  const items = useMemo(() => list.data?.items ?? [], [list.data]);
-  const openCount = items.filter((i) => openStatus(i.status)).length;
-  const board = useMemo(() => groupByBoard(items), [items]);
-  const timeline = useMemo(() => groupByDate(items), [items]);
+  const [viewMode, setViewMode] = useState<ViewMode>("timeline");
+  const [focusDate, setFocusDate] = useState(() => startOfDay());
+  const [focusDateKey, setFocusDateKey] = useState<string | undefined>("scroll-today");
 
-  const headline = list.isLoading
-    ? "Reading your commitments…"
-    : list.isError
-      ? "Your tasks are out of reach right now."
-      : openCount === 0
-        ? "This view is clear."
-        : openCount === 1
-          ? "One thing wants you in this view."
-          : `${openCount} things want you in this view.`;
+  const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
+  const sections = useMemo(() => buildDateTimeline(tasks, filter), [tasks, filter]);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const title = draft.trim();
-    if (!title) return;
-    m.create.mutate(
-      { title },
-      {
-        onSuccess: (created) => {
-          setDraft("");
-          setOpenId(created.id);
-          toast.success("Task captured");
-        },
+  const setFilter = useCallback(
+    (next: TimelineFilter) => {
+      navigate({
+        search: (prev) => ({ ...prev, filter: next === "all" ? undefined : next }),
+        replace: true,
+      });
+    },
+    [navigate],
+  );
+
+  const openTask = useCallback(
+    (id: string) => {
+      navigate({ search: (prev) => ({ ...prev, taskId: id }), replace: true });
+    },
+    [navigate],
+  );
+
+  const closeDetail = useCallback(() => {
+    navigate({
+      search: (prev) => {
+        const { taskId: _, ...rest } = prev;
+        return rest;
       },
-    );
-  };
+      replace: true,
+    });
+  }, [navigate]);
 
-  const toggleComplete = (id: string, done: boolean) => {
-    if (done) m.reopen.mutate([id]);
-    else m.complete.mutate([id]);
-  };
+  const handleToggleComplete = useCallback(
+    (task: TaskSummary) => {
+      const done = task.status === "completed" || Boolean(task.completedAt);
+      if (done) mutations.reopen.mutate([task.id]);
+      else mutations.complete.mutate([task.id]);
+    },
+    [mutations],
+  );
+
+  const handleQuickCreate = useCallback(
+    (title: string) => {
+      mutations.create.mutate({
+        title,
+        dueAt: defaultDueForDate(focusDate),
+      });
+    },
+    [focusDate, mutations.create],
+  );
+
+  const jumpToToday = useCallback(() => {
+    setFocusDate(startOfDay());
+    setFocusDateKey("scroll-today");
+    setFilter("today");
+  }, [setFilter]);
+
+  const onFocusDateChange = useCallback((date: Date) => {
+    setFocusDate(startOfDay(date));
+    setFocusDateKey(dateKey(startOfDay(date)));
+  }, []);
 
   return (
-    <div className="mx-auto w-full max-w-[1600px]">
-      <header className="animate-rise max-w-3xl">
-        <p className="label-eyebrow">Tasks</p>
-        <h1 className="display-lg mt-3">{headline}</h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{view.line}</p>
-      </header>
+    <div className="mx-auto w-full max-w-[1500px]">
+      <SectionHeader
+        system="Tasks"
+        module="Personal execution"
+        title="Execution timeline"
+        subtitle="Your commitments, organized around time."
+      />
 
-      <div className="animate-rise mt-6 flex flex-wrap items-center gap-2" style={{ animationDelay: "60ms" }}>
-        <div className="glass-panel inline-flex flex-wrap items-center gap-1 rounded-xl p-1">
-          {views.map((v) => (
-            <button
-              key={v.key}
-              onClick={() => setView(v)}
-              className={cn(
-                "rail-item rounded-lg px-3 py-1.5 text-sm",
-                view.key === v.key
-                  ? "gradient-primary font-semibold text-primary-foreground shadow-soft"
-                  : "text-muted-foreground hover:bg-muted/70",
-              )}
-            >
-              {v.label}
-            </button>
-          ))}
-        </div>
-        <div className="glass-panel inline-flex rounded-xl p-1">
-          {(
-            [
-              ["board", LayoutGrid, "Board"],
-              ["timeline", ListTree, "Timeline"],
-            ] as const
-          ).map(([mode, Icon, label]) => (
-            <button
-              key={mode}
-              onClick={() => setLayout(mode)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm",
-                layout === mode
-                  ? "bg-muted/80 font-medium text-foreground"
-                  : "text-muted-foreground hover:bg-muted/50",
-              )}
-            >
-              <Icon className="size-3.5" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <form
-        onSubmit={submit}
-        className="animate-rise mt-5 flex items-center gap-2"
-        style={{ animationDelay: "100ms" }}
-      >
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Write a task the way you'd say it out loud…"
-          className="h-11 min-w-0 flex-1 rounded-lg border border-hairline bg-surface/60 px-3.5 text-sm outline-none transition focus:border-transparent focus:ring-2 focus:ring-ring/40"
-        />
-        <button
-          type="submit"
-          disabled={m.create.isPending}
-          aria-label="Add task"
-          className="gradient-primary grid size-11 shrink-0 place-items-center rounded-lg text-primary-foreground transition active:scale-95 disabled:opacity-70"
-        >
-          <Plus className="size-4" />
-        </button>
-      </form>
-
-      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.75fr)]">
-        <section className="animate-rise min-w-0" style={{ animationDelay: "140ms" }}>
-          {list.isLoading ? (
-            <RowsSkeleton rows={6} />
-          ) : list.isError ? (
-            <ErrorState
-              error={list.error}
-              title="Unable to load your tasks."
-              onRetry={() => void list.refetch()}
+      <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="min-w-0 flex-1">
+          <div className="space-y-4 rounded-xl border border-hairline/60 bg-surface/20 p-4 sm:p-5">
+            <TaskSummaryBar
+              today={summary.today}
+              overdue={summary.overdue}
+              upcoming={summary.upcoming}
             />
-          ) : !items.length ? (
-            <EmptyState
-              title="No tasks yet."
-              line="Capture something you need to get done — it stays connected to everything else."
-            />
-          ) : layout === "board" ? (
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-              {boardColumns.map((column) => (
-                <TaskBoardColumn
-                  key={column.id}
-                  title={column.title}
-                  hint={column.hint}
-                  count={board[column.id].length}
-                  accent=""
-                >
-                  {board[column.id].length ? (
-                    board[column.id].map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        accent={column.id}
-                        selected={openId === task.id}
-                        onOpen={() => setOpenId(task.id)}
-                        onToggleComplete={() =>
-                          toggleComplete(task.id, task.status === "completed")
-                        }
-                      />
-                    ))
-                  ) : (
-                    <p className="px-1 py-6 text-center text-xs text-muted-foreground">Nothing here.</p>
-                  )}
-                </TaskBoardColumn>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {timeline.map((section) => (
-                <TaskTimelineSection
-                  key={section.group}
-                  title={dateGroupLabels[section.group]}
-                  count={section.tasks.length}
-                >
-                  {section.tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      accent={isOverdue(task) ? "overdue" : section.group}
-                      selected={openId === task.id}
-                      onOpen={() => setOpenId(task.id)}
-                      onToggleComplete={() => toggleComplete(task.id, task.status === "completed")}
-                    />
-                  ))}
-                </TaskTimelineSection>
-              ))}
-            </div>
-          )}
-          {list.data?.meta && list.data.meta.total > items.length ? (
-            <p className="pt-3 text-xs text-muted-foreground">
-              Showing {items.length} of {list.data.meta.total}
-            </p>
-          ) : null}
-        </section>
 
-        {openId ? (
-          <aside
-            key={openId}
-            className="animate-rise surface-raised tile-glow sticky top-24 h-fit overflow-hidden p-5"
-          >
-            {detail.isLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-3 w-full" />
+            <TaskQuickCreate
+              dueAt={defaultDueForDate(focusDate)}
+              onSubmit={handleQuickCreate}
+              pending={mutations.create.isPending}
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-1">
+                {(
+                  [
+                    ["all", "All"],
+                    ["today", "Today"],
+                    ["upcoming", "Upcoming"],
+                    ["overdue", "Overdue"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <Button
+                    key={key}
+                    type="button"
+                    variant={filter === key ? "secondary" : "ghost"}
+                    size="sm"
+                    className={cn(
+                      "h-7 rounded-md px-2.5 text-[11px] font-medium uppercase tracking-wide",
+                      filter === key && "bg-primary/15 text-primary",
+                    )}
+                    onClick={() => setFilter(key)}
+                  >
+                    {label}
+                  </Button>
+                ))}
               </div>
-            ) : detail.isError ? (
+
+              <div className="flex gap-1 rounded-md border border-hairline/60 p-0.5">
+                <Button
+                  type="button"
+                  variant={viewMode === "timeline" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-[11px]"
+                  onClick={() => setViewMode("timeline")}
+                >
+                  <Rows3 className="h-3.5 w-3.5" />
+                  Timeline
+                </Button>
+                <Button
+                  type="button"
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-[11px]"
+                  onClick={() => setViewMode("list")}
+                >
+                  <List className="h-3.5 w-3.5" />
+                  List
+                </Button>
+              </div>
+            </div>
+
+            <TaskDateNavigator
+              focusDate={focusDate}
+              onChange={onFocusDateChange}
+              onJumpToday={jumpToToday}
+              onJumpWeek={() => {
+                setFocusDate(startOfDay());
+                setFocusDateKey("scroll-today");
+                setFilter("upcoming");
+              }}
+            />
+          </div>
+
+          <div className="mt-4 pb-8">
+            {tasksQuery.isLoading ? (
+              <RowsSkeleton rows={6} />
+            ) : tasksQuery.isError ? (
               <ErrorState
-                error={detail.error}
-                title="Unable to load this task."
-                onRetry={() => void detail.refetch()}
+                error={tasksQuery.error}
+                title="Unable to load tasks."
+                onRetry={() => tasksQuery.refetch()}
               />
-            ) : detail.data ? (
-              <TaskDetailPane task={detail.data} onClose={() => setOpenId(null)} mutations={m} />
-            ) : null}
+            ) : viewMode === "timeline" ? (
+              <TaskExecutionTimeline
+                sections={sections}
+                focusDateKey={focusDateKey}
+                selectedId={selectedTaskId}
+                onOpen={openTask}
+                onToggleComplete={handleToggleComplete}
+              />
+            ) : (
+              <TaskListView
+                tasks={tasks}
+                filter={filter}
+                selectedId={selectedTaskId}
+                onOpen={openTask}
+                onToggleComplete={handleToggleComplete}
+              />
+            )}
+          </div>
+        </div>
+
+        {selectedTaskId ? (
+          <aside className="w-full shrink-0 lg:sticky lg:top-20 lg:w-[380px]">
+            <div className="rounded-xl border border-hairline/60 bg-surface/30 p-4 sm:p-5">
+              {detailQuery.isLoading ? (
+                <RowsSkeleton rows={8} />
+              ) : detailQuery.isError || !detailQuery.data ? (
+                <ErrorState
+                  error={detailQuery.error}
+                  title="Task could not be loaded."
+                  onRetry={() => detailQuery.refetch()}
+                />
+              ) : (
+                <TaskDetailPane
+                  task={detailQuery.data}
+                  onClose={closeDetail}
+                  mutations={mutations}
+                />
+              )}
+            </div>
           </aside>
         ) : null}
       </div>
