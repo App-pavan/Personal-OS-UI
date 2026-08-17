@@ -96,7 +96,7 @@ function TasksPage() {
       mutations.create.mutate({
         title,
         dueAt: defaultDueForDate(focusDate),
-        status: "pending",
+        status: "scheduled",
         priority: "normal",
       });
     },

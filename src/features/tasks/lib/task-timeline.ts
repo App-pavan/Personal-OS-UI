@@ -66,7 +66,7 @@ export function summarizeTasks(tasks: TaskSummary[], now = new Date()): Timeline
     today: open.filter((t) => isDueToday(t, now)).length,
     overdue: open.filter((t) => isOverdue(t, now)).length,
     upcoming: open.filter((t) => isUpcoming(t, now)).length,
-    pending: open.filter((t) => t.status === "pending" || t.status === "inbox").length,
+    pending: open.filter((t) => t.status === "inbox" || t.status === "ready").length,
   };
 }
 
