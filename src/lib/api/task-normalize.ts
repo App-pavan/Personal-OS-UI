@@ -48,7 +48,21 @@ const STATUS: TaskStatus[] = [
   "cancelled",
 ];
 
-const TYPES: TaskType[] = ["task", "project", "habit", "errand", "follow_up"];
+const TYPES: TaskType[] = [
+  "personal",
+  "family",
+  "project",
+  "shopping",
+  "reminder",
+  "automation",
+  "maintenance",
+  "health",
+  "travel",
+  "finance",
+  "system",
+  "ai",
+  "custom",
+];
 
 function normalizeStatus(value: unknown): TaskStatus {
   const s = str(value, "inbox");
@@ -56,8 +70,8 @@ function normalizeStatus(value: unknown): TaskStatus {
 }
 
 function normalizeType(value: unknown): TaskType {
-  const t = str(value, "task");
-  return TYPES.includes(t as TaskType) ? (t as TaskType) : "task";
+  const t = str(value, "personal");
+  return TYPES.includes(t as TaskType) ? (t as TaskType) : "personal";
 }
 
 function normalizeSubtasks(raw: Raw): TaskSubtask[] {
