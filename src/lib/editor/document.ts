@@ -213,7 +213,7 @@ export function docToTaskDraft(doc: EditorDoc, extras: TaskDraftExtras = {}): Ta
 export function taskToDoc(task: TaskDetail): EditorDoc {
   const blocks: Block[] = [];
   if (task.description) for (const line of task.description.split("\n")) blocks.push(block("text", line));
-  for (const s of [...task.subtasks].sort((a, b) => a.position - b.position)) {
+  for (const s of [...(task.subtasks ?? [])].sort((a, b) => a.position - b.position)) {
     const b = block("todo", s.title);
     b.checked = s.completed;
     blocks.push(b);

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { ArrowRight, Check, ClipboardCheck, Clock, ListChecks, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowRight, Check, Plus } from "lucide-react";
 import { DataPanel, HudPanel, InsightPanel, MetricPanel, SectionHeader } from "@/components/future";
 import {
   semanticSurfaceClasses,
@@ -9,10 +9,12 @@ import {
 } from "@/lib/design/semantic";
 import { Meter, Pill } from "@/components/os/primitives";
 import { EmptyState, ErrorState, FutureState, RowsSkeleton } from "@/components/os/state-views";
+import { formatDueLabel, isDueToday, isOverdue } from "@/features/tasks/lib/task-buckets";
 import { useTaskMutations, useTasks } from "@/hooks/use-tasks";
 import { useChecklistInstances } from "@/hooks/use-checklists";
 import { useAuth } from "@/features/auth/auth-context";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,37 +32,23 @@ const greeting = () => {
   return "Winding down";
 };
 
-const isToday = (iso?: string) => {
-  if (!iso) return false;
-  const d = new Date(iso);
-  const now = new Date();
-  return d.toDateString() === now.toDateString();
-};
-
-const timeOf = (iso?: string) =>
-  iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : null;
-
 function HomePage() {
   const { user } = useAuth();
   const tasks = useTasks({ perPage: 100 });
   const instances = useChecklistInstances();
   const m = useTaskMutations();
+  const [draft, setDraft] = useState("");
 
   const items = useMemo(() => tasks.data?.items ?? [], [tasks.data]);
   const open = useMemo(
     () => items.filter((t) => t.status !== "completed" && t.status !== "cancelled"),
     [items],
   );
-  const overdue = useMemo(
-    () => open.filter((t) => t.dueAt && new Date(t.dueAt).getTime() < Date.now()),
+  const overdue = useMemo(() => open.filter((t) => isOverdue(t)), [open]);
+  const today = useMemo(
+    () => open.filter((t) => isDueToday(t) || isOverdue(t)).slice(0, 8),
     [open],
   );
-  const today = useMemo(() => open.filter((t) => isToday(t.dueAt)), [open]);
-  const important = useMemo(
-    () => open.filter((t) => t.priority === "urgent" || t.priority === "high" || t.pinned),
-    [open],
-  );
-  const focus = (today.length ? today : important.length ? important : open).slice(0, 6);
   const running = useMemo(
     () => (instances.data ?? []).filter((i) => i.status === "active"),
     [instances.data],
@@ -73,10 +61,25 @@ function HomePage() {
       : overdue.length
         ? `${overdue.length} commitment${overdue.length > 1 ? "s" : ""} past due.`
         : today.length
-          ? `${today.length} priority item${today.length > 1 ? "s" : ""} for today.`
+          ? `${today.length} item${today.length > 1 ? "s" : ""} for today.`
           : open.length
             ? `${open.length} open commitment${open.length > 1 ? "s" : ""} in queue.`
             : "All systems quiet.";
+
+  const addTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    const title = draft.trim();
+    if (!title) return;
+    m.create.mutate(
+      { title, dueAt: new Date().toISOString() },
+      {
+        onSuccess: () => {
+          setDraft("");
+          toast.success("Task added for today");
+        },
+      },
+    );
+  };
 
   return (
     <div className="mx-auto w-full max-w-[1500px]">
@@ -119,14 +122,32 @@ function HomePage() {
       <div className="mt-5 grid gap-4 lg:grid-cols-12">
         <HudPanel glow corners className="lg:col-span-7">
           <div className="flex items-center justify-between gap-3">
-            <p className="label-eyebrow">Focus queue</p>
+            <p className="label-eyebrow">Today</p>
             <Link
               to="/tasks"
               className="flex items-center gap-1 text-xs text-primary hover:text-accent"
             >
-              All tasks <ArrowRight className="size-3" />
+              Open board <ArrowRight className="size-3" />
             </Link>
           </div>
+
+          <form onSubmit={addTask} className="mt-3 flex items-center gap-2">
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Add something for today…"
+              className="h-10 min-w-0 flex-1 rounded-lg border border-hairline bg-surface/50 px-3 text-sm outline-none focus:ring-2 focus:ring-ring/40"
+            />
+            <button
+              type="submit"
+              disabled={m.create.isPending}
+              className="gradient-primary grid size-10 shrink-0 place-items-center rounded-lg text-primary-foreground disabled:opacity-70"
+              aria-label="Add task"
+            >
+              <Plus className="size-4" />
+            </button>
+          </form>
+
           {tasks.isLoading ? (
             <RowsSkeleton rows={4} />
           ) : tasks.isError ? (
@@ -135,14 +156,14 @@ function HomePage() {
               title="Unable to load tasks."
               onRetry={() => tasks.refetch()}
             />
-          ) : !focus.length ? (
+          ) : !today.length ? (
             <EmptyState
-              title="Queue clear"
-              line="Capture something you need to get done and it will appear here."
+              title="Nothing scheduled for today"
+              line="Capture a task above or open the board to plan the week."
             />
           ) : (
-            <div className="hairline-list mt-2">
-              {focus.map((t) => (
+            <div className="hairline-list mt-3">
+              {today.map((t) => (
                 <div key={t.id} className="flex items-start gap-3 py-3">
                   <button
                     onClick={() => m.complete.mutate([t.id])}
@@ -153,7 +174,9 @@ function HomePage() {
                   </button>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm">{t.title}</p>
+                      <Link to="/tasks" className="truncate text-sm hover:text-primary">
+                        {t.title}
+                      </Link>
                       <Pill
                         tone={
                           t.priority === "urgent"
@@ -167,8 +190,7 @@ function HomePage() {
                       </Pill>
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {t.status.replace(/_/g, " ")}
-                      {timeOf(t.dueAt) ? ` · ${timeOf(t.dueAt)}` : ""}
+                      {formatDueLabel(t.dueAt) ?? t.status.replace(/_/g, " ")}
                     </p>
                   </div>
                 </div>
@@ -210,42 +232,14 @@ function HomePage() {
               ? `Clearing "${overdue[0]!.title}" removes most of today's pressure.`
               : running.length
                 ? `Mid-routine on ${running[0]!.name} — ${running[0]!.itemCount - running[0]!.completedCount} items left.`
-                : open.length
-                  ? "Your day is balanced. Pick the nearest due date and stop there."
+                : today.length
+                  ? "Focus on today's list first — the board has the rest."
                   : "Nothing needs you. That is allowed."}
           </InsightPanel>
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <DataPanel title="Recent activity">
-          {tasks.isLoading ? (
-            <RowsSkeleton rows={3} />
-          ) : items.length ? (
-            <div className="hairline-list">
-              {[...items]
-                .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt))
-                .slice(0, 4)
-                .map((t) => (
-                  <div key={t.id} className="py-2.5">
-                    <p className="truncate text-sm">{t.title}</p>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="size-3" />
-                      {new Date(t.updatedAt).toLocaleString([], {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No recent changes.</p>
-          )}
-        </DataPanel>
-
+      <div className="mt-4">
         <FutureState
           title="Calendar, finance, documents & home"
           line="These modules arrive when their backend does. Nothing here is simulated."

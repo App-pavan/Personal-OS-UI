@@ -11,7 +11,8 @@ import {
   fromBackendInstanceDetail,
   toBackendCreateInstanceInput,
 } from "./instance-mapper";
-import { priorityFromBackend, priorityToBackend } from "./priority";
+import { priorityToBackend } from "./priority";
+import { normalizeTaskDetail, normalizeTaskSummary } from "./task-normalize";
 import type {
   BulkTaskOperation,
   ChecklistInstance,
@@ -93,21 +94,22 @@ export interface ChecklistService {
 /* ---------------- live task service ---------------- */
 
 class ApiTaskService implements TaskService {
-  private normalizeTask = <T extends TaskDetail | TaskSummary>(task: T): T => ({
-    ...task,
-    priority: priorityFromBackend(task.priority),
-  });
+  private normalizeSummary = (task: TaskSummary) =>
+    normalizeTaskSummary(task as unknown as Record<string, unknown>);
+  private normalizeDetail = (task: TaskDetail) =>
+    normalizeTaskDetail(task as unknown as Record<string, unknown>);
 
   async list(query: TaskListQuery = {}) {
     const res = await api.get<TaskSummary[]>("/tasks", query as Record<string, never>);
     return {
-      items: res.data.map((task) => this.normalizeTask(task)),
+      items: res.data.map((task) => this.normalizeSummary(task)),
       meta: res.meta ?? { page: 1, perPage: res.data.length, total: res.data.length, totalPages: 1 },
     };
   }
-  get = async (id: string) => this.normalizeTask((await api.get<TaskDetail>(`/tasks/${id}`)).data);
+  get = async (id: string) =>
+    this.normalizeDetail((await api.get<TaskDetail>(`/tasks/${id}`)).data);
   create = async (input: CreateTaskInput) =>
-    this.normalizeTask(
+    this.normalizeDetail(
       (
         await api.post<TaskDetail>("/tasks", {
           ...input,
@@ -116,7 +118,7 @@ class ApiTaskService implements TaskService {
       ).data,
     );
   update = async (id: string, input: UpdateTaskInput) =>
-    this.normalizeTask(
+    this.normalizeDetail(
       (
         await api.patch<TaskDetail>(`/tasks/${id}`, {
           ...input,
@@ -130,27 +132,27 @@ class ApiTaskService implements TaskService {
   bulk = async (op: BulkTaskOperation) => {
     await api.post<null>("/tasks/bulk", op);
   };
-  complete = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/complete`)).data);
-  reopen = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/reopen`)).data);
-  archive = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/archive`)).data);
-  restore = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/restore`)).data);
-  duplicate = async (id: string) => this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/duplicate`)).data);
+  complete = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/complete`)).data);
+  reopen = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/reopen`)).data);
+  archive = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/archive`)).data);
+  restore = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/restore`)).data);
+  duplicate = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/duplicate`)).data);
   assign = async (id: string, assigneeName: string) =>
-    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/assign`, { assigneeName })).data);
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/assign`, { assigneeName })).data);
   setProgress = async (id: string, progress: number) =>
-    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/progress`, { progress })).data);
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/progress`, { progress })).data);
   setPinned = async (id: string, pinned: boolean) =>
-    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/pin`, { pinned })).data);
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/pin`, { pinned })).data);
   setFavorite = async (id: string, favorite: boolean) =>
-    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/favorite`, { favorite })).data);
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/favorite`, { favorite })).data);
   addSubtask = async (id: string, title: string) =>
-    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/subtasks`, { title })).data);
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/subtasks`, { title })).data);
   toggleSubtask = async (id: string, subtaskId: string) =>
-    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/subtasks/${subtaskId}/toggle`)).data);
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/subtasks/${subtaskId}/toggle`)).data);
   toggleChecklistItem = async (id: string, itemId: string) =>
-    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/checklist/${itemId}/toggle`)).data);
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/checklist/${itemId}/toggle`)).data);
   addComment = async (id: string, body: string) =>
-    this.normalizeTask((await api.post<TaskDetail>(`/tasks/${id}/comments`, { body })).data);
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/comments`, { body })).data);
 }
 
 
