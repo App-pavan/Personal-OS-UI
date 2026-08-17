@@ -39,13 +39,17 @@ const asRaw = (value: unknown): Raw => (value && typeof value === "object" ? (va
 const asList = (value: unknown): Raw[] => (Array.isArray(value) ? value.map(asRaw) : []);
 
 const STATUS: TaskStatus[] = [
+  "draft",
   "inbox",
-  "planned",
+  "scheduled",
+  "ready",
   "in_progress",
   "waiting",
   "blocked",
+  "delegated",
   "completed",
   "cancelled",
+  "archived",
 ];
 
 const TYPES: TaskType[] = [

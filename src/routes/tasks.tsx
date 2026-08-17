@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
-import { List, Loader2, Rows3 } from "lucide-react";
+import { List, Rows3 } from "lucide-react";
 import { SectionHeader } from "@/components/future";
 import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { Button } from "@/components/ui/button";
