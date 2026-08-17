@@ -31,6 +31,18 @@ import type {
   UpdateTaskInput,
 } from "./types";
 
+/** Backend accepts only its lifecycle statuses; omit status on create (defaults to inbox). */
+function toBackendCreateTaskBody(input: CreateTaskInput): Record<string, unknown> {
+  const body: Record<string, unknown> = { title: input.title.trim() };
+  if (input.description?.trim()) body.description = input.description.trim();
+  if (input.type) body.type = input.type;
+  if (input.dueAt) body.dueAt = input.dueAt;
+  if (input.startAt) body.startAt = input.startAt;
+  if (input.tags?.length) body.tags = input.tags;
+  if (input.priority) body.priority = priorityToBackend(input.priority);
+  return body;
+}
+
 /* ---------------------------------------------------------------
  * Service boundary.
  *
@@ -110,12 +122,7 @@ class ApiTaskService implements TaskService {
     this.normalizeDetail((await api.get<TaskDetail>(`/tasks/${id}`)).data);
   create = async (input: CreateTaskInput) =>
     this.normalizeDetail(
-      (
-        await api.post<TaskDetail>("/tasks", {
-          ...input,
-          ...(input.priority ? { priority: priorityToBackend(input.priority) } : {}),
-        })
-      ).data,
+      (await api.post<TaskDetail>("/tasks", toBackendCreateTaskBody(input))).data,
     );
   update = async (id: string, input: UpdateTaskInput) =>
     this.normalizeDetail(
