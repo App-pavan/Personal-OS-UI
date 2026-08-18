@@ -3,7 +3,6 @@ import {
   addLocalDays,
   compareDateKeys,
   dateFromLocalKey,
-  defaultDueForDate,
   dueDateKey,
   isDueToday,
   isOverdue,
