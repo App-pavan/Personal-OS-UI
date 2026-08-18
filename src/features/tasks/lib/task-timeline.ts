@@ -1,4 +1,17 @@
 import type { TaskSummary } from "@/lib/api/types";
+import {
+  addLocalDays,
+  compareDateKeys,
+  dateFromLocalKey,
+  defaultDueForDate,
+  dueDateKey,
+  isDueToday,
+  isOverdue,
+  isUpcoming,
+  localDateKey,
+  sortTasksInTimelineSection,
+  startOfLocalDay,
+} from "./task-dates";
 
 export type TimelineFilter = "all" | "today" | "upcoming" | "overdue";
 
@@ -22,65 +35,53 @@ export type TimelineSummary = {
 const OPEN = (status: TaskSummary["status"]) =>
   status !== "completed" && status !== "cancelled" && status !== "archived";
 
-export function startOfDay(d = new Date()) {
-  const copy = new Date(d);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
+export {
+  defaultDueForDate,
+  formatTaskTime,
+  isDueToday,
+  isOverdue,
+  isUpcoming,
+  startOfLocalDay as startOfDay,
+  addLocalDays as addDays,
+  localDateKey as dateKey,
+} from "./task-dates";
 
-export function addDays(d: Date, days: number) {
-  const copy = new Date(d);
-  copy.setDate(copy.getDate() + days);
-  return copy;
-}
+function sectionLabels(key: string, now: Date): { headline: string; subline: string; isToday: boolean } {
+  const todayKey = localDateKey(now);
+  const date = dateFromLocalKey(key);
+  const subline = date
+    .toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+    .toUpperCase();
 
-export function dateKey(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
+  if (key === todayKey) {
+    return { headline: "TODAY", subline, isToday: true };
+  }
 
-export function isOverdue(task: TaskSummary, now = new Date()) {
-  if (!task.dueAt || !OPEN(task.status)) return false;
-  return startOfDay(new Date(task.dueAt)).getTime() < startOfDay(now).getTime();
-}
+  const tomorrowKey = localDateKey(addLocalDays(startOfLocalDay(now), 1));
+  if (key === tomorrowKey) {
+    return { headline: "TOMORROW", subline, isToday: false };
+  }
 
-export function isDueToday(task: TaskSummary, now = new Date()) {
-  if (!task.dueAt) return false;
-  return startOfDay(new Date(task.dueAt)).getTime() === startOfDay(now).getTime();
-}
-
-export function isUpcoming(task: TaskSummary, now = new Date()) {
-  if (!task.dueAt || !OPEN(task.status)) return false;
-  return startOfDay(new Date(task.dueAt)).getTime() > startOfDay(now).getTime();
-}
-
-export function formatTaskTime(iso?: string) {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (d.getHours() === 0 && d.getMinutes() === 0) return null;
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-export function summarizeTasks(tasks: TaskSummary[], now = new Date()): TimelineSummary {
-  const open = tasks.filter(OPEN);
-  return {
-    today: open.filter((t) => isDueToday(t, now)).length,
-    overdue: open.filter((t) => isOverdue(t, now)).length,
-    upcoming: open.filter((t) => isUpcoming(t, now)).length,
-    pending: open.filter((t) => t.status === "inbox" || t.status === "ready").length,
-  };
-}
-
-function sectionLabels(date: Date, now: Date): { headline: string; subline: string; isToday: boolean } {
-  const today = startOfDay(now);
-  const target = startOfDay(date);
-  const diff = Math.round((target.getTime() - today.getTime()) / 86_400_000);
-  const subline = date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }).toUpperCase();
-  if (diff === 0) return { headline: "TODAY", subline, isToday: true };
-  if (diff === 1) return { headline: "TOMORROW", subline, isToday: false };
   return {
     headline: date.toLocaleDateString([], { month: "short", day: "numeric" }).toUpperCase(),
     subline,
     isToday: false,
+  };
+}
+
+function makeDateSection(
+  key: string,
+  tasks: TaskSummary[],
+  now: Date,
+  isOverdueSection: boolean,
+): DateSection {
+  const labels = sectionLabels(key, now);
+  return {
+    key,
+    date: dateFromLocalKey(key),
+    ...labels,
+    isOverdueSection,
+    tasks: [...tasks].sort(sortTasksInTimelineSection),
   };
 }
 
@@ -90,42 +91,36 @@ export function buildDateTimeline(
   filter: TimelineFilter,
   now = new Date(),
 ): DateSection[] {
-  const today = startOfDay(now);
+  const todayKey = localDateKey(now);
   const scheduled = new Map<string, TaskSummary[]>();
   const unscheduled: TaskSummary[] = [];
 
-  const sections: DateSection[] = [];
+  const overdueTasks = tasks
+    .filter((t) => isOverdue(t, now) && OPEN(t.status))
+    .sort(sortTasksInTimelineSection);
 
   for (const task of tasks) {
     if (filter === "today" && !isDueToday(task, now) && !isOverdue(task, now)) continue;
     if (filter === "upcoming" && !isUpcoming(task, now)) continue;
-    if (filter === "overdue" && !isOverdue(task, now)) continue;
-    if (
-      (filter === "all" || filter === "today") &&
-      isOverdue(task, now) &&
-      OPEN(task.status)
-    ) {
-      continue;
-    }
+    if (filter === "overdue") continue;
+
+    if (isOverdue(task, now) && OPEN(task.status)) continue;
 
     if (!task.dueAt) {
       if (filter === "all" || filter === "today") unscheduled.push(task);
       continue;
     }
 
-    const key = dateKey(startOfDay(new Date(task.dueAt)));
+    const key = dueDateKey(task.dueAt);
     const bucket = scheduled.get(key) ?? [];
     bucket.push(task);
     scheduled.set(key, bucket);
   }
 
-  const overdueTasks = tasks
-    .filter((t) => isOverdue(t, now) && OPEN(t.status))
-    .sort((a, b) => +new Date(a.dueAt ?? 0) - +new Date(b.dueAt ?? 0));
-
   if (filter === "overdue") {
-    if (overdueTasks.length) {
-      sections.push({
+    if (!overdueTasks.length) return [];
+    return [
+      {
         key: "overdue",
         date: null,
         headline: "OVERDUE",
@@ -133,10 +128,11 @@ export function buildDateTimeline(
         isToday: false,
         isOverdueSection: true,
         tasks: overdueTasks,
-      });
-    }
-    return sections;
+      },
+    ];
   }
+
+  const sections: DateSection[] = [];
 
   if ((filter === "all" || filter === "today") && overdueTasks.length) {
     sections.push({
@@ -150,43 +146,44 @@ export function buildDateTimeline(
     });
   }
 
-  const keys = [...scheduled.keys()].sort();
-  const datedSections: DateSection[] = keys.map((key) => {
-    const date = new Date(`${key}T12:00:00`);
-    const labels = sectionLabels(date, now);
-    const sectionTasks = (scheduled.get(key) ?? []).sort((a, b) => {
-      const ta = new Date(a.dueAt ?? a.createdAt).getTime();
-      const tb = new Date(b.dueAt ?? b.createdAt).getTime();
-      return ta - tb;
-    });
-    return {
-      key,
-      date,
-      ...labels,
-      isOverdueSection: date.getTime() < today.getTime(),
-      tasks: sectionTasks,
-    };
-  });
+  const datedKeys = [...scheduled.keys()].sort(compareDateKeys);
+  const todayKeys = datedKeys.filter((k) => k === todayKey);
+  const futureKeys = datedKeys.filter((k) => k > todayKey);
+  const pastKeys = datedKeys.filter((k) => k < todayKey);
 
-  if (unscheduled.length && filter !== "upcoming" && filter !== "overdue") {
-    datedSections.push({
+  for (const key of todayKeys) {
+    sections.push(makeDateSection(key, scheduled.get(key) ?? [], now, false));
+  }
+  for (const key of futureKeys) {
+    sections.push(makeDateSection(key, scheduled.get(key) ?? [], now, false));
+  }
+  for (const key of [...pastKeys].reverse()) {
+    sections.push(makeDateSection(key, scheduled.get(key) ?? [], now, true));
+  }
+
+  if (unscheduled.length && filter !== "upcoming") {
+    sections.push({
       key: "unscheduled",
       date: null,
       headline: "UNSCHEDULED",
       subline: "NO DATE",
       isToday: false,
       isOverdueSection: false,
-      tasks: unscheduled.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt)),
+      tasks: unscheduled.sort(sortTasksInTimelineSection),
     });
   }
 
-  return [...sections, ...datedSections];
+  return sections;
 }
 
-export function defaultDueForDate(date: Date) {
-  const d = startOfDay(date);
-  d.setHours(9, 0, 0, 0);
-  return d.toISOString();
+export function summarizeTasks(tasks: TaskSummary[], now = new Date()): TimelineSummary {
+  const open = tasks.filter(OPEN);
+  return {
+    today: open.filter((t) => isDueToday(t, now)).length,
+    overdue: open.filter((t) => isOverdue(t, now)).length,
+    upcoming: open.filter((t) => isUpcoming(t, now)).length,
+    pending: open.filter((t) => t.status === "inbox" || t.status === "ready").length,
+  };
 }
 
 export function endOfTodayIso() {

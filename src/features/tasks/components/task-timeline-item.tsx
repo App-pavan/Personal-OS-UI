@@ -1,5 +1,5 @@
 import { Check, Loader2 } from "lucide-react";
-import { formatTaskTime, isOverdue } from "@/features/tasks/lib/task-timeline";
+import { formatTaskTime, isOverdue } from "@/features/tasks/lib/task-dates";
 import type { TaskPriority, TaskSummary } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
