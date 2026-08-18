@@ -14,6 +14,7 @@ import {
 import { useTheme } from "@/components/os/theme-provider";
 import { FutureState } from "@/components/os/state-views";
 import { useAuth } from "@/features/auth/auth-context";
+import { WealthSettingsRow } from "@/features/wealth/components/wealth-settings-section";
 import { API_BASE_URL, API_CONFIGURED, API_ENVIRONMENT } from "@/lib/api/config";
 import { useTasks } from "@/hooks/use-tasks";
 import { cn } from "@/lib/utils";
@@ -169,6 +170,13 @@ function SettingsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="animate-rise surface-raised mt-6 p-5" style={{ animationDelay: "180ms" }}>
+        <p className="label-eyebrow">Wealth</p>
+        <div className="hairline-list mt-1">
+          <WealthSettingsRow />
         </div>
       </section>
 

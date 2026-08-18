@@ -13,6 +13,9 @@ import type {
   WealthPortfolio,
   WealthProviderDefinition,
   WealthProviderKey,
+  WealthPlatformConfiguration,
+  UpdatePlatformConfigurationInput,
+  PlatformProviderKey,
   WealthSyncJob,
 } from "./wealth-types";
 
@@ -107,6 +110,37 @@ function mapConnection(v: unknown): WealthConnection {
   };
 }
 
+function mapPlatformConfiguration(v: unknown): WealthPlatformConfiguration {
+  const o = raw(v);
+  const providers = raw(o.providers);
+  const zerodha = raw(providers.zerodha);
+  const groww = raw(providers.groww);
+  const sync = raw(o.sync);
+  return {
+    providers: {
+      zerodha: {
+        enabled: Boolean(zerodha.enabled),
+        apiKeyConfigured: Boolean(zerodha.apiKeyConfigured),
+        apiSecretConfigured: Boolean(zerodha.apiSecretConfigured),
+        platformConfigured: Boolean(zerodha.platformConfigured),
+      },
+      groww: {
+        enabled: Boolean(groww.enabled),
+        apiKeyConfigured: Boolean(groww.apiKeyConfigured),
+        apiSecretConfigured: Boolean(groww.apiSecretConfigured),
+        platformConfigured: Boolean(groww.platformConfigured),
+      },
+    },
+    marketData: { cacheTtl: num(raw(o.marketData).cacheTtl, 300) },
+    sync: {
+      scheduleCron: sync.scheduleCron ? str(sync.scheduleCron) : null,
+      schedulePreset: str(sync.schedulePreset) || undefined,
+    },
+    envConfigDetected: Boolean(o.envConfigDetected),
+    envConfigImported: Boolean(o.envConfigImported),
+  };
+}
+
 function mapProvider(v: unknown): WealthProviderDefinition {
   const o = raw(v);
   return {
@@ -115,6 +149,7 @@ function mapProvider(v: unknown): WealthProviderDefinition {
     description: str(o.description),
     country: str(o.country, "IN"),
     available: Boolean(o.available),
+    platformConfigured: Boolean(o.platformConfigured),
     capabilities: raw(o.capabilities) as WealthProviderDefinition["capabilities"],
     credentialFields: Array.isArray(o.credentialFields)
       ? o.credentialFields.map((f) => {
@@ -337,6 +372,27 @@ export const wealthApi = {
       );
       const list = Array.isArray(res.data) ? res.data : [];
       return list.map(mapAccount);
+    },
+  },
+  configuration: {
+    get: async (): Promise<WealthPlatformConfiguration> => {
+      const res = await api.get<unknown>("/wealth/settings/configuration");
+      return mapPlatformConfiguration(res.data);
+    },
+    update: async (input: UpdatePlatformConfigurationInput): Promise<WealthPlatformConfiguration> => {
+      const res = await api.put<unknown>("/wealth/settings/configuration", input);
+      return mapPlatformConfiguration(res.data);
+    },
+    deleteProvider: async (provider: PlatformProviderKey): Promise<WealthPlatformConfiguration> => {
+      const res = await api.delete<unknown>(`/wealth/settings/configuration/${provider}`);
+      return mapPlatformConfiguration(res.data);
+    },
+    importEnv: async (): Promise<WealthPlatformConfiguration> => {
+      const res = await api.post<unknown>("/wealth/settings/configuration/import-env");
+      return mapPlatformConfiguration(res.data);
+    },
+    testProvider: async (provider: PlatformProviderKey): Promise<void> => {
+      await api.post(`/wealth/settings/providers/${provider}/platform-test`);
     },
   },
 };
