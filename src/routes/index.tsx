@@ -10,7 +10,7 @@ import {
 } from "@/lib/design/semantic";
 import { Pill } from "@/components/os/primitives";
 import { EmptyState, ErrorState, FutureState, RowsSkeleton } from "@/components/os/state-views";
-import { isDueToday, isOverdue } from "@/features/tasks/lib/task-timeline";
+import { isDueToday, isOverdue } from "@/features/tasks/lib/task-dates";
 import { formatDueLabel } from "@/features/tasks/lib/task-buckets";
 import { useTaskMutations, useTasks } from "@/hooks/use-tasks";
 import { useChecklistInstances } from "@/hooks/use-checklists";

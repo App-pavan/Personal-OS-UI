@@ -1,6 +1,4 @@
-import { Check, Loader2 } from "lucide-react";
-import { formatTaskTime, isOverdue } from "@/features/tasks/lib/task-timeline";
-import type { TaskPriority, TaskSummary } from "@/lib/api/types";
+import { formatTaskTime, isOverdue } from "@/features/tasks/lib/task-dates";
 import { cn } from "@/lib/utils";
 
 const priorityDot: Record<TaskPriority, string> = {
