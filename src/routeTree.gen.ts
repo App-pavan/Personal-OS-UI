@@ -20,6 +20,8 @@ import { Route as ExpensesCategoriesRouteImport } from './routes/expenses/catego
 import { Route as ExpensesInsightsRouteImport } from './routes/expenses/insights'
 import { Route as ExpensesMembersRouteImport } from './routes/expenses/members'
 import { Route as ExpensesTransactionsRouteImport } from './routes/expenses/transactions'
+import { Route as WealthIndexRouteImport } from './routes/wealth/index'
+import { Route as WealthOauthCallbackRouteImport } from './routes/wealth/oauth/callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +78,16 @@ const ExpensesTransactionsRoute = ExpensesTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => ExpensesRouteRoute,
 } as any)
+const WealthIndexRoute = WealthIndexRouteImport.update({
+  id: '/wealth/',
+  path: '/wealth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WealthOauthCallbackRoute = WealthOauthCallbackRouteImport.update({
+  id: '/wealth/oauth/callback',
+  path: '/wealth/oauth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +101,8 @@ export interface FileRoutesByFullPath {
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/expenses/': typeof ExpensesIndexRoute
+  '/wealth/': typeof WealthIndexRoute
+  '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,6 +115,8 @@ export interface FileRoutesByTo {
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/expenses': typeof ExpensesIndexRoute
+  '/wealth': typeof WealthIndexRoute
+  '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,6 +131,8 @@ export interface FileRoutesById {
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/expenses/': typeof ExpensesIndexRoute
+  '/wealth/': typeof WealthIndexRoute
+  '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,6 +148,8 @@ export interface FileRouteTypes {
     | '/expenses/members'
     | '/expenses/transactions'
     | '/expenses/'
+    | '/wealth/'
+    | '/wealth/oauth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -142,6 +162,8 @@ export interface FileRouteTypes {
     | '/expenses/members'
     | '/expenses/transactions'
     | '/expenses'
+    | '/wealth'
+    | '/wealth/oauth/callback'
   id:
     | '__root__'
     | '/'
@@ -155,6 +177,8 @@ export interface FileRouteTypes {
     | '/expenses/members'
     | '/expenses/transactions'
     | '/expenses/'
+    | '/wealth/'
+    | '/wealth/oauth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -163,6 +187,8 @@ export interface RootRouteChildren {
   ChecklistsRoute: typeof ChecklistsRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
+  WealthIndexRoute: typeof WealthIndexRoute
+  WealthOauthCallbackRoute: typeof WealthOauthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -244,6 +270,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExpensesTransactionsRouteImport
       parentRoute: typeof ExpensesRouteRoute
     }
+    '/wealth/': {
+      id: '/wealth/'
+      path: '/wealth'
+      fullPath: '/wealth/'
+      preLoaderRoute: typeof WealthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wealth/oauth/callback': {
+      id: '/wealth/oauth/callback'
+      path: '/wealth/oauth/callback'
+      fullPath: '/wealth/oauth/callback'
+      preLoaderRoute: typeof WealthOauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -275,6 +315,8 @@ const rootRouteChildren: RootRouteChildren = {
   ChecklistsRoute: ChecklistsRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
+  WealthIndexRoute: WealthIndexRoute,
+  WealthOauthCallbackRoute: WealthOauthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
