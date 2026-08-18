@@ -1,4 +1,4 @@
-import { ClipboardCheck, LayoutGrid, ListChecks, Settings, Wallet } from "lucide-react";
+import { ClipboardCheck, LayoutGrid, ListChecks, Settings, TrendingUp, Wallet } from "lucide-react";
 
 /**
  * Primary navigation.
@@ -8,7 +8,7 @@ import { ClipboardCheck, LayoutGrid, ListChecks, Settings, Wallet } from "lucide
  */
 export type ModuleDef = {
   label: string;
-  to: "/" | "/tasks" | "/checklists" | "/expenses" | "/settings";
+  to: "/" | "/tasks" | "/checklists" | "/expenses" | "/wealth" | "/settings";
   icon: typeof LayoutGrid;
   group: "core" | "system";
   blurb: string;
@@ -16,7 +16,13 @@ export type ModuleDef = {
 
 export const modules: ModuleDef[] = [
   { label: "Home", to: "/", icon: LayoutGrid, group: "core", blurb: "Your day, composed" },
-  { label: "Tasks", to: "/tasks", icon: ListChecks, group: "core", blurb: "Everything you owe yourself" },
+  {
+    label: "Tasks",
+    to: "/tasks",
+    icon: ListChecks,
+    group: "core",
+    blurb: "Everything you owe yourself",
+  },
   {
     label: "Checklists",
     to: "/checklists",
@@ -29,7 +35,14 @@ export const modules: ModuleDef[] = [
     to: "/expenses",
     icon: Wallet,
     group: "core",
-    blurb: "Your financial command center",
+    blurb: "Spending and budgets",
+  },
+  {
+    label: "Wealth",
+    to: "/wealth",
+    icon: TrendingUp,
+    group: "core",
+    blurb: "Investments and portfolio",
   },
   { label: "Settings", to: "/settings", icon: Settings, group: "system", blurb: "Preferences" },
 ];
