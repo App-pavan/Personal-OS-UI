@@ -13,6 +13,7 @@ import {
   AssetAllocationCard,
   PortfolioPerformanceCard,
 } from "@/features/wealth/components/wealth-charts";
+import { WealthSyncActivity } from "@/features/runtime/components/wealth-sync-activity";
 import {
   buildSyncLabel,
   SyncStatusBanner,
@@ -48,21 +49,24 @@ function WealthOverviewPage() {
   const connections = useWealthConnections();
   const providers = useWealthProviders();
   const cashFlow = useWealthCashFlow();
-  const syncJobs = useWealthSyncJobs();
-  const accounts = useQuery({
-    queryKey: wealthKeys.accounts("all"),
-    queryFn: () => wealthApi.accounts.list(),
-  });
   const mutations = useWealthMutations();
-
-  const [connectKey, setConnectKey] = useState<WealthProviderKey | null>(null);
-  const [manualOpen, setManualOpen] = useState(false);
-  const [syncingId, setSyncingId] = useState<string | null>(null);
 
   const hasSyncingConnection = useMemo(
     () => connections.data?.some((c) => c.status === "syncing") ?? false,
     [connections.data],
   );
+
+  const isSyncingEarly = mutations.sync.isPending || hasSyncingConnection;
+  const syncJobs = useWealthSyncJobs({ refetchInterval: isSyncingEarly ? 3000 : false });
+  const accounts = useQuery({
+    queryKey: wealthKeys.accounts("all"),
+    queryFn: () => wealthApi.accounts.list(),
+  });
+
+  const [connectKey, setConnectKey] = useState<WealthProviderKey | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [activeSyncJobId, setActiveSyncJobId] = useState<string | null>(null);
 
   const uiState = resolveWealthUiState({
     isLoading: overview.isLoading,
@@ -76,6 +80,9 @@ function WealthOverviewPage() {
   const allocation = useMemo(() => allocationFromHoldings(holdings.data ?? []), [holdings.data]);
 
   const latestJob = syncJobs.data?.[0];
+  const activeJob =
+    latestJob?.status === "running" || latestJob?.status === "pending" ? latestJob : null;
+  const syncJobId = activeSyncJobId ?? activeJob?.id ?? null;
   const isSyncing =
     mutations.sync.isPending ||
     hasSyncingConnection ||
@@ -104,7 +111,8 @@ function WealthOverviewPage() {
       if (conn.provider === "manual") continue;
       setSyncingId(conn.id);
       try {
-        await mutations.sync.mutateAsync({ connectionId: conn.id, mode: "incremental" });
+        const job = await mutations.sync.mutateAsync({ connectionId: conn.id, mode: "incremental" });
+        setActiveSyncJobId(job.id);
       } finally {
         setSyncingId(null);
       }
@@ -115,7 +123,10 @@ function WealthOverviewPage() {
     setSyncingId(connectionId);
     mutations.sync.mutate(
       { connectionId, mode: "incremental" },
-      { onSettled: () => setSyncingId(null) },
+      {
+        onSuccess: (job) => setActiveSyncJobId(job.id),
+        onSettled: () => setSyncingId(null),
+      },
     );
   };
 
@@ -157,6 +168,14 @@ function WealthOverviewPage() {
         lastSyncedLabel={syncLabel?.replace(/^Last synced /, "")}
         errorMessage={latestJob?.errorMessage}
         onRetry={() => void handleSyncAll()}
+      />
+
+      <WealthSyncActivity
+        syncing={isSyncing}
+        syncJobId={syncJobId}
+        errorMessage={
+          uiState === "ERROR" || latestJob?.status === "failed" ? latestJob?.errorMessage : undefined
+        }
       />
 
       {uiState === "LOADING" ? <WealthSummarySkeleton /> : null}
