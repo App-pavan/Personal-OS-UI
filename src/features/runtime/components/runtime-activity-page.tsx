@@ -44,7 +44,7 @@ export function RuntimeActivityPage({
     logs,
     operations,
     activeOperations,
-    summary,
+    summary: _summary,
     services,
     providers,
     operationTypes,
@@ -87,6 +87,11 @@ export function RuntimeActivityPage({
       null
     );
   }, [selectedEvent, operations, activeOperations]);
+
+  const summary = useMemo(
+    () => computeSummary(logs, operations),
+    [logs, operations],
+  );
 
   const hasFilters = Boolean(
     params.service ||
