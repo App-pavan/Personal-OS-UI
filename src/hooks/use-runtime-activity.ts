@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { openRuntimeLogStream, runtimeApi } from "@/lib/api/runtime-service";
+import { ApiRequestError, errorMessage } from "@/lib/api/errors";
 import type { RuntimeLogEvent, RuntimeLogFilter, RuntimeOperation } from "@/lib/api/runtime-types";
 import {
   buildBackendFilter,
@@ -14,6 +15,8 @@ import {
 } from "@/features/runtime/lib/activity-utils";
 
 export type RuntimeConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "error";
+
+const POLL_MS = 3000;
 
 function mergeLogs(existing: RuntimeLogEvent[], incoming: RuntimeLogEvent[]): RuntimeLogEvent[] {
   const map = new Map<string, RuntimeLogEvent>();
@@ -42,34 +45,45 @@ export function useRuntimeActivityPage(params: ActivitySearchParams, enabled = t
   const [retentionMinutes, setRetentionMinutes] = useState(15);
   const [status, setStatus] = useState<RuntimeConnectionStatus>("idle");
   const [initialLoading, setInitialLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const streamRef = useRef<{ close: () => void } | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastEventIdRef = useRef<string | undefined>();
-  const refreshOpsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sseDisabled = useRef(false);
 
-  const refreshOperations = useCallback(async () => {
+  const refreshData = useCallback(async () => {
     try {
-      const res = await runtimeApi.operations.list();
-      setOperations(res.operations);
-      setRetentionMinutes((prev) => res.retentionMinutes ?? prev);
-    } catch {
-      /* non-fatal */
+      const [logsRes, opsRes] = await Promise.all([
+        runtimeApi.logs.list(filterStable),
+        runtimeApi.operations.list(),
+      ]);
+      setLogs((prev) => mergeLogs(prev, logsRes.logs));
+      setOperations(opsRes.operations);
+      setRetentionMinutes(logsRes.retentionMinutes);
+      setLoadError(null);
+      if (logsRes.logs.length) {
+        lastEventIdRef.current = logsRes.logs[logsRes.logs.length - 1]!.id;
+      }
+      setStatus((prev) => (prev === "error" ? "connected" : prev === "idle" ? "connected" : prev));
+      return true;
+    } catch (err) {
+      setLoadError(errorMessage(err));
+      setStatus("error");
+      if (err instanceof ApiRequestError && err.status === 403) {
+        setLoadError("Access denied. Sign out and sign back in to refresh your session permissions.");
+      }
+      return false;
     }
-  }, []);
+  }, [filterStable]);
 
-  const scheduleOperationsRefresh = useCallback(() => {
-    if (refreshOpsTimer.current) clearTimeout(refreshOpsTimer.current);
-    refreshOpsTimer.current = setTimeout(() => void refreshOperations(), 400);
-  }, [refreshOperations]);
-
-  const connect = useCallback(
+  const connectSSE = useCallback(
     (reconnect = false) => {
-      if (!enabled) return;
+      if (!enabled || sseDisabled.current) return;
 
       streamRef.current?.close();
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
 
-      setStatus(reconnect ? "reconnecting" : "connecting");
+      if (!reconnect) setStatus("connecting");
 
       const stream = openRuntimeLogStream(
         filterStable,
@@ -82,19 +96,20 @@ export function useRuntimeActivityPage(params: ActivitySearchParams, enabled = t
               if (!parsed.id) return;
               lastEventIdRef.current = parsed.id;
               setLogs((prev) => mergeLogs(prev, [parsed]));
-              scheduleOperationsRefresh();
+              setLoadError(null);
             } catch {
               /* ignore */
             }
           },
           onError: () => {
-            setStatus("error");
-            reconnectTimer.current = setTimeout(() => connect(true), 3000);
+            // API Gateway/Lambda cannot keep SSE alive — fall back to polling.
+            sseDisabled.current = true;
+            streamRef.current?.close();
+            setStatus("connected");
           },
           onClose: () => {
-            if (enabled) {
-              setStatus("reconnecting");
-              reconnectTimer.current = setTimeout(() => connect(true), 2000);
+            if (enabled && !sseDisabled.current) {
+              reconnectTimer.current = setTimeout(() => connectSSE(true), 2000);
             }
           },
         },
@@ -103,7 +118,7 @@ export function useRuntimeActivityPage(params: ActivitySearchParams, enabled = t
 
       streamRef.current = stream;
     },
-    [enabled, filterStable, scheduleOperationsRefresh],
+    [enabled, filterStable],
   );
 
   useEffect(() => {
@@ -115,32 +130,26 @@ export function useRuntimeActivityPage(params: ActivitySearchParams, enabled = t
 
     let cancelled = false;
     setInitialLoading(true);
+    sseDisabled.current = false;
 
-    void Promise.all([
-      runtimeApi.logs.list(filterStable),
-      runtimeApi.operations.list(),
-    ])
-      .then(([logsRes, opsRes]) => {
-        if (cancelled) return;
-        setLogs(logsRes.logs);
-        setOperations(opsRes.operations);
-        setRetentionMinutes(logsRes.retentionMinutes);
-        if (logsRes.logs.length) {
-          lastEventIdRef.current = logsRes.logs[logsRes.logs.length - 1]!.id;
-        }
-        connect(false);
+    void refreshData()
+      .then((ok) => {
+        if (cancelled || !ok) return;
+        connectSSE(false);
       })
       .finally(() => {
         if (!cancelled) setInitialLoading(false);
       });
 
+    const pollId = setInterval(() => void refreshData(), POLL_MS);
+
     return () => {
       cancelled = true;
       streamRef.current?.close();
+      clearInterval(pollId);
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      if (refreshOpsTimer.current) clearTimeout(refreshOpsTimer.current);
     };
-  }, [connect, enabled, filterStable]);
+  }, [connectSSE, enabled, filterStable, refreshData]);
 
   const filteredLogs = useMemo(() => {
     let result = logs.filter((log) => matchesClientFilters(log, params));
@@ -187,7 +196,12 @@ export function useRuntimeActivityPage(params: ActivitySearchParams, enabled = t
     retentionMinutes,
     status,
     initialLoading,
-    reconnect: () => connect(true),
-    refreshOperations,
+    loadError,
+    reconnect: () => {
+      sseDisabled.current = false;
+      void refreshData().then((ok) => {
+        if (ok) connectSSE(false);
+      });
+    },
   };
 }

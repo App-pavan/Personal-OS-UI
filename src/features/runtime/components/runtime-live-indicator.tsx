@@ -12,7 +12,7 @@ export function RuntimeLiveIndicator({
   onRetry?: () => void;
   className?: string;
 }) {
-  const live = status === "connected";
+  const live = status === "connected" || status === "connecting";
   const label =
     status === "connected"
       ? "LIVE"

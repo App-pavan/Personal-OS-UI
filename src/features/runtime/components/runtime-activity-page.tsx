@@ -51,6 +51,7 @@ export function RuntimeActivityPage({
     retentionMinutes,
     status,
     initialLoading,
+    loadError,
     reconnect,
   } = useRuntimeActivityPage(params);
 
@@ -184,6 +185,12 @@ export function RuntimeActivityPage({
       />
 
       <RuntimeConnectionBanner status={status} onRetry={reconnect} />
+
+      {loadError ? (
+        <div className="rounded-md border tone-danger-border tone-danger-bg/40 px-4 py-3 text-sm tone-danger-text">
+          {loadError}
+        </div>
+      ) : null}
 
       {params.correlationId ? (
         <RuntimeFollowingBanner
