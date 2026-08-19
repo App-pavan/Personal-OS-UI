@@ -5,7 +5,9 @@ import type {
   CompleteOAuthInput,
   ConnectProviderInput,
   CreateHoldingInput,
+  PlatformProviderKey,
   TriggerSyncInput,
+  UpdatePlatformConfigurationInput,
   WealthProviderKey,
 } from "@/lib/api/wealth-types";
 import { toast } from "sonner";
@@ -20,6 +22,7 @@ export const wealthKeys = {
   holdings: ["wealth", "holdings"] as const,
   accounts: (connectionId?: string) => ["wealth", "accounts", connectionId ?? "all"] as const,
   syncJobs: ["wealth", "sync-jobs"] as const,
+  configuration: ["wealth", "configuration"] as const,
 };
 
 function currentMonthKey() {
@@ -94,6 +97,15 @@ export function useWealthSyncJobs() {
   });
 }
 
+export function useWealthConfiguration() {
+  return useQuery({
+    queryKey: wealthKeys.configuration,
+    queryFn: () => wealthApi.configuration.get(),
+    staleTime: 30_000,
+    retry: 1,
+  });
+}
+
 export function useWealthMutations() {
   const qc = useQueryClient();
 
@@ -151,5 +163,52 @@ export function useWealthMutations() {
     onError: (err) => toast.error(errorMessage(err)),
   });
 
-  return { connect, completeOAuth, disconnect, sync, createHolding, invalidateAll };
+  const updateConfiguration = useMutation({
+    mutationFn: (input: UpdatePlatformConfigurationInput) => wealthApi.configuration.update(input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: wealthKeys.configuration });
+      void qc.invalidateQueries({ queryKey: wealthKeys.providers });
+      toast.success("Configuration saved");
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  });
+
+  const importEnvConfiguration = useMutation({
+    mutationFn: () => wealthApi.configuration.importEnv(),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: wealthKeys.configuration });
+      void qc.invalidateQueries({ queryKey: wealthKeys.providers });
+      toast.success("Environment configuration imported");
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  });
+
+  const deleteProviderCredentials = useMutation({
+    mutationFn: (provider: PlatformProviderKey) => wealthApi.configuration.deleteProvider(provider),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: wealthKeys.configuration });
+      void qc.invalidateQueries({ queryKey: wealthKeys.providers });
+      toast.success("Credentials removed");
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  });
+
+  const testPlatformProvider = useMutation({
+    mutationFn: (provider: PlatformProviderKey) => wealthApi.configuration.testProvider(provider),
+    onSuccess: () => toast.success("Provider connection successful"),
+    onError: (err) => toast.error(errorMessage(err)),
+  });
+
+  return {
+    connect,
+    completeOAuth,
+    disconnect,
+    sync,
+    createHolding,
+    updateConfiguration,
+    importEnvConfiguration,
+    deleteProviderCredentials,
+    testPlatformProvider,
+    invalidateAll,
+  };
 }

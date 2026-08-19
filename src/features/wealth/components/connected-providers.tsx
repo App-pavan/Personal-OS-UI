@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "@tanstack/react-router";
 import { FuturisticButton, SemanticBadge } from "@/components/future";
 import type { WealthConnection, WealthProviderDefinition } from "@/lib/api/wealth-types";
 import { formatRelativeTime } from "../lib/format";
@@ -55,7 +56,7 @@ export function ConnectedProvidersCard({
   syncingId?: string | null;
 }) {
   const connectable = useMemo(
-    () => providers.filter((p) => p.available && p.key !== "manual"),
+    () => providers.filter((p) => p.key !== "manual"),
     [providers],
   );
 
@@ -84,8 +85,14 @@ export function ConnectedProvidersCard({
                     <SemanticBadge tone={connectionTone(conn.status)}>
                       {statusLabel(conn.status)}
                     </SemanticBadge>
+                  ) : p.available ? (
+                    p.platformConfigured ? (
+                      <SemanticBadge tone="success">Configured</SemanticBadge>
+                    ) : (
+                      <SemanticBadge tone="muted">Not configured</SemanticBadge>
+                    )
                   ) : (
-                    <SemanticBadge tone="muted">Not connected</SemanticBadge>
+                    <SemanticBadge tone="muted">Unavailable</SemanticBadge>
                   )}
                 </div>
                 {conn?.lastSuccessfulSyncAt || conn?.lastSyncAt ? (
@@ -109,9 +116,15 @@ export function ConnectedProvidersCard({
                   </FuturisticButton>
                 ) : null}
                 {!conn || conn.status === "auth_expired" || conn.status === "error" ? (
-                  <FuturisticButton className="text-xs" onClick={() => onConnect(p.key)}>
-                    Connect
-                  </FuturisticButton>
+                  p.available ? (
+                    <FuturisticButton className="text-xs" onClick={() => onConnect(p.key)}>
+                      Connect
+                    </FuturisticButton>
+                  ) : p.key === "zerodha_kite" && !p.platformConfigured ? (
+                    <FuturisticButton variant="ghost" className="text-xs" asChild>
+                      <a href="/settings">Configure</a>
+                    </FuturisticButton>
+                  ) : null
                 ) : null}
               </div>
             </li>

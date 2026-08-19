@@ -107,9 +107,66 @@ export type WealthProviderDefinition = {
   description: string;
   country: string;
   available: boolean;
+  platformConfigured?: boolean;
   capabilities: WealthProviderCapabilities;
   credentialFields?: WealthCredentialField[];
 };
+
+export type PlatformProviderKey = "zerodha" | "groww";
+
+export type WealthPlatformProviderView = {
+  enabled: boolean;
+  apiKeyConfigured: boolean;
+  apiSecretConfigured: boolean;
+  platformConfigured: boolean;
+};
+
+export type WealthPlatformConfiguration = {
+  providers: {
+    zerodha: WealthPlatformProviderView;
+    groww: WealthPlatformProviderView;
+  };
+  marketData: { cacheTtl: number };
+  sync: { scheduleCron: string | null; schedulePreset?: string };
+  envConfigDetected: boolean;
+  envConfigImported: boolean;
+};
+
+export type UpdatePlatformProviderInput = {
+  enabled?: boolean;
+  apiKey?: string;
+  apiSecret?: string;
+};
+
+export type UpdatePlatformConfigurationInput = {
+  zerodha?: UpdatePlatformProviderInput;
+  groww?: UpdatePlatformProviderInput;
+  marketData?: { cacheTtl: number };
+  sync?: { scheduleCron?: string; schedulePreset?: string };
+};
+
+export type SyncSchedulePreset =
+  | "disabled"
+  | "hourly"
+  | "every_6_hours"
+  | "every_12_hours"
+  | "daily";
+
+export const MARKET_DATA_CACHE_OPTIONS = [
+  { label: "1 minute", value: 60 },
+  { label: "5 minutes", value: 300 },
+  { label: "10 minutes", value: 600 },
+  { label: "15 minutes", value: 900 },
+  { label: "30 minutes", value: 1800 },
+] as const;
+
+export const SYNC_SCHEDULE_OPTIONS: { label: string; value: SyncSchedulePreset }[] = [
+  { label: "Disabled", value: "disabled" },
+  { label: "Every hour", value: "hourly" },
+  { label: "Every 6 hours", value: "every_6_hours" },
+  { label: "Every 12 hours", value: "every_12_hours" },
+  { label: "Daily", value: "daily" },
+];
 
 export type WealthConnection = {
   id: string;
