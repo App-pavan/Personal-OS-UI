@@ -20,6 +20,7 @@ import { Route as ExpensesCategoriesRouteImport } from './routes/expenses/catego
 import { Route as ExpensesInsightsRouteImport } from './routes/expenses/insights'
 import { Route as ExpensesMembersRouteImport } from './routes/expenses/members'
 import { Route as ExpensesTransactionsRouteImport } from './routes/expenses/transactions'
+import { Route as SystemActivityRouteImport } from './routes/system/activity'
 import { Route as WealthIndexRouteImport } from './routes/wealth/index'
 import { Route as WealthOauthCallbackRouteImport } from './routes/wealth/oauth/callback'
 
@@ -78,6 +79,11 @@ const ExpensesTransactionsRoute = ExpensesTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => ExpensesRouteRoute,
 } as any)
+const SystemActivityRoute = SystemActivityRouteImport.update({
+  id: '/system/activity',
+  path: '/system/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WealthIndexRoute = WealthIndexRouteImport.update({
   id: '/wealth/',
   path: '/wealth/',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/expenses/insights': typeof ExpensesInsightsRoute
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
+  '/system/activity': typeof SystemActivityRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/wealth/': typeof WealthIndexRoute
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/expenses/insights': typeof ExpensesInsightsRoute
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
+  '/system/activity': typeof SystemActivityRoute
   '/expenses': typeof ExpensesIndexRoute
   '/wealth': typeof WealthIndexRoute
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/expenses/insights': typeof ExpensesInsightsRoute
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
+  '/system/activity': typeof SystemActivityRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/wealth/': typeof WealthIndexRoute
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/expenses/insights'
     | '/expenses/members'
     | '/expenses/transactions'
+    | '/system/activity'
     | '/expenses/'
     | '/wealth/'
     | '/wealth/oauth/callback'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/expenses/insights'
     | '/expenses/members'
     | '/expenses/transactions'
+    | '/system/activity'
     | '/expenses'
     | '/wealth'
     | '/wealth/oauth/callback'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/expenses/insights'
     | '/expenses/members'
     | '/expenses/transactions'
+    | '/system/activity'
     | '/expenses/'
     | '/wealth/'
     | '/wealth/oauth/callback'
@@ -187,6 +199,7 @@ export interface RootRouteChildren {
   ChecklistsRoute: typeof ChecklistsRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
+  SystemActivityRoute: typeof SystemActivityRoute
   WealthIndexRoute: typeof WealthIndexRoute
   WealthOauthCallbackRoute: typeof WealthOauthCallbackRoute
 }
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExpensesTransactionsRouteImport
       parentRoute: typeof ExpensesRouteRoute
     }
+    '/system/activity': {
+      id: '/system/activity'
+      path: '/system/activity'
+      fullPath: '/system/activity'
+      preLoaderRoute: typeof SystemActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wealth/': {
       id: '/wealth/'
       path: '/wealth'
@@ -315,6 +335,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChecklistsRoute: ChecklistsRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
+  SystemActivityRoute: SystemActivityRoute,
   WealthIndexRoute: WealthIndexRoute,
   WealthOauthCallbackRoute: WealthOauthCallbackRoute,
 }
