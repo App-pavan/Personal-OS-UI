@@ -1,4 +1,4 @@
-import { ClipboardCheck, LayoutGrid, ListChecks, Settings, TrendingUp, Wallet } from "lucide-react";
+import { ClipboardCheck, LayoutGrid, ListChecks, Radio, Settings, TrendingUp, Wallet } from "lucide-react";
 
 /**
  * Primary navigation.
@@ -8,7 +8,7 @@ import { ClipboardCheck, LayoutGrid, ListChecks, Settings, TrendingUp, Wallet } 
  */
 export type ModuleDef = {
   label: string;
-  to: "/" | "/tasks" | "/checklists" | "/expenses" | "/wealth" | "/settings";
+  to: "/" | "/tasks" | "/checklists" | "/expenses" | "/wealth" | "/settings" | "/system/activity";
   icon: typeof LayoutGrid;
   group: "core" | "system";
   blurb: string;
@@ -45,6 +45,13 @@ export const modules: ModuleDef[] = [
     blurb: "Investments and portfolio",
   },
   { label: "Settings", to: "/settings", icon: Settings, group: "system", blurb: "Preferences" },
+  {
+    label: "Runtime",
+    to: "/system/activity",
+    icon: Radio,
+    group: "system",
+    blurb: "Live system activity",
+  },
 ];
 
 export const primaryNav = modules;

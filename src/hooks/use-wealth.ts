@@ -89,11 +89,12 @@ export function useWealthAccounts(connectionId?: string) {
   });
 }
 
-export function useWealthSyncJobs() {
+export function useWealthSyncJobs(options?: { refetchInterval?: number | false }) {
   return useQuery({
     queryKey: wealthKeys.syncJobs,
     queryFn: () => wealthApi.sync.listJobs(),
     retry: 1,
+    refetchInterval: options?.refetchInterval ?? false,
   });
 }
 

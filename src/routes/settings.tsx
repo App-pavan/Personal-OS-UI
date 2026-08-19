@@ -7,10 +7,12 @@ import {
   Monitor,
   Moon,
   Palette,
+  Radio,
   ShieldCheck,
   Sun,
   UserRound,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useTheme } from "@/components/os/theme-provider";
 import { FutureState } from "@/components/os/state-views";
 import { useAuth } from "@/features/auth/auth-context";
@@ -174,6 +176,24 @@ function SettingsPage() {
       </section>
 
       <section className="animate-rise surface-raised mt-6 p-5" style={{ animationDelay: "180ms" }}>
+        <p className="label-eyebrow">Observability</p>
+        <div className="hairline-list mt-1">
+          <Row
+            icon={<Radio className="size-4" />}
+            title="Runtime activity"
+            line="Live operational events from the last 15 minutes — syncs, jobs, and background work."
+          >
+            <Link
+              to="/system/activity"
+              className="rounded-md border border-hairline px-3 py-1.5 text-xs font-medium transition hover:bg-muted/70"
+            >
+              Open activity
+            </Link>
+          </Row>
+        </div>
+      </section>
+
+      <section className="animate-rise surface-raised mt-6 p-5" style={{ animationDelay: "200ms" }}>
         <p className="label-eyebrow">Wealth</p>
         <div className="hairline-list mt-1">
           <WealthSettingsRow />
