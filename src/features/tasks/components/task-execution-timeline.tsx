@@ -21,7 +21,8 @@ export function TaskExecutionTimeline({
 
   useEffect(() => {
     if (!focusDateKey) return;
-    const key = focusDateKey === "scroll-today" ? sections.find((s) => s.isToday)?.key : focusDateKey;
+    const key =
+      focusDateKey === "scroll-today" ? sections.find((s) => s.isToday)?.key : focusDateKey;
     if (!key) return;
     sectionRefs.current.get(key)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [focusDateKey, sections]);

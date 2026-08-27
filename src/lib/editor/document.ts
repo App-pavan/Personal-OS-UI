@@ -163,7 +163,9 @@ export function templateToDoc(detail: ChecklistTemplateDetail): EditorDoc {
     }
     const label = item.quantity ? `${item.quantity} ${item.title}` : item.title;
     blocks.push(
-      item.itemType === "note" ? block("text", label) : block(item.required ? "check" : "todo", label),
+      item.itemType === "note"
+        ? block("text", label)
+        : block(item.required ? "check" : "todo", label),
     );
   }
   if (!blocks.length) blocks.push(block("check"));
@@ -212,7 +214,8 @@ export function docToTaskDraft(doc: EditorDoc, extras: TaskDraftExtras = {}): Ta
 /** Existing task → document, so editing reuses the same surface. */
 export function taskToDoc(task: TaskDetail): EditorDoc {
   const blocks: Block[] = [];
-  if (task.description) for (const line of task.description.split("\n")) blocks.push(block("text", line));
+  if (task.description)
+    for (const line of task.description.split("\n")) blocks.push(block("text", line));
   for (const s of [...(task.subtasks ?? [])].sort((a, b) => a.position - b.position)) {
     const b = block("todo", s.title);
     b.checked = s.completed;

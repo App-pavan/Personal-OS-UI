@@ -379,7 +379,9 @@ export const wealthApi = {
       const res = await api.get<unknown>("/wealth/settings/configuration");
       return mapPlatformConfiguration(res.data);
     },
-    update: async (input: UpdatePlatformConfigurationInput): Promise<WealthPlatformConfiguration> => {
+    update: async (
+      input: UpdatePlatformConfigurationInput,
+    ): Promise<WealthPlatformConfiguration> => {
       const res = await api.put<unknown>("/wealth/settings/configuration", input);
       return mapPlatformConfiguration(res.data);
     },

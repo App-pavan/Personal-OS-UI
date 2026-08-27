@@ -1,8 +1,4 @@
-import type {
-  RuntimeLogEvent,
-  RuntimeLogFilter,
-  RuntimeOperation,
-} from "@/lib/api/runtime-types";
+import type { RuntimeLogEvent, RuntimeLogFilter, RuntimeOperation } from "@/lib/api/runtime-types";
 
 export type ActivityLevelFilter = "all" | "DEBUG" | "INFO" | "WARN" | "ERROR";
 export type ActivityStatusFilter = "all" | "RUNNING" | "COMPLETED" | "FAILED";
@@ -60,9 +56,7 @@ export function formatEventDateTime(iso: string): string {
 }
 
 export function humanizeToken(value: string): string {
-  return value
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function serviceLabel(service: string): string {
@@ -95,10 +89,7 @@ export function buildBackendFilter(params: ActivitySearchParams): RuntimeLogFilt
   return filter;
 }
 
-export function matchesClientFilters(
-  log: RuntimeLogEvent,
-  params: ActivitySearchParams,
-): boolean {
+export function matchesClientFilters(log: RuntimeLogEvent, params: ActivitySearchParams): boolean {
   if (params.level && params.level !== "all") {
     if (params.level === "INFO") {
       if (log.level !== "INFO" && log.level !== "DEBUG" && !isSuccessEvent(log)) return false;
@@ -137,30 +128,21 @@ export function filterOperations(
   });
 }
 
-export function deriveServices(
-  logs: RuntimeLogEvent[],
-  operations: RuntimeOperation[],
-): string[] {
+export function deriveServices(logs: RuntimeLogEvent[], operations: RuntimeOperation[]): string[] {
   const set = new Set<string>();
   for (const log of logs) if (log.service) set.add(log.service);
   for (const op of operations) if (op.service) set.add(op.service);
   return [...set].sort();
 }
 
-export function deriveProviders(
-  logs: RuntimeLogEvent[],
-  operations: RuntimeOperation[],
-): string[] {
+export function deriveProviders(logs: RuntimeLogEvent[], operations: RuntimeOperation[]): string[] {
   const set = new Set<string>();
   for (const log of logs) if (log.provider) set.add(log.provider);
   for (const op of operations) if (op.provider) set.add(op.provider);
   return [...set].sort();
 }
 
-export function deriveOperations(
-  logs: RuntimeLogEvent[],
-  ops: RuntimeOperation[],
-): string[] {
+export function deriveOperations(logs: RuntimeLogEvent[], ops: RuntimeOperation[]): string[] {
   const set = new Set<string>();
   for (const log of logs) if (log.operation) set.add(log.operation);
   for (const op of ops) if (op.type) set.add(op.type);

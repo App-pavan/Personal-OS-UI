@@ -123,10 +123,7 @@ function normalizeTransaction(input: unknown): ExpenseTransaction {
   const merchantRaw = merchantLabel(raw);
   const counterparty = str(pick(raw, ["counterparty"]));
   const displayName =
-    counterparty ||
-    merchantRaw ||
-    str(pick(raw, ["note", "notes", "description"])) ||
-    "Expense";
+    counterparty || merchantRaw || str(pick(raw, ["note", "notes", "description"])) || "Expense";
   const merchantNormalized = str(pick(merchantObj, ["normalizedName"]));
   const splitObj = asRaw(pick(raw, ["split"]));
   const splitsRaw = asList(

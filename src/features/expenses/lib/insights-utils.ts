@@ -16,7 +16,9 @@ export function enrichMemberAnalytics(
   return rows.map((row) => {
     const fromDirectory = byId.get(row.memberId);
     const resolved =
-      row.memberName && row.memberName !== "Member" ? row.memberName : fromDirectory ?? row.memberName;
+      row.memberName && row.memberName !== "Member"
+        ? row.memberName
+        : (fromDirectory ?? row.memberName);
     return {
       ...row,
       memberName: resolved?.trim() || "Unknown member",

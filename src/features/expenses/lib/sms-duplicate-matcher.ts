@@ -116,9 +116,7 @@ export function findSmsDuplicateClusters(
 }
 
 /** Pending SMS clones that should be ignored when a managed twin exists. */
-export function pendingSmsClonesToIgnore(
-  transactions: ExpenseTransaction[],
-): ExpenseTransaction[] {
+export function pendingSmsClonesToIgnore(transactions: ExpenseTransaction[]): ExpenseTransaction[] {
   const toIgnore: ExpenseTransaction[] = [];
 
   for (const cluster of buildClusters(transactions)) {

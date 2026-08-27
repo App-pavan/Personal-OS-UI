@@ -10,20 +10,9 @@ export type TransactionOwnership = "personal" | "split";
 export type SplitMode = "equal" | "custom";
 
 export type PaymentMethod =
-  | "cash"
-  | "upi"
-  | "debit_card"
-  | "credit_card"
-  | "bank_transfer"
-  | "wallet"
-  | "other";
+  "cash" | "upi" | "debit_card" | "credit_card" | "bank_transfer" | "wallet" | "other";
 
-export type TransactionKind =
-  | "purchase"
-  | "transfer"
-  | "payment"
-  | "bill_payment"
-  | "other";
+export type TransactionKind = "purchase" | "transfer" | "payment" | "bill_payment" | "other";
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
   "cash",
@@ -135,12 +124,7 @@ export type TransactionWriteInput = {
   source?: TransactionSource;
 };
 
-export type TransactionSort =
-  | "occurredAt"
-  | "amountMinor"
-  | "merchant"
-  | "createdAt"
-  | "status";
+export type TransactionSort = "occurredAt" | "amountMinor" | "merchant" | "createdAt" | "status";
 
 export type TransactionQuery = {
   status?: TransactionStatus[];

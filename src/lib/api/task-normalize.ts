@@ -226,7 +226,8 @@ export function normalizeTaskDetail(raw: Raw): TaskDetail {
         ? {
             summary: str(asRaw(raw.aiContext).summary) || undefined,
             suggestedWindow: str(asRaw(raw.aiContext).suggestedWindow) || undefined,
-            confidence: num(asRaw(raw.aiContext).confidence, undefined as unknown as number) || undefined,
+            confidence:
+              num(asRaw(raw.aiContext).confidence, undefined as unknown as number) || undefined,
           }
         : undefined,
   };

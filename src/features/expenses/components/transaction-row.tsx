@@ -9,7 +9,13 @@ import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { displayCategoryLabel } from "../lib/category-resolve";
 import { getCategoryMeta } from "../lib/category-meta";
-import { formatWhenDetailed, paymentMethodLabel, sourceLabel, sourceTone, transactionDisplayName } from "../lib/labels";
+import {
+  formatWhenDetailed,
+  paymentMethodLabel,
+  sourceLabel,
+  sourceTone,
+  transactionDisplayName,
+} from "../lib/labels";
 import { GlassBadge } from "./glass";
 import {
   DirectionArrow,

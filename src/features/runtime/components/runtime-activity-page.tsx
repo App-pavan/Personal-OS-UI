@@ -88,20 +88,17 @@ export function RuntimeActivityPage({
     );
   }, [selectedEvent, operations, activeOperations]);
 
-  const summary = useMemo(
-    () => computeSummary(logs, operations),
-    [logs, operations],
-  );
+  const summary = useMemo(() => computeSummary(logs, operations), [logs, operations]);
 
   const hasFilters = Boolean(
     params.service ||
-      params.provider ||
-      params.operation ||
-      params.correlationId ||
-      (params.level && params.level !== "all") ||
-      (params.status && params.status !== "all") ||
-      (params.minutes && params.minutes !== 15) ||
-      params.q,
+    params.provider ||
+    params.operation ||
+    params.correlationId ||
+    (params.level && params.level !== "all") ||
+    (params.status && params.status !== "all") ||
+    (params.minutes && params.minutes !== 15) ||
+    params.q,
   );
 
   const patchSearch = useCallback(

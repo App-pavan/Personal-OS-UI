@@ -53,7 +53,10 @@ export function RuntimeEventRow({
 }) {
   const visual = eventVisualLevel(log);
   const tone = levelTone(visual);
-  const context = [log.service ? serviceLabel(log.service) : null, log.provider ? providerLabel(log.provider) : null]
+  const context = [
+    log.service ? serviceLabel(log.service) : null,
+    log.provider ? providerLabel(log.provider) : null,
+  ]
     .filter(Boolean)
     .join(" · ");
 
@@ -80,7 +83,12 @@ export function RuntimeEventRow({
             aria-hidden
           />
           <div className="min-w-0 flex-1">
-            <p className={cn("font-mono text-[11px] tracking-wide uppercase", semanticTextClasses(tone))}>
+            <p
+              className={cn(
+                "font-mono text-[11px] tracking-wide uppercase",
+                semanticTextClasses(tone),
+              )}
+            >
               {humanizeToken(log.event)}
             </p>
             {context ? <p className="text-[11px] text-muted-foreground">{context}</p> : null}

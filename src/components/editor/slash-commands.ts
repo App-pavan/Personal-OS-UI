@@ -150,7 +150,6 @@ export function filterCommands(query: string): SlashCommand[] {
   if (!q) return slashCommands;
   return slashCommands.filter(
     (c) =>
-      c.label.toLowerCase().includes(q) ||
-      c.keywords.some((k) => k.startsWith(q) || k.includes(q)),
+      c.label.toLowerCase().includes(q) || c.keywords.some((k) => k.startsWith(q) || k.includes(q)),
   );
 }

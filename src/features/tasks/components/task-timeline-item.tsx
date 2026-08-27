@@ -57,12 +57,17 @@ export function TaskTimelineItem({
       <button type="button" onClick={onOpen} className="min-w-0 text-left">
         <div className="flex items-start gap-2">
           <span
-            className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", priorityDot[task.priority] ?? priorityDot.normal)}
+            className={cn(
+              "mt-1.5 size-1.5 shrink-0 rounded-full",
+              priorityDot[task.priority] ?? priorityDot.normal,
+            )}
             aria-hidden
           />
           <div className="min-w-0 flex-1">
             {time ? (
-              <p className="font-mono text-[10px] tracking-wide text-muted-foreground uppercase">{time}</p>
+              <p className="font-mono text-[10px] tracking-wide text-muted-foreground uppercase">
+                {time}
+              </p>
             ) : null}
             <p className={cn("text-sm leading-snug", done && "line-through")}>{task.title}</p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">

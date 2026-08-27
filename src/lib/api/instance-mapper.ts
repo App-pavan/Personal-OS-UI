@@ -70,8 +70,7 @@ export function fromBackendInstance(raw: BackendInstance): ChecklistInstance {
   const completedCount = progress.completedItems ?? items.filter((i) => i.checked).length;
   const requiredCount = progress.requiredItems ?? items.filter((i) => i.required).length;
   const requiredCompletedCount =
-    progress.completedRequiredItems ??
-    items.filter((i) => i.required && i.checked).length;
+    progress.completedRequiredItems ?? items.filter((i) => i.required && i.checked).length;
 
   return {
     id: String(raw["id"] ?? ""),

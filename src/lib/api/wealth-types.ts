@@ -146,11 +146,7 @@ export type UpdatePlatformConfigurationInput = {
 };
 
 export type SyncSchedulePreset =
-  | "disabled"
-  | "hourly"
-  | "every_6_hours"
-  | "every_12_hours"
-  | "daily";
+  "disabled" | "hourly" | "every_6_hours" | "every_12_hours" | "daily";
 
 export const MARKET_DATA_CACHE_OPTIONS = [
   { label: "1 minute", value: 60 },

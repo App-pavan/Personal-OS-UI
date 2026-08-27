@@ -78,7 +78,10 @@ export const paymentMethodLabel: Record<import("@/lib/api/expense-types").Paymen
   other: "Other",
 };
 
-export const transactionKindLabel: Record<import("@/lib/api/expense-types").TransactionKind, string> = {
+export const transactionKindLabel: Record<
+  import("@/lib/api/expense-types").TransactionKind,
+  string
+> = {
   purchase: "Purchase",
   transfer: "Transfer",
   payment: "Payment",
