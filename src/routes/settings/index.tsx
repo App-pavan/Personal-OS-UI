@@ -7,7 +7,6 @@ import {
   Monitor,
   Moon,
   Palette,
-  Radio,
   ShieldCheck,
   Sun,
   UserRound,
@@ -16,12 +15,12 @@ import { Link } from "@tanstack/react-router";
 import { useTheme } from "@/components/os/theme-provider";
 import { FutureState } from "@/components/os/state-views";
 import { useAuth } from "@/features/auth/auth-context";
-import { WealthSettingsRow } from "@/features/wealth/components/wealth-settings-section";
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { API_BASE_URL, API_CONFIGURED, API_ENVIRONMENT } from "@/lib/api/config";
 import { useTasks } from "@/hooks/use-tasks";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/settings/")({
   head: () => ({
     meta: [
       { title: "Settings — Personal OS" },
@@ -66,8 +65,8 @@ function Row({
 
 function SettingsPage() {
   const { user, signOut } = useAuth();
+  const { canViewAccessControl } = useCapabilities();
   const { theme, toggle } = useTheme();
-  // A cheap authenticated read doubles as a live connection probe.
   const probe = useTasks({ perPage: 1 });
 
   const connection = useMemo(() => {
@@ -77,7 +76,7 @@ function SettingsPage() {
   }, [probe.isLoading, probe.isSuccess]);
 
   return (
-    <div className="mx-auto w-full max-w-[900px]">
+    <>
       <header className="animate-rise">
         <p className="label-eyebrow">Settings</p>
         <h1 className="display-lg mt-3">How your OS behaves.</h1>
@@ -85,6 +84,27 @@ function SettingsPage() {
           One owner account, one system. Anything not yet built by the backend is marked honestly.
         </p>
       </header>
+
+      {canViewAccessControl && (
+        <section
+          className="animate-rise surface-raised mt-8 p-5"
+          style={{ animationDelay: "60ms" }}
+        >
+          <p className="label-eyebrow">Access</p>
+          <Row
+            icon={<ShieldCheck className="size-4" />}
+            title="Access Control"
+            line="Manage users, roles, and what each person can access across Personal OS."
+          >
+            <Link
+              to="/settings/access"
+              className="rounded-md border border-hairline px-3 py-1.5 text-xs font-medium transition hover:bg-muted/70"
+            >
+              Open
+            </Link>
+          </Row>
+        </section>
+      )}
 
       <section className="animate-rise surface-raised mt-8 p-5" style={{ animationDelay: "80ms" }}>
         <p className="label-eyebrow">Account</p>
@@ -175,31 +195,6 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="animate-rise surface-raised mt-6 p-5" style={{ animationDelay: "180ms" }}>
-        <p className="label-eyebrow">Observability</p>
-        <div className="hairline-list mt-1">
-          <Row
-            icon={<Radio className="size-4" />}
-            title="Runtime activity"
-            line="Live operational events from the last 15 minutes — syncs, jobs, and background work."
-          >
-            <Link
-              to="/system/activity"
-              className="rounded-md border border-hairline px-3 py-1.5 text-xs font-medium transition hover:bg-muted/70"
-            >
-              Open activity
-            </Link>
-          </Row>
-        </div>
-      </section>
-
-      <section className="animate-rise surface-raised mt-6 p-5" style={{ animationDelay: "200ms" }}>
-        <p className="label-eyebrow">Wealth</p>
-        <div className="hairline-list mt-1">
-          <WealthSettingsRow />
-        </div>
-      </section>
-
       <section className="animate-rise mt-6 space-y-3" style={{ animationDelay: "200ms" }}>
         <FutureState
           title="Notifications"
@@ -214,6 +209,6 @@ function SettingsPage() {
       <p className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
         <Bell className="size-3.5" /> No tokens or secrets are ever displayed here.
       </p>
-    </div>
+    </>
   );
 }
