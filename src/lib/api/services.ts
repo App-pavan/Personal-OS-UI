@@ -115,7 +115,12 @@ class ApiTaskService implements TaskService {
     const res = await api.get<TaskSummary[]>("/tasks", query as Record<string, never>);
     return {
       items: res.data.map((task) => this.normalizeSummary(task)),
-      meta: res.meta ?? { page: 1, perPage: res.data.length, total: res.data.length, totalPages: 1 },
+      meta: res.meta ?? {
+        page: 1,
+        perPage: res.data.length,
+        total: res.data.length,
+        totalPages: 1,
+      },
     };
   }
   get = async (id: string) =>
@@ -139,13 +144,20 @@ class ApiTaskService implements TaskService {
   bulk = async (op: BulkTaskOperation) => {
     await api.post<null>("/tasks/bulk", op);
   };
-  complete = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/complete`)).data);
-  reopen = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/reopen`)).data);
-  archive = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/archive`)).data);
-  restore = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/restore`)).data);
-  duplicate = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/duplicate`)).data);
+  complete = async (id: string) =>
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/complete`)).data);
+  reopen = async (id: string) =>
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/reopen`)).data);
+  archive = async (id: string) =>
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/archive`)).data);
+  restore = async (id: string) =>
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/restore`)).data);
+  duplicate = async (id: string) =>
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/duplicate`)).data);
   assign = async (id: string, assigneeName: string) =>
-    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/assign`, { assigneeName })).data);
+    this.normalizeDetail(
+      (await api.post<TaskDetail>(`/tasks/${id}/assign`, { assigneeName })).data,
+    );
   setProgress = async (id: string, progress: number) =>
     this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/progress`, { progress })).data);
   setPinned = async (id: string, pinned: boolean) =>
@@ -155,13 +167,16 @@ class ApiTaskService implements TaskService {
   addSubtask = async (id: string, title: string) =>
     this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/subtasks`, { title })).data);
   toggleSubtask = async (id: string, subtaskId: string) =>
-    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/subtasks/${subtaskId}/toggle`)).data);
+    this.normalizeDetail(
+      (await api.post<TaskDetail>(`/tasks/${id}/subtasks/${subtaskId}/toggle`)).data,
+    );
   toggleChecklistItem = async (id: string, itemId: string) =>
-    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/checklist/${itemId}/toggle`)).data);
+    this.normalizeDetail(
+      (await api.post<TaskDetail>(`/tasks/${id}/checklist/${itemId}/toggle`)).data,
+    );
   addComment = async (id: string, body: string) =>
     this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/comments`, { body })).data);
 }
-
 
 /* ---------------- live checklist service ---------------- */
 
@@ -171,11 +186,17 @@ class ApiChecklistService implements ChecklistService {
       fromBackendTemplate(raw),
     );
   getTemplate = async (id: string) =>
-    fromBackendTemplateDetail((await api.get<Record<string, unknown>>(`/checklists/templates/${id}`)).data);
+    fromBackendTemplateDetail(
+      (await api.get<Record<string, unknown>>(`/checklists/templates/${id}`)).data,
+    );
   createTemplate = async (input: CreateChecklistTemplateInput) =>
     fromBackendTemplateDetail(
-      (await api.post<Record<string, unknown>>("/checklists/templates", toBackendCreateTemplateInput(input)))
-        .data,
+      (
+        await api.post<Record<string, unknown>>(
+          "/checklists/templates",
+          toBackendCreateTemplateInput(input),
+        )
+      ).data,
     );
   updateTemplate = async (id: string, input: UpdateChecklistTemplateInput) =>
     fromBackendTemplateDetail(
@@ -211,8 +232,12 @@ class ApiChecklistService implements ChecklistService {
               body,
             )
           ).data
-        : (await api.post<Record<string, unknown>>(`/checklists/templates/${templateId}/items`, body))
-            .data,
+        : (
+            await api.post<Record<string, unknown>>(
+              `/checklists/templates/${templateId}/items`,
+              body,
+            )
+          ).data,
     );
   };
   removeTemplateItem = async (templateId: string, itemId: string) =>

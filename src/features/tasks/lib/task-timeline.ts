@@ -45,7 +45,10 @@ export {
   localDateKey as dateKey,
 } from "./task-dates";
 
-function sectionLabels(key: string, now: Date): { headline: string; subline: string; isToday: boolean } {
+function sectionLabels(
+  key: string,
+  now: Date,
+): { headline: string; subline: string; isToday: boolean } {
   const todayKey = localDateKey(now);
   const date = dateFromLocalKey(key);
   const subline = date

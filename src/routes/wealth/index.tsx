@@ -114,7 +114,10 @@ function WealthOverviewPage() {
       if (conn.provider === "manual") continue;
       setSyncingId(conn.id);
       try {
-        const job = await mutations.sync.mutateAsync({ connectionId: conn.id, mode: "incremental" });
+        const job = await mutations.sync.mutateAsync({
+          connectionId: conn.id,
+          mode: "incremental",
+        });
         setActiveSyncJobId(job.id);
       } finally {
         setSyncingId(null);
@@ -177,7 +180,9 @@ function WealthOverviewPage() {
         syncing={isSyncing}
         syncJobId={syncJobId}
         errorMessage={
-          uiState === "ERROR" || latestJob?.status === "failed" ? latestJob?.errorMessage : undefined
+          uiState === "ERROR" || latestJob?.status === "failed"
+            ? latestJob?.errorMessage
+            : undefined
         }
       />
 

@@ -51,7 +51,8 @@ export function TaskDetailPane({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="label-eyebrow">
-            {(task.type ?? "task").replace(/_/g, " ")} · {(task.status ?? "inbox").replace(/_/g, " ")}
+            {(task.type ?? "task").replace(/_/g, " ")} ·{" "}
+            {(task.status ?? "inbox").replace(/_/g, " ")}
           </p>
           <h2 className="mt-2 text-lg leading-snug font-medium">{task.title}</h2>
         </div>
@@ -224,7 +225,9 @@ export function TaskDetailPane({
                 >
                   <Check className="size-2.5" />
                 </span>
-                <span className={cn("text-sm", c.completed && "text-muted-foreground line-through")}>
+                <span
+                  className={cn("text-sm", c.completed && "text-muted-foreground line-through")}
+                >
                   {c.title}
                 </span>
                 {c.required ? <Pill tone="muted">required</Pill> : null}
@@ -240,8 +243,8 @@ export function TaskDetailPane({
           <div className="mt-2 space-y-1.5">
             {dependencies.map((d) => (
               <p key={d.id} className="text-sm text-muted-foreground">
-                <span className="text-foreground/85">{d.title}</span> — {d.type.replace(/_/g, " ")} ·{" "}
-                {d.status.replace(/_/g, " ")}
+                <span className="text-foreground/85">{d.title}</span> — {d.type.replace(/_/g, " ")}{" "}
+                · {d.status.replace(/_/g, " ")}
               </p>
             ))}
           </div>

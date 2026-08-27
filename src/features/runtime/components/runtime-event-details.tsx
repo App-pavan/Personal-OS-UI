@@ -179,10 +179,21 @@ export function RuntimeEventDetails({
           <div className="space-y-2 rounded-md border border-hairline/60 bg-muted/10 p-3">
             <p className="label-eyebrow">Operation</p>
             <div className="flex items-center gap-2">
-              <SemanticBadge tone={operation.status === "RUNNING" ? "info" : operation.status === "FAILED" ? "danger" : "success"} dot={operation.status === "RUNNING"}>
+              <SemanticBadge
+                tone={
+                  operation.status === "RUNNING"
+                    ? "info"
+                    : operation.status === "FAILED"
+                      ? "danger"
+                      : "success"
+                }
+                dot={operation.status === "RUNNING"}
+              >
                 {humanizeToken(operation.type)}
               </SemanticBadge>
-              <span className="text-[10px] text-muted-foreground uppercase">{operation.status}</span>
+              <span className="text-[10px] text-muted-foreground uppercase">
+                {operation.status}
+              </span>
             </div>
             {operation.currentStep ? (
               <DetailRow label="Current step" value={humanizeToken(operation.currentStep)} />
@@ -203,14 +214,26 @@ export function RuntimeEventDetails({
         {event ? (
           <div className="space-y-1">
             <p className="label-eyebrow">Event details</p>
-            <p className="font-mono text-sm tracking-wide uppercase">{humanizeToken(event.event)}</p>
+            <p className="font-mono text-sm tracking-wide uppercase">
+              {humanizeToken(event.event)}
+            </p>
 
             <DetailRow label="Time" value={formatEventDateTime(event.timestamp)} />
             <DetailRow
               label="Level"
               value={
                 visual ? (
-                  <SemanticBadge tone={visual === "SUCCESS" ? "success" : visual === "ERROR" ? "danger" : visual === "WARN" ? "warning" : "info"}>
+                  <SemanticBadge
+                    tone={
+                      visual === "SUCCESS"
+                        ? "success"
+                        : visual === "ERROR"
+                          ? "danger"
+                          : visual === "WARN"
+                            ? "warning"
+                            : "info"
+                    }
+                  >
                     {visual}
                   </SemanticBadge>
                 ) : null
@@ -218,8 +241,14 @@ export function RuntimeEventDetails({
             />
             <DetailRow label="Service" value={event.service ? serviceLabel(event.service) : null} />
             <DetailRow label="Module" value={event.module ? humanizeToken(event.module) : null} />
-            <DetailRow label="Operation" value={event.operation ? humanizeToken(event.operation) : null} />
-            <DetailRow label="Provider" value={event.provider ? providerLabel(event.provider) : null} />
+            <DetailRow
+              label="Operation"
+              value={event.operation ? humanizeToken(event.operation) : null}
+            />
+            <DetailRow
+              label="Provider"
+              value={event.provider ? providerLabel(event.provider) : null}
+            />
             {event.durationMs != null ? (
               <DetailRow label="Duration" value={`${event.durationMs}ms`} />
             ) : null}
@@ -269,12 +298,8 @@ export function RuntimeEventDetails({
             {event.error ? (
               <div className="space-y-1 border-t border-hairline/60 pt-3">
                 <p className="label-eyebrow">Error details</p>
-                {event.error.name ? (
-                  <DetailRow label="Type" value={event.error.name} />
-                ) : null}
-                {event.error.code ? (
-                  <DetailRow label="Code" value={event.error.code} />
-                ) : null}
+                {event.error.name ? <DetailRow label="Type" value={event.error.name} /> : null}
+                {event.error.code ? <DetailRow label="Code" value={event.error.code} /> : null}
                 {event.error.message ? (
                   <DetailRow label="Message" value={event.error.message} />
                 ) : null}

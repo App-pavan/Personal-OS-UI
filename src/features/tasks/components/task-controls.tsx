@@ -57,7 +57,10 @@ export function TaskDateNavigator({
             }}
             className={cn(
               "rounded-md px-2.5 py-1 text-[11px] transition",
-              (i === 0 && isToday) || (i === 1 && !isToday && focusDate.toDateString() === addDays(startOfDay(), 1).toDateString())
+              (i === 0 && isToday) ||
+                (i === 1 &&
+                  !isToday &&
+                  focusDate.toDateString() === addDays(startOfDay(), 1).toDateString())
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:bg-muted/50",
             )}

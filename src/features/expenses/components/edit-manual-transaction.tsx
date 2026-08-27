@@ -121,15 +121,28 @@ export function EditManualTransaction({
       </div>
       <CategorySelector categories={categories} value={categoryId} onChange={setCategoryId} />
       <div className="grid grid-cols-2 gap-2">
-        <GlassInput type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
-        <GlassInput type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
+        <GlassInput
+          type="date"
+          value={occurredDate}
+          onChange={(e) => setOccurredDate(e.target.value)}
+        />
+        <GlassInput
+          type="time"
+          value={occurredTime}
+          onChange={(e) => setOccurredTime(e.target.value)}
+        />
       </div>
       <textarea
         className="glass-panel min-h-[64px] w-full rounded-lg border border-hairline/70 p-3 text-sm"
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
-      <GlassButton type="button" className="w-full" disabled={saving || amountMinor <= 0} onClick={submit}>
+      <GlassButton
+        type="button"
+        className="w-full"
+        disabled={saving || amountMinor <= 0}
+        onClick={submit}
+      >
         Save changes
       </GlassButton>
     </section>

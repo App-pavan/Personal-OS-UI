@@ -62,8 +62,7 @@ type RequestOptions = {
 
 export type Envelope<T> = { data: T; meta?: PaginationMeta | undefined };
 
-const requestId = () =>
-  `pos-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+const requestId = () => `pos-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 /* ---------------- single-flight refresh ---------------- */
 

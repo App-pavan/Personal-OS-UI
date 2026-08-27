@@ -175,9 +175,7 @@ function ExpenseOverviewPage() {
           <RecentTransactions
             transactions={recent}
             categories={categories.data ?? []}
-            onSelect={(id) =>
-              setSelectedId(resolveCanonicalTransactionId(id, cleanupPool))
-            }
+            onSelect={(id) => setSelectedId(resolveCanonicalTransactionId(id, cleanupPool))}
           />
         </div>
       )}

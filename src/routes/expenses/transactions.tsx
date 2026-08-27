@@ -89,10 +89,7 @@ function TransactionsPage() {
   const cleanupPool = cleanupQuery.data?.items ?? [];
   useSmsDuplicateCleanup(cleanupPool);
 
-  const items = useMemo(
-    () => collapseSmsDuplicates(list.data?.items ?? []),
-    [list.data?.items],
-  );
+  const items = useMemo(() => collapseSmsDuplicates(list.data?.items ?? []), [list.data?.items]);
   const meta = list.data?.meta;
   const totalPages = meta?.totalPages ?? 1;
 

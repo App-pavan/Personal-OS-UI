@@ -13,7 +13,8 @@ import {
   type ActivitySearchParams,
 } from "@/features/runtime/lib/activity-utils";
 
-export type RuntimeConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "error";
+export type RuntimeConnectionStatus =
+  "idle" | "connecting" | "connected" | "reconnecting" | "error";
 
 function mergeLogs(existing: RuntimeLogEvent[], incoming: RuntimeLogEvent[]): RuntimeLogEvent[] {
   const map = new Map<string, RuntimeLogEvent>();
@@ -27,14 +28,17 @@ function filterKey(filter: RuntimeLogFilter): string {
 }
 
 export function useRuntimeActivityPage(params: ActivitySearchParams, enabled = true) {
-  const backendFilter = useMemo(() => buildBackendFilter(params), [
-    params.service,
-    params.provider,
-    params.operation,
-    params.correlationId,
-    params.level,
-    params.minutes,
-  ]);
+  const backendFilter = useMemo(
+    () => buildBackendFilter(params),
+    [
+      params.service,
+      params.provider,
+      params.operation,
+      params.correlationId,
+      params.level,
+      params.minutes,
+    ],
+  );
   const filterStable = useMemo(() => backendFilter, [filterKey(backendFilter)]);
 
   const [logs, setLogs] = useState<RuntimeLogEvent[]>([]);
@@ -116,10 +120,7 @@ export function useRuntimeActivityPage(params: ActivitySearchParams, enabled = t
     let cancelled = false;
     setInitialLoading(true);
 
-    void Promise.all([
-      runtimeApi.logs.list(filterStable),
-      runtimeApi.operations.list(),
-    ])
+    void Promise.all([runtimeApi.logs.list(filterStable), runtimeApi.operations.list()])
       .then(([logsRes, opsRes]) => {
         if (cancelled) return;
         setLogs(logsRes.logs);

@@ -11,7 +11,10 @@ const activitySearchSchema = z.object({
   correlationId: z.string().optional(),
   level: z.enum(["all", "DEBUG", "INFO", "WARN", "ERROR"]).optional(),
   status: z.enum(["all", "RUNNING", "COMPLETED", "FAILED"]).optional(),
-  minutes: z.coerce.number().pipe(z.union([z.literal(5), z.literal(10), z.literal(15)])).optional(),
+  minutes: z.coerce
+    .number()
+    .pipe(z.union([z.literal(5), z.literal(10), z.literal(15)]))
+    .optional(),
   q: z.string().optional(),
   eventId: z.string().optional(),
 });

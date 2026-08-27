@@ -218,11 +218,19 @@ export function CreateTransactionFlow({
       <section className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <p className="label-eyebrow">Date</p>
-          <GlassInput type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
+          <GlassInput
+            type="date"
+            value={occurredDate}
+            onChange={(e) => setOccurredDate(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <p className="label-eyebrow">Time</p>
-          <GlassInput type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
+          <GlassInput
+            type="time"
+            value={occurredTime}
+            onChange={(e) => setOccurredTime(e.target.value)}
+          />
         </div>
       </section>
 
@@ -286,7 +294,12 @@ export function CreateTransactionFlow({
         <ReceiptField value={billUrl} onChange={setBillUrl} />
       </section>
 
-      <GlassButton type="button" className="w-full" disabled={!canSubmit || creating} onClick={submit}>
+      <GlassButton
+        type="button"
+        className="w-full"
+        disabled={!canSubmit || creating}
+        onClick={submit}
+      >
         Save transaction
       </GlassButton>
     </div>

@@ -18,10 +18,7 @@ import type {
   WealthPlatformConfiguration,
   WealthPlatformProviderView,
 } from "@/lib/api/wealth-types";
-import {
-  MARKET_DATA_CACHE_OPTIONS,
-  SYNC_SCHEDULE_OPTIONS,
-} from "@/lib/api/wealth-types";
+import { MARKET_DATA_CACHE_OPTIONS, SYNC_SCHEDULE_OPTIONS } from "@/lib/api/wealth-types";
 import { useWealthConfiguration, useWealthMutations } from "@/hooks/use-wealth";
 import { cn } from "@/lib/utils";
 
@@ -213,7 +210,11 @@ export function WealthSettingsSection() {
         if (!prev) return base;
         return {
           ...base,
-          zerodha: { ...base.zerodha, apiKey: prev.zerodha.apiKey, apiSecret: prev.zerodha.apiSecret },
+          zerodha: {
+            ...base.zerodha,
+            apiKey: prev.zerodha.apiKey,
+            apiSecret: prev.zerodha.apiSecret,
+          },
           groww: { ...base.groww, apiKey: prev.groww.apiKey, apiSecret: prev.groww.apiSecret },
           cacheTtl: prev.cacheTtl,
           syncPreset: prev.syncPreset,
@@ -316,9 +317,7 @@ export function WealthSettingsSection() {
             <Label className="text-xs">Automatic synchronization</Label>
             <Select
               value={draft.syncPreset}
-              onValueChange={(v) =>
-                setDraft({ ...draft, syncPreset: v as SyncSchedulePreset })
-              }
+              onValueChange={(v) => setDraft({ ...draft, syncPreset: v as SyncSchedulePreset })}
             >
               <SelectTrigger className="mt-1.5">
                 <SelectValue />
@@ -354,10 +353,7 @@ export function WealthSettingsSection() {
       </div>
 
       <div className="flex items-center gap-3">
-        <FuturisticButton
-          disabled={mutations.updateConfiguration.isPending}
-          onClick={handleSave}
-        >
+        <FuturisticButton disabled={mutations.updateConfiguration.isPending} onClick={handleSave}>
           {mutations.updateConfiguration.isPending ? (
             <>
               <Loader2 className="mr-1 size-3 animate-spin" /> Saving…

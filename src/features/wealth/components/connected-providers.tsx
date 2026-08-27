@@ -55,10 +55,7 @@ export function ConnectedProvidersCard({
   onSyncConnection?: (connectionId: string) => void;
   syncingId?: string | null;
 }) {
-  const connectable = useMemo(
-    () => providers.filter((p) => p.key !== "manual"),
-    [providers],
-  );
+  const connectable = useMemo(() => providers.filter((p) => p.key !== "manual"), [providers]);
 
   const connectedByProvider = useMemo(() => {
     const map = new Map<string, WealthConnection>();

@@ -36,7 +36,7 @@ export function WealthSyncActivity({
       to: "/system/activity",
       search: {
         service: "wealth",
-        ...(correlationId ?? operation?.correlationId
+        ...((correlationId ?? operation?.correlationId)
           ? { correlationId: correlationId ?? operation?.correlationId }
           : {}),
       },

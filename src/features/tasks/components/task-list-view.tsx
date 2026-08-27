@@ -21,9 +21,7 @@ export function TaskListView({
 
   if (sections.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        Nothing matches this view.
-      </p>
+      <p className="py-12 text-center text-sm text-muted-foreground">Nothing matches this view.</p>
     );
   }
 

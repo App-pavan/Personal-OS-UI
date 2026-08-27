@@ -42,7 +42,10 @@ function humanizeType(type: string): string {
 
 function humanizeStep(step?: string): string {
   if (!step) return "";
-  return step.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toLowerCase()).replace(/^\w/, (c) => c.toUpperCase());
+  return step
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toLowerCase())
+    .replace(/^\w/, (c) => c.toUpperCase());
 }
 
 export function RuntimeOperationCard({

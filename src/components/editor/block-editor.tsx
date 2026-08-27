@@ -344,7 +344,9 @@ export function BlockEditor({
                     onClick={() => patch(b.id, { collapsed: !b.collapsed })}
                     className="grid size-5 place-items-center rounded text-muted-foreground hover:bg-muted/70"
                   >
-                    <ChevronRight className={cn("size-4 transition", !b.collapsed && "rotate-90")} />
+                    <ChevronRight
+                      className={cn("size-4 transition", !b.collapsed && "rotate-90")}
+                    />
                   </button>
                 ) : b.type === "bullet" ? (
                   <span className="size-1.5 rounded-full bg-muted-foreground" />

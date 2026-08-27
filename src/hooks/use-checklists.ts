@@ -61,15 +61,16 @@ export function useChecklistInstance(id: string | null) {
 export function useChecklistMutations() {
   const qc = useQueryClient();
   const done = () => qc.invalidateQueries({ queryKey: checklistKeys.all });
-  const fail = (fallback: string) => (error: unknown) =>
-    toast.error(errorMessage(error, fallback));
+  const fail = (fallback: string) => (error: unknown) => toast.error(errorMessage(error, fallback));
 
-  const m = <TVars, TData>(fn: (vars: TVars) => Promise<TData>, fallback: string) =>
-    useMutation({ mutationFn: fn, onSuccess: done, onError: fail(fallback) });
+  const useChecklistMutation = <TVars, TData>(
+    fn: (vars: TVars) => Promise<TData>,
+    fallback: string,
+  ) => useMutation({ mutationFn: fn, onSuccess: done, onError: fail(fallback) });
 
   return {
     /* instances */
-    start: m(
+    start: useChecklistMutation(
       (input: CreateChecklistInstanceInput) => checklistService.startInstance(input),
       "Checklist could not be started.",
     ),
@@ -106,65 +107,74 @@ export function useChecklistMutations() {
         void qc.invalidateQueries({ queryKey: checklistKeys.instances });
       },
     }),
-    checkAllRequired: m(
+    checkAllRequired: useChecklistMutation(
       (id: string) => checklistService.checkAllRequired(id),
       "Required items could not be checked.",
     ),
-    uncheckAll: m((id: string) => checklistService.uncheckAll(id), "Items could not be cleared."),
-    complete: m(
+    uncheckAll: useChecklistMutation(
+      (id: string) => checklistService.uncheckAll(id),
+      "Items could not be cleared.",
+    ),
+    complete: useChecklistMutation(
       (id: string) => checklistService.completeInstance(id),
       "Checklist could not be completed.",
     ),
-    reset: m((id: string) => checklistService.resetInstance(id), "Checklist could not be reset."),
-    cancel: m((id: string) => checklistService.cancelInstance(id), "Checklist could not be cancelled."),
-    duplicateInstance: m(
+    reset: useChecklistMutation(
+      (id: string) => checklistService.resetInstance(id),
+      "Checklist could not be reset.",
+    ),
+    cancel: useChecklistMutation(
+      (id: string) => checklistService.cancelInstance(id),
+      "Checklist could not be cancelled.",
+    ),
+    duplicateInstance: useChecklistMutation(
       (id: string) => checklistService.duplicateInstance(id),
       "Checklist could not be duplicated.",
     ),
-    assignItem: m(
+    assignItem: useChecklistMutation(
       (vars: { id: string; itemId: string; assigneeName: string }) =>
         checklistService.assignItem(vars.id, vars.itemId, vars.assigneeName),
       "Assignment could not be saved.",
     ),
-    convertItemToTask: m(
+    convertItemToTask: useChecklistMutation(
       (vars: { id: string; itemId: string }) =>
         checklistService.convertItemToTask(vars.id, vars.itemId),
       "Task could not be created from this item.",
     ),
 
     /* templates */
-    createTemplate: m(
+    createTemplate: useChecklistMutation(
       (input: CreateChecklistTemplateInput) => checklistService.createTemplate(input),
       "Checklist could not be created.",
     ),
-    updateTemplate: m(
+    updateTemplate: useChecklistMutation(
       (vars: { id: string; input: UpdateChecklistTemplateInput }) =>
         checklistService.updateTemplate(vars.id, vars.input),
       "Checklist could not be updated.",
     ),
-    duplicateTemplate: m(
+    duplicateTemplate: useChecklistMutation(
       (id: string) => checklistService.duplicateTemplate(id),
       "Checklist could not be duplicated.",
     ),
-    archiveTemplate: m(
+    archiveTemplate: useChecklistMutation(
       (id: string) => checklistService.archiveTemplate(id),
       "Checklist could not be archived.",
     ),
-    restoreTemplate: m(
+    restoreTemplate: useChecklistMutation(
       (id: string) => checklistService.restoreTemplate(id),
       "Checklist could not be restored.",
     ),
-    saveTemplateItem: m(
+    saveTemplateItem: useChecklistMutation(
       (vars: { templateId: string; item: Partial<ChecklistTemplateItem> & { title: string } }) =>
         checklistService.saveTemplateItem(vars.templateId, vars.item),
       "Item could not be saved.",
     ),
-    removeTemplateItem: m(
+    removeTemplateItem: useChecklistMutation(
       (vars: { templateId: string; itemId: string }) =>
         checklistService.removeTemplateItem(vars.templateId, vars.itemId),
       "Item could not be removed.",
     ),
-    reorderTemplateItems: m(
+    reorderTemplateItems: useChecklistMutation(
       (vars: { templateId: string; itemIds: string[] }) =>
         checklistService.reorderTemplateItems(vars.templateId, vars.itemIds),
       "Order could not be saved.",

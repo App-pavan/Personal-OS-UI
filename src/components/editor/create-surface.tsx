@@ -43,9 +43,7 @@ import type { ChecklistCategory, TaskPriority } from "@/lib/api/types";
  * anything later all open the same document editor.
  * ------------------------------------------------------------- */
 
-type Target =
-  | { kind: ObjectKind; mode: "create" }
-  | { kind: ObjectKind; mode: "edit"; id: string };
+type Target = { kind: ObjectKind; mode: "create" } | { kind: ObjectKind; mode: "edit"; id: string };
 
 type Ctx = {
   create: (kind: ObjectKind, seedTitle?: string) => void;
@@ -122,9 +120,7 @@ function EditorSurface({
   const task = useTask(target.kind === "task" ? editing : null);
 
   const [doc, setDoc] = useState<EditorDoc>(() =>
-    target.kind === "checklist"
-      ? { title: seed, blocks: [block("check")] }
-      : { ...emptyDoc(seed) },
+    target.kind === "checklist" ? { title: seed, blocks: [block("check")] } : { ...emptyDoc(seed) },
   );
   const [dirty, setDirty] = useState(false);
   const [category, setCategory] = useState<ChecklistCategory>("personal");
@@ -184,7 +180,9 @@ function EditorSurface({
       toast.error(
         errorMessage(
           error,
-          target.kind === "checklist" ? "Unable to save this checklist." : "Unable to save this task.",
+          target.kind === "checklist"
+            ? "Unable to save this checklist."
+            : "Unable to save this task.",
         ),
       ),
   });
@@ -228,7 +226,9 @@ function EditorSurface({
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-hairline px-4 py-2.5 md:px-6">
         <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-muted-foreground">
           <KindIcon className="size-3.5 text-primary" />
-          <span className="truncate">{editing ? `Editing ${kindLabel.toLowerCase()}` : `New ${kindLabel.toLowerCase()}`}</span>
+          <span className="truncate">
+            {editing ? `Editing ${kindLabel.toLowerCase()}` : `New ${kindLabel.toLowerCase()}`}
+          </span>
         </span>
         <button
           onClick={requestClose}
@@ -247,7 +247,9 @@ function EditorSurface({
             <BlockEditor
               doc={doc}
               onChange={change}
-              titlePlaceholder={target.kind === "checklist" ? "Name this routine" : "What needs doing?"}
+              titlePlaceholder={
+                target.kind === "checklist" ? "Name this routine" : "What needs doing?"
+              }
             />
           </div>
         )}
@@ -271,7 +273,9 @@ function EditorSurface({
                       onClick={() => setCategory(c)}
                       className={cn(
                         "rounded-md px-2 py-1 text-xs capitalize",
-                        category === c ? "bg-primary-soft text-primary" : "text-muted-foreground hover:bg-muted/70",
+                        category === c
+                          ? "bg-primary-soft text-primary"
+                          : "text-muted-foreground hover:bg-muted/70",
                       )}
                     >
                       {c}
@@ -347,7 +351,10 @@ function EditorSurface({
                         <button
                           key={t}
                           onClick={() =>
-                            setExtras((x) => ({ ...x, tags: (x.tags ?? []).filter((v) => v !== t) }))
+                            setExtras((x) => ({
+                              ...x,
+                              tags: (x.tags ?? []).filter((v) => v !== t),
+                            }))
                           }
                           className="rounded-md bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
                         >

@@ -40,9 +40,7 @@ describe("permission-tree", () => {
 
   it("unions permission sets from multiple roles", () => {
     const result = unionPermissions(["tasks.view"], ["tasks.create", "wealth.portfolio.view"]);
-    expect(result.sort()).toEqual(
-      ["tasks.view", "tasks.create", "wealth.portfolio.view"].sort(),
-    );
+    expect(result.sort()).toEqual(["tasks.view", "tasks.create", "wealth.portfolio.view"].sort());
   });
 
   it("detects module access from granted permissions", () => {

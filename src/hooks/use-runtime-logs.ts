@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { openRuntimeLogStream, runtimeApi } from "@/lib/api/runtime-service";
 import type { RuntimeLogEvent, RuntimeLogFilter, RuntimeOperation } from "@/lib/api/runtime-types";
 
-export type RuntimeConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "error";
+export type RuntimeConnectionStatus =
+  "idle" | "connecting" | "connected" | "reconnecting" | "error";
 
 export type RuntimeLevelFilter = "all" | "INFO" | "WARN" | "ERROR";
 
@@ -59,31 +60,35 @@ export function useRuntimeLogs(options: {
 
       setStatus(reconnect ? "reconnecting" : "connecting");
 
-      const stream = openRuntimeLogStream(filterStable, {
-        onOpen: () => setStatus("connected"),
-        onEvent: (ev) => {
-          if (ev.event !== "runtime-log") return;
-          try {
-            const parsed = JSON.parse(ev.data) as RuntimeLogEvent;
-            if (!parsed.id) return;
-            setLastEventId(parsed.id);
-            lastEventIdRef.current = parsed.id;
-            setLogs((prev) => mergeLogs(prev, [parsed]));
-          } catch {
-            /* ignore malformed events */
-          }
+      const stream = openRuntimeLogStream(
+        filterStable,
+        {
+          onOpen: () => setStatus("connected"),
+          onEvent: (ev) => {
+            if (ev.event !== "runtime-log") return;
+            try {
+              const parsed = JSON.parse(ev.data) as RuntimeLogEvent;
+              if (!parsed.id) return;
+              setLastEventId(parsed.id);
+              lastEventIdRef.current = parsed.id;
+              setLogs((prev) => mergeLogs(prev, [parsed]));
+            } catch {
+              /* ignore malformed events */
+            }
+          },
+          onError: () => {
+            setStatus("error");
+            reconnectTimer.current = setTimeout(() => connect(true), 3000);
+          },
+          onClose: () => {
+            if (enabled) {
+              setStatus("reconnecting");
+              reconnectTimer.current = setTimeout(() => connect(true), 2000);
+            }
+          },
         },
-        onError: () => {
-          setStatus("error");
-          reconnectTimer.current = setTimeout(() => connect(true), 3000);
-        },
-        onClose: () => {
-          if (enabled) {
-            setStatus("reconnecting");
-            reconnectTimer.current = setTimeout(() => connect(true), 2000);
-          }
-        },
-      }, { lastEventId: reconnect ? lastEventIdRef.current : undefined });
+        { lastEventId: reconnect ? lastEventIdRef.current : undefined },
+      );
 
       streamRef.current = stream;
     },

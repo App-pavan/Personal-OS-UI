@@ -205,7 +205,9 @@ function ChecklistsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
                       <p className="truncate text-sm font-medium">{t.name}</p>
-                      {t.favorite ? <Star className="size-3 shrink-0 fill-accent text-accent" /> : null}
+                      {t.favorite ? (
+                        <Star className="size-3 shrink-0 fill-accent text-accent" />
+                      ) : null}
                     </div>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {t.itemCount} items
@@ -217,7 +219,9 @@ function ChecklistsPage() {
                   {t.archived ? (
                     <button
                       onClick={() =>
-                        m.restoreTemplate.mutate(t.id, { onSuccess: () => toast.success("Restored") })
+                        m.restoreTemplate.mutate(t.id, {
+                          onSuccess: () => toast.success("Restored"),
+                        })
                       }
                       className="shrink-0 rounded-md border border-hairline px-2.5 py-1.5 text-xs font-medium transition hover:bg-muted/70"
                     >
@@ -275,7 +279,8 @@ function ChecklistsPage() {
                       ) : (
                         <DropdownMenuItem
                           onSelect={() => {
-                            if (!window.confirm(`Archive “${t.name}”? You can restore it later.`)) return;
+                            if (!window.confirm(`Archive “${t.name}”? You can restore it later.`))
+                              return;
                             m.archiveTemplate.mutate(t.id, {
                               onSuccess: () => toast.success("Checklist archived"),
                             });
@@ -481,7 +486,9 @@ function Runner({
               <DropdownMenuItem
                 onSelect={() => {
                   if (!window.confirm("Cancel this checklist?")) return;
-                  m.cancel.mutate(run.id, { onSuccess: () => toast.success("Checklist cancelled") });
+                  m.cancel.mutate(run.id, {
+                    onSuccess: () => toast.success("Checklist cancelled"),
+                  });
                 }}
               >
                 <X className="size-3.5" /> Cancel checklist
@@ -533,7 +540,9 @@ function Runner({
                           item.completed && "text-muted-foreground line-through",
                         )}
                       >
-                        {item.quantity ? `${item.quantity}${item.unit ? ` ${item.unit}` : ""} ` : ""}
+                        {item.quantity
+                          ? `${item.quantity}${item.unit ? ` ${item.unit}` : ""} `
+                          : ""}
                         {item.title}
                       </span>
                       {item.assigneeName || item.linkedTaskId || item.notes ? (
@@ -544,7 +553,9 @@ function Runner({
                               {item.assigneeName}
                             </span>
                           ) : null}
-                          {item.linkedTaskId ? <span className="text-primary">Task created</span> : null}
+                          {item.linkedTaskId ? (
+                            <span className="text-primary">Task created</span>
+                          ) : null}
                           {item.notes ? <span className="truncate">{item.notes}</span> : null}
                         </span>
                       ) : null}
