@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, ApiRequestError } from "./client";
 import type {
   AdminRole,
   AdminUser,
@@ -9,8 +9,26 @@ import type {
   UpdateUserInput,
 } from "./rbac-types";
 
+/** Production exposes /identity/auth/capabilities; Phase 2 also adds /identity/me/capabilities. */
+async function getCapabilities(): Promise<CapabilitiesResponse> {
+  const paths = ["/identity/auth/capabilities", "/identity/me/capabilities"] as const;
+  let lastError: unknown;
+  for (const path of paths) {
+    try {
+      return (await api.get<CapabilitiesResponse>(path)).data;
+    } catch (err) {
+      if (err instanceof ApiRequestError && err.status === 404) {
+        lastError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError ?? new Error("Capabilities endpoint unavailable");
+}
+
 export const rbacApi = {
-  capabilities: () => api.get<CapabilitiesResponse>("/identity/me/capabilities"),
+  capabilities: () => getCapabilities().then((data) => ({ data })),
 
   permissions: {
     list: () => api.get<PermissionDefinition[]>("/admin/permissions"),

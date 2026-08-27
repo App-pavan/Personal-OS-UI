@@ -73,11 +73,13 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
 
   const caps = query.data;
 
+  const settled = status === "signed_in" && query.isFetched && !query.isFetching;
+
   const value = useMemo<CapabilitiesValue>(
     () => ({
       caps,
-      isLoading: status === "signed_in" && query.isLoading,
-      isReady: status === "signed_in" && !query.isLoading && Boolean(caps),
+      isLoading: status === "signed_in" && (query.isLoading || query.isFetching),
+      isReady: settled && (Boolean(caps) || query.isError),
       isError: query.isError,
       error: query.error,
       can: (permission: string) => {
@@ -93,7 +95,7 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
       },
       refresh,
     }),
-    [caps, status, query.isLoading, query.isError, query.error, refresh],
+    [caps, status, settled, query.isError, query.error, refresh],
   );
 
   return <CapabilitiesContext.Provider value={value}>{children}</CapabilitiesContext.Provider>;

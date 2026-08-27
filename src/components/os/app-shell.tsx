@@ -192,7 +192,7 @@ function QuickActions({ trigger }: { trigger: ReactNode }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { status, user, signOut } = useAuth();
-  const { isLoading: capsLoading, isReady, caps } = useCapabilities();
+  const { isLoading: capsLoading, isReady, caps, isError, refresh } = useCapabilities();
   const { theme, toggle } = useTheme();
   const { open, setOpen } = useCommandPalette();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -224,6 +224,28 @@ export function AppShell({ children }: { children: ReactNode }) {
           </span>
           <p className="mt-4 text-sm font-medium">Loading Personal OS…</p>
           <p className="mt-1 text-xs text-muted-foreground">Preparing your access</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError && !caps) {
+    return (
+      <div className="ambient-canvas grid min-h-screen place-items-center px-4">
+        <div className="max-w-sm text-center">
+          <span className="gradient-primary mx-auto grid size-11 place-items-center rounded-lg text-primary-foreground">
+            <Sparkles className="size-5" />
+          </span>
+          <p className="mt-4 text-sm font-medium">Could not load your access</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            We could not reach the permissions service. Check your connection and try again.
+          </p>
+          <button
+            onClick={() => void refresh()}
+            className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
