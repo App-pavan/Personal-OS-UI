@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCapabilities } from "@/features/capabilities/capabilities-context";
+import { PERM } from "@/lib/permissions";
 import { wealthApi } from "@/lib/api/wealth-service";
 import { errorMessage } from "@/lib/api/errors";
 import type {
@@ -31,17 +33,21 @@ function currentMonthKey() {
 }
 
 export function useWealthOverview() {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: wealthKeys.overview,
     queryFn: () => wealthApi.overview.get(),
+    enabled: isReady && can(PERM.WEALTH_PORTFOLIO_VIEW),
     retry: 1,
   });
 }
 
 export function useWealthPortfolio() {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: wealthKeys.portfolio,
     queryFn: () => wealthApi.portfolio.get(),
+    enabled: isReady && can(PERM.WEALTH_PORTFOLIO_VIEW),
     retry: 1,
   });
 }

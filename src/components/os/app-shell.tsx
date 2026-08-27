@@ -15,9 +15,12 @@ import {
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { modules, navIsActive } from "@/lib/nav";
+import { visibleModules, navIsActive, type ModuleDef } from "@/lib/modules";
 import { moduleAccent, navAccentStyle, semanticTextClasses } from "@/lib/design/semantic";
 import { useAuth } from "@/features/auth/auth-context";
+import { useCapabilities } from "@/features/capabilities/capabilities-context";
+import { Can } from "@/features/capabilities/can";
+import { PERM } from "@/lib/permissions";
 import { useTheme } from "./theme-provider";
 import { CommandPalette, useCommandPalette } from "./command-palette";
 import { SignInScreen } from "./sign-in-screen";
@@ -30,7 +33,7 @@ const groups: { key: "core" | "system"; label: string }[] = [
 
 /* ---------- adaptive rail (Arc / visionOS flavored) ---------- */
 
-function Rail({ onSignOut }: { onSignOut: () => void }) {
+function Rail({ onSignOut, navModules }: { onSignOut: () => void; navModules: ModuleDef[] }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const [expanded, setExpanded] = useState(false);
@@ -72,11 +75,11 @@ function Rail({ onSignOut }: { onSignOut: () => void }) {
             >
               {g.label}
             </p>
-            {modules
+            {navModules
               .filter((m) => m.group === g.key)
               .map((m) => {
                 const active = navIsActive(pathname, m.to);
-                const accent = moduleAccent[m.to];
+                const accent = moduleAccent[m.to as keyof typeof moduleAccent] ?? "primary";
                 return (
                   <Link
                     key={m.to}
@@ -143,12 +146,19 @@ function QuickActions({ trigger }: { trigger: ReactNode }) {
   const editor = useUniversalEditor();
   const [open, setOpen] = useState(false);
   const actions = [
-    { label: "Task", hint: "Something to do", kind: "task" as const, icon: ListChecks },
+    {
+      label: "Task",
+      hint: "Something to do",
+      kind: "task" as const,
+      icon: ListChecks,
+      permission: PERM.TASKS_CREATE,
+    },
     {
       label: "Checklist",
       hint: "A routine you repeat",
       kind: "checklist" as const,
       icon: ClipboardCheck,
+      permission: PERM.CHECKLISTS_CREATE,
     },
   ];
   return (
@@ -157,20 +167,21 @@ function QuickActions({ trigger }: { trigger: ReactNode }) {
       <PopoverContent align="end" className="w-56 rounded-xl border-hairline p-1.5">
         <p className="label-eyebrow px-2.5 py-2">Create</p>
         {actions.map((a) => (
-          <button
-            key={a.label}
-            onClick={() => {
-              setOpen(false);
-              editor.create(a.kind);
-            }}
-            className="row-quiet flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-sm"
-          >
-            <a.icon className="size-4 text-primary" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate">{a.label}</span>
-              <span className="block truncate text-[11px] text-muted-foreground">{a.hint}</span>
-            </span>
-          </button>
+          <Can key={a.label} permission={a.permission}>
+            <button
+              onClick={() => {
+                setOpen(false);
+                editor.create(a.kind);
+              }}
+              className="row-quiet flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-sm"
+            >
+              <a.icon className="size-4 text-primary" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{a.label}</span>
+                <span className="block truncate text-[11px] text-muted-foreground">{a.hint}</span>
+              </span>
+            </button>
+          </Can>
         ))}
       </PopoverContent>
     </Popover>
@@ -181,12 +192,16 @@ function QuickActions({ trigger }: { trigger: ReactNode }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { status, user, signOut } = useAuth();
+  const { isLoading: capsLoading, isReady, caps } = useCapabilities();
   const { theme, toggle } = useTheme();
   const { open, setOpen } = useCommandPalette();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileNav, setMobileNav] = useState(false);
 
-  const current = modules.find((m) => m.to === pathname);
+  const navModules = visibleModules(caps);
+  const current = navModules.find(
+    (m) => m.to === pathname || (m.to !== "/" && pathname.startsWith(m.to)),
+  );
 
   if (status === "restoring") {
     return (
@@ -200,12 +215,26 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (status === "signed_out") return <SignInScreen />;
 
+  if (capsLoading || !isReady) {
+    return (
+      <div className="ambient-canvas grid min-h-screen place-items-center px-4">
+        <div className="text-center">
+          <span className="gradient-primary animate-breathe mx-auto grid size-11 place-items-center rounded-lg text-primary-foreground">
+            <Sparkles className="size-5" />
+          </span>
+          <p className="mt-4 text-sm font-medium">Loading Personal OS…</p>
+          <p className="mt-1 text-xs text-muted-foreground">Preparing your access</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="ambient-canvas min-h-screen">
-      <CommandPalette open={open} onOpenChange={setOpen} />
+      <CommandPalette open={open} onOpenChange={setOpen} navModules={navModules} />
 
       <div className="flex min-h-screen w-full">
-        <Rail onSignOut={() => void signOut()} />
+        <Rail onSignOut={() => void signOut()} navModules={navModules} />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 border-b border-hairline bg-background/75 px-4 py-2.5 backdrop-blur-xl md:px-8">
@@ -236,11 +265,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                         {groups.map((g) => (
                           <div key={g.key} className="space-y-0.5">
                             <p className="label-eyebrow px-2 pb-1">{g.label}</p>
-                            {modules
+                            {navModules
                               .filter((m) => m.group === g.key)
                               .map((m) => {
                                 const active = navIsActive(pathname, m.to);
-                                const accent = moduleAccent[m.to];
+                                const accent =
+                                  moduleAccent[m.to as keyof typeof moduleAccent] ?? "primary";
                                 return (
                                   <Link
                                     key={m.to}
@@ -342,7 +372,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 md:hidden">
         <div className="pointer-events-auto mx-auto mb-3 flex max-w-md items-center gap-2 px-3">
           <nav className="hud-panel flex flex-1 items-center justify-between angular-clip px-1.5 py-1.5">
-            {modules.map((n) => {
+            {navModules.map((n) => {
               const active = navIsActive(pathname, n.to);
               const accent = moduleAccent[n.to];
               return (

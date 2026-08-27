@@ -15,7 +15,7 @@ import { Link } from "@tanstack/react-router";
 import { useTheme } from "@/components/os/theme-provider";
 import { FutureState } from "@/components/os/state-views";
 import { useAuth } from "@/features/auth/auth-context";
-import { useCapabilities } from "@/hooks/use-capabilities";
+import { useAccessControlPermissions } from "@/hooks/use-capabilities";
 import { API_BASE_URL, API_CONFIGURED, API_ENVIRONMENT } from "@/lib/api/config";
 import { useTasks } from "@/hooks/use-tasks";
 import { cn } from "@/lib/utils";
@@ -65,7 +65,7 @@ function Row({
 
 function SettingsPage() {
   const { user, signOut } = useAuth();
-  const { canViewAccessControl } = useCapabilities();
+  const { canViewAccessControl } = useAccessControlPermissions();
   const { theme, toggle } = useTheme();
   const probe = useTasks({ perPage: 1 });
 

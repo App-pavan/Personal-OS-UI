@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requirePermissions } from "@/features/capabilities/route-guard";
+import { PERM } from "@/lib/permissions";
 import { useMemo, useState } from "react";
 import {
   Archive,
@@ -39,6 +41,7 @@ import { useUniversalEditor } from "@/components/editor/create-surface";
 import type { ChecklistInstanceItem, ChecklistTemplate } from "@/lib/api/types";
 
 export const Route = createFileRoute("/checklists")({
+  beforeLoad: requirePermissions(PERM.CHECKLISTS_VIEW),
   head: () => ({
     meta: [
       { title: "Checklists — Personal OS" },

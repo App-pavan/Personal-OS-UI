@@ -19,8 +19,15 @@ export { API_BASE_URL };
 type SessionExpiredHandler = () => void;
 let onSessionExpired: SessionExpiredHandler = () => {};
 
+type ForbiddenHandler = () => void;
+let onForbidden: ForbiddenHandler = () => {};
+
 export function setSessionExpiredHandler(handler: SessionExpiredHandler) {
   onSessionExpired = handler;
+}
+
+export function setForbiddenHandler(handler: ForbiddenHandler) {
+  onForbidden = handler;
 }
 
 export type QueryParams = Record<
@@ -134,7 +141,9 @@ async function rawFetch<T>(path: string, options: RequestOptions): Promise<Envel
   }
 
   if (!response.ok || (payload && payload.success === false)) {
-    throw toApiError(response.status, payload?.error);
+    const err = toApiError(response.status, payload?.error);
+    if (response.status === 403) onForbidden();
+    throw err;
   }
 
   // Normalize the backend envelope: services and components receive plain data.

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { Can } from "@/features/capabilities/can";
+import { PERM } from "@/lib/permissions";
 import {
   Archive,
   ArchiveRestore,
@@ -140,15 +141,17 @@ export function TaskDetailPane({
             <Archive className="mr-1 inline size-3" /> Archive
           </button>
         )}
-        <button
-          onClick={() => {
-            if (!window.confirm("Delete this task?")) return;
-            m.remove.mutate([task.id], { onSuccess: () => onClose() });
-          }}
-          className="rounded-md px-2.5 py-1.5 text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="mr-1 inline size-3" /> Delete
-        </button>
+        <Can permission={PERM.TASKS_DELETE}>
+          <button
+            onClick={() => {
+              if (!window.confirm("Delete this task?")) return;
+              m.remove.mutate([task.id], { onSuccess: () => onClose() });
+            }}
+            className="rounded-md px-2.5 py-1.5 text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="mr-1 inline size-3" /> Delete
+          </button>
+        </Can>
       </div>
 
       {task.aiContext?.summary ? (

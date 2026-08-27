@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useCapabilities } from "@/features/capabilities/capabilities-context";
+import { PERM } from "@/lib/permissions";
 import { taskService } from "@/lib/api/services";
 import { errorMessage } from "@/lib/api/errors";
 import type {
@@ -17,19 +19,23 @@ export const taskKeys = {
   detail: (id: string) => ["tasks", "detail", id] as const,
 };
 
-export function useTasks(query: TaskListQuery = {}) {
+export function useTasks(query: TaskListQuery = {}, options?: { enabled?: boolean }) {
+  const { can, isReady } = useCapabilities();
+  const allowed = isReady && can(PERM.TASKS_VIEW);
   return useQuery({
     queryKey: taskKeys.list(query),
     queryFn: () => taskService.list(query),
+    enabled: allowed && (options?.enabled ?? true),
     retry: 1,
   });
 }
 
 export function useTask(id: string | null) {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: taskKeys.detail(id ?? "none"),
     queryFn: () => taskService.get(id!),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && isReady && can(PERM.TASKS_VIEW),
     retry: 1,
   });
 }
