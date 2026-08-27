@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useCapabilities } from "@/features/capabilities/capabilities-context";
 import { formatMonthLabel } from "@/features/expenses/lib/budget-utils";
 import { expenseApi } from "@/lib/api/expense-service";
 import { errorMessage } from "@/lib/api/errors";
+import { PERM } from "@/lib/permissions";
 import { toast } from "sonner";
 import type {
   CreateBudgetInput,
@@ -40,9 +42,11 @@ export const expenseKeys = {
 };
 
 export function useTransactions(query: TransactionQuery = {}) {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: expenseKeys.transactionList(query),
     queryFn: () => expenseApi.transactions.list(query),
+    enabled: isReady && can(PERM.EXPENSES_TRANSACTIONS_VIEW),
     retry: 1,
     placeholderData: (previous) => previous,
   });
@@ -58,35 +62,43 @@ export function useTransaction(id: string | null) {
 }
 
 export function useCategories() {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: expenseKeys.categories,
     queryFn: () => expenseApi.categories.list(),
+    enabled: isReady && can(PERM.EXPENSES_TRANSACTIONS_VIEW),
     staleTime: 5 * 60_000,
     retry: 1,
   });
 }
 
 export function useMembers() {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: expenseKeys.members,
     queryFn: () => expenseApi.members.list(),
+    enabled: isReady && can(PERM.EXPENSES_TRANSACTIONS_VIEW),
     staleTime: 5 * 60_000,
     retry: 1,
   });
 }
 
 export function useExpenseDashboard(month: string) {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: expenseKeys.dashboard(month),
     queryFn: () => expenseApi.insights.dashboard(month),
+    enabled: isReady && can(PERM.EXPENSES_TRANSACTIONS_VIEW),
     retry: 1,
   });
 }
 
 export function useBudgets() {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: expenseKeys.budgets,
     queryFn: () => expenseApi.budgets.list(),
+    enabled: isReady && can(PERM.EXPENSES_BUDGETS_VIEW),
     retry: 1,
   });
 }

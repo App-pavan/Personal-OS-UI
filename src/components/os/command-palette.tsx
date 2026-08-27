@@ -9,7 +9,9 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { ClipboardCheck, ListChecks, Loader2 } from "lucide-react";
-import { modules } from "@/lib/nav";
+import type { ModuleDef } from "@/lib/modules";
+import { useCan } from "@/features/capabilities/can";
+import { PERM } from "@/lib/permissions";
 import { useTasks } from "@/hooks/use-tasks";
 import { useChecklistInstances, useChecklistTemplates } from "@/hooks/use-checklists";
 
@@ -32,25 +34,35 @@ export function useCommandPalette() {
 export function CommandPalette({
   open,
   onOpenChange,
+  navModules,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  navModules: ModuleDef[];
 }) {
   const navigate = useNavigate();
+  const { can } = useCan();
   const [query, setQuery] = useState("");
 
-  const tasks = useTasks(query.trim() ? { search: query.trim(), perPage: 8 } : { perPage: 8 });
+  const tasksEnabled = can(PERM.TASKS_VIEW);
+  const checklistsEnabled = can(PERM.CHECKLISTS_VIEW);
+
+  const tasks = useTasks(query.trim() ? { search: query.trim(), perPage: 8 } : { perPage: 8 }, {
+    enabled: tasksEnabled && open,
+  });
   const templates = useChecklistTemplates();
   const instances = useChecklistInstances();
 
-  const go = (to: "/" | "/tasks" | "/checklists" | "/expenses" | "/settings") => {
+  const go = (to: string) => {
     onOpenChange(false);
     navigate({ to });
   };
 
   const q = query.trim().toLowerCase();
   const match = (value: string) => !q || value.toLowerCase().includes(q);
-  const loading = tasks.isLoading || templates.isLoading || instances.isLoading;
+  const loading =
+    (tasksEnabled && tasks.isLoading) ||
+    (checklistsEnabled && (templates.isLoading || instances.isLoading));
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -71,7 +83,7 @@ export function CommandPalette({
         </CommandEmpty>
 
         <CommandGroup heading="Go to">
-          {modules.map((m) => (
+          {navModules.map((m) => (
             <CommandItem key={m.to} value={`go ${m.label}`} onSelect={() => go(m.to)}>
               <m.icon className="size-4 text-primary" />
               <span>{m.label}</span>
@@ -80,7 +92,7 @@ export function CommandPalette({
           ))}
         </CommandGroup>
 
-        {(tasks.data?.items ?? []).length ? (
+        {tasksEnabled && (tasks.data?.items ?? []).length ? (
           <CommandGroup heading="Tasks">
             {(tasks.data?.items ?? []).slice(0, 6).map((t) => (
               <CommandItem key={t.id} value={`task ${t.title}`} onSelect={() => go("/tasks")}>
@@ -92,7 +104,7 @@ export function CommandPalette({
           </CommandGroup>
         ) : null}
 
-        {(instances.data ?? []).filter((i) => match(i.name)).length ? (
+        {checklistsEnabled && (instances.data ?? []).filter((i) => match(i.name)).length ? (
           <CommandGroup heading="Running checklists">
             {(instances.data ?? [])
               .filter((i) => match(i.name))
@@ -109,7 +121,7 @@ export function CommandPalette({
           </CommandGroup>
         ) : null}
 
-        {(templates.data ?? []).filter((t) => match(t.name)).length ? (
+        {checklistsEnabled && (templates.data ?? []).filter((t) => match(t.name)).length ? (
           <CommandGroup heading="Checklist templates">
             {(templates.data ?? [])
               .filter((t) => match(t.name))

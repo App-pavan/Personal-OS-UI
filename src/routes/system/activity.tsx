@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { requirePermissions } from "@/features/capabilities/route-guard";
 import { RuntimeActivityPage } from "@/features/runtime/components/runtime-activity-page";
+import { PERM } from "@/lib/permissions";
 
 const activitySearchSchema = z.object({
   service: z.string().optional(),
@@ -15,6 +17,7 @@ const activitySearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/system/activity")({
+  beforeLoad: requirePermissions(PERM.SYSTEM_RUNTIME_VIEW),
   validateSearch: (search) => activitySearchSchema.parse(search),
   head: () => ({
     meta: [

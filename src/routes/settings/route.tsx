@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
-import { useCapabilities } from "@/hooks/use-capabilities";
+import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { canViewAccessControl } = useCapabilities();
+  const { canViewAccessControl } = useAccessControlPermissions();
   const visibleTabs = tabs.filter((t) => !t.requiresAccess || canViewAccessControl);
 
   return (

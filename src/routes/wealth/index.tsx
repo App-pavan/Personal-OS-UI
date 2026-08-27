@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requirePermissions } from "@/features/capabilities/route-guard";
+import { PERM } from "@/lib/permissions";
 import { useMemo, useState } from "react";
 import { PageShell } from "@/components/os/primitives";
 import { ErrorState } from "@/components/os/state-views";
@@ -39,6 +41,7 @@ import { useQuery } from "@tanstack/react-query";
 import { wealthKeys } from "@/hooks/use-wealth";
 
 export const Route = createFileRoute("/wealth/")({
+  beforeLoad: requirePermissions(PERM.WEALTH_PORTFOLIO_VIEW),
   head: () => ({ meta: [{ title: "Wealth — Personal OS" }] }),
   component: WealthOverviewPage,
 });

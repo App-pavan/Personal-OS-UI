@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useCapabilities } from "@/features/capabilities/capabilities-context";
+import { PERM } from "@/lib/permissions";
 import { checklistService } from "@/lib/api/services";
 import { errorMessage } from "@/lib/api/errors";
 import type {
@@ -19,9 +21,11 @@ export const checklistKeys = {
 };
 
 export function useChecklistTemplates() {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: checklistKeys.templates,
     queryFn: () => checklistService.listTemplates(),
+    enabled: isReady && can(PERM.CHECKLISTS_VIEW),
     retry: 1,
   });
 }
@@ -36,9 +40,11 @@ export function useChecklistTemplate(id: string | null) {
 }
 
 export function useChecklistInstances() {
+  const { can, isReady } = useCapabilities();
   return useQuery({
     queryKey: checklistKeys.instances,
     queryFn: () => checklistService.listInstances(),
+    enabled: isReady && can(PERM.CHECKLISTS_VIEW),
     retry: 1,
   });
 }

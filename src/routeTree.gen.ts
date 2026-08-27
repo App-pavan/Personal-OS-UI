@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccessRestrictedRouteImport } from './routes/access-restricted'
 import { Route as ChecklistsRouteImport } from './routes/checklists'
 import { Route as ExpensesRouteRouteImport } from './routes/expenses/route'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
@@ -35,6 +36,11 @@ import { Route as SettingsAccessUsersIdRouteImport } from './routes/settings/acc
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessRestrictedRoute = AccessRestrictedRouteImport.update({
+  id: '/access-restricted',
+  path: '/access-restricted',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChecklistsRoute = ChecklistsRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/expenses': typeof ExpensesRouteRouteWithChildren
   '/settings': typeof SettingsRouteRouteWithChildren
+  '/access-restricted': typeof AccessRestrictedRoute
   '/checklists': typeof ChecklistsRoute
   '/tasks': typeof TasksRoute
   '/settings/access': typeof SettingsAccessRouteRouteWithChildren
@@ -171,6 +178,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/access-restricted': typeof AccessRestrictedRoute
   '/checklists': typeof ChecklistsRoute
   '/tasks': typeof TasksRoute
   '/expenses/budgets': typeof ExpensesBudgetsRoute
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/expenses': typeof ExpensesRouteRouteWithChildren
   '/settings': typeof SettingsRouteRouteWithChildren
+  '/access-restricted': typeof AccessRestrictedRoute
   '/checklists': typeof ChecklistsRoute
   '/tasks': typeof TasksRoute
   '/settings/access': typeof SettingsAccessRouteRouteWithChildren
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/'
     | '/expenses'
     | '/settings'
+    | '/access-restricted'
     | '/checklists'
     | '/tasks'
     | '/settings/access'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/access-restricted'
     | '/checklists'
     | '/tasks'
     | '/expenses/budgets'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/'
     | '/expenses'
     | '/settings'
+    | '/access-restricted'
     | '/checklists'
     | '/tasks'
     | '/settings/access'
@@ -291,6 +303,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExpensesRouteRoute: typeof ExpensesRouteRouteWithChildren
   SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
+  AccessRestrictedRoute: typeof AccessRestrictedRoute
   ChecklistsRoute: typeof ChecklistsRoute
   TasksRoute: typeof TasksRoute
   SystemActivityRoute: typeof SystemActivityRoute
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/access-restricted': {
+      id: '/access-restricted'
+      path: '/access-restricted'
+      fullPath: '/access-restricted'
+      preLoaderRoute: typeof AccessRestrictedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checklists': {
@@ -536,6 +556,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExpensesRouteRoute: ExpensesRouteRouteWithChildren,
   SettingsRouteRoute: SettingsRouteRouteWithChildren,
+  AccessRestrictedRoute: AccessRestrictedRoute,
   ChecklistsRoute: ChecklistsRoute,
   TasksRoute: TasksRoute,
   SystemActivityRoute: SystemActivityRoute,

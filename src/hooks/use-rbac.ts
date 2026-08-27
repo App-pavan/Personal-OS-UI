@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
 import { errorMessage } from "@/lib/api/errors";
 import { rbacApi } from "@/lib/api/rbac-service";
 import type { CreateRoleInput, UpdateRoleInput, UpdateUserInput } from "@/lib/api/rbac-types";
@@ -24,44 +25,52 @@ function invalidateAccess(qc: ReturnType<typeof useQueryClient>) {
 }
 
 export function usePermissionCatalog() {
+  const { canViewAccessControl, isReady } = useAccessControlPermissions();
   return useQuery({
     queryKey: rbacKeys.permissions,
     queryFn: async () => (await rbacApi.permissions.list()).data,
+    enabled: isReady && canViewAccessControl,
     staleTime: 5 * 60_000,
     retry: 1,
   });
 }
 
 export function useAdminUsers() {
+  const { canViewAccessControl, isReady } = useAccessControlPermissions();
   return useQuery({
     queryKey: rbacKeys.users,
     queryFn: async () => (await rbacApi.users.list({ limit: 100 })).data,
+    enabled: isReady && canViewAccessControl,
     retry: 1,
   });
 }
 
 export function useAdminUser(id: string | null) {
+  const { canViewAccessControl, isReady } = useAccessControlPermissions();
   return useQuery({
     queryKey: rbacKeys.user(id ?? "none"),
     queryFn: async () => (await rbacApi.users.get(id!)).data,
-    enabled: Boolean(id),
+    enabled: Boolean(id) && isReady && canViewAccessControl,
     retry: 1,
   });
 }
 
 export function useAdminRoles() {
+  const { canViewAccessControl, isReady } = useAccessControlPermissions();
   return useQuery({
     queryKey: rbacKeys.roles,
     queryFn: async () => (await rbacApi.roles.list()).data,
+    enabled: isReady && canViewAccessControl,
     retry: 1,
   });
 }
 
 export function useAdminRole(roleKey: string | null) {
+  const { canViewAccessControl, isReady } = useAccessControlPermissions();
   return useQuery({
     queryKey: rbacKeys.role(roleKey ?? "none"),
     queryFn: async () => (await rbacApi.roles.get(roleKey!)).data,
-    enabled: Boolean(roleKey),
+    enabled: Boolean(roleKey) && isReady && canViewAccessControl,
     retry: 1,
   });
 }

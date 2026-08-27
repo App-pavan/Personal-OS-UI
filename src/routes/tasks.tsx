@@ -4,6 +4,9 @@ import { List, Rows3 } from "lucide-react";
 import { SectionHeader } from "@/components/future";
 import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { Button } from "@/components/ui/button";
+import { Can } from "@/features/capabilities/can";
+import { requirePermissions } from "@/features/capabilities/route-guard";
+import { PERM } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { useTask, useTaskMutations, useTasks } from "@/hooks/use-tasks";
 import { TaskExecutionTimeline } from "@/features/tasks/components/task-execution-timeline";
@@ -31,6 +34,7 @@ const tasksSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/tasks")({
+  beforeLoad: requirePermissions(PERM.TASKS_VIEW),
   validateSearch: (search) => tasksSearchSchema.parse(search),
   head: () => ({ meta: [{ title: "Tasks — Personal OS" }] }),
   component: TasksPage,
@@ -130,11 +134,13 @@ function TasksPage() {
               upcoming={summary.upcoming}
             />
 
-            <TaskQuickCreate
-              dueAt={defaultDueForDate(focusDate)}
-              onSubmit={handleQuickCreate}
-              pending={mutations.create.isPending}
-            />
+            <Can permission={PERM.TASKS_CREATE}>
+              <TaskQuickCreate
+                dueAt={defaultDueForDate(focusDate)}
+                onSubmit={handleQuickCreate}
+                pending={mutations.create.isPending}
+              />
+            </Can>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap gap-1">

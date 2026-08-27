@@ -15,6 +15,7 @@ import { ThemeProvider } from "@/components/os/theme-provider";
 import { UniversalEditorProvider } from "@/components/editor/create-surface";
 import { AppShell } from "@/components/os/app-shell";
 import { AuthProvider } from "@/features/auth/auth-context";
+import { CapabilitiesProvider } from "@/features/capabilities/capabilities-context";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -129,12 +130,14 @@ function RootComponent() {
       <ThemeProvider>
         <TooltipProvider>
           <AuthProvider>
-            <UniversalEditorProvider>
-              <AppShell>
-              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-                <Outlet />
-              </AppShell>
-            </UniversalEditorProvider>
+            <CapabilitiesProvider>
+              <UniversalEditorProvider>
+                <AppShell>
+                  {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+                  <Outlet />
+                </AppShell>
+              </UniversalEditorProvider>
+            </CapabilitiesProvider>
           </AuthProvider>
           <Toaster position="top-center" />
         </TooltipProvider>
