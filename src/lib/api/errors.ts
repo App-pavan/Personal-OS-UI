@@ -86,3 +86,7 @@ export function errorMessage(error: unknown, fallback = messages.unknown): strin
   if (error instanceof Error && error.message) return fallback;
   return fallback;
 }
+
+export function isNotFoundError(error: unknown): boolean {
+  return error instanceof ApiRequestError && error.kind === "not_found";
+}
