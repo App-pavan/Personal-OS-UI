@@ -8,6 +8,7 @@ import { capabilityKeys } from "./use-capabilities";
 
 export const rbacKeys = {
   all: ["rbac"] as const,
+  adminProbe: ["rbac", "admin-probe"] as const,
   permissions: ["rbac", "permissions"] as const,
   users: ["rbac", "users"] as const,
   user: (id: string) => ["rbac", "users", id] as const,
@@ -22,6 +23,21 @@ const fail = (fallback: string) => (error: unknown) => toast.error(errorMessage(
 function invalidateAccess(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: rbacKeys.all });
   void qc.invalidateQueries({ queryKey: capabilityKeys.all });
+}
+
+/** Probes whether Phase 2 admin APIs are deployed (/admin/*). */
+export function useAdminApiProbe() {
+  const { canViewAccessControl, isReady } = useAccessControlPermissions();
+  return useQuery({
+    queryKey: rbacKeys.adminProbe,
+    queryFn: async () => {
+      await rbacApi.permissions.list();
+      return true as const;
+    },
+    enabled: isReady && canViewAccessControl,
+    retry: false,
+    staleTime: 10 * 60_000,
+  });
 }
 
 export function usePermissionCatalog() {

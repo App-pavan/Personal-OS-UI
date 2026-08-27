@@ -16,6 +16,8 @@ import { useTheme } from "@/components/os/theme-provider";
 import { FutureState } from "@/components/os/state-views";
 import { useAuth } from "@/features/auth/auth-context";
 import { useAccessControlPermissions } from "@/hooks/use-capabilities";
+import { useAdminApiProbe } from "@/hooks/use-rbac";
+import { isNotFoundError } from "@/lib/api/errors";
 import { API_BASE_URL, API_CONFIGURED, API_ENVIRONMENT } from "@/lib/api/config";
 import { useTasks } from "@/hooks/use-tasks";
 import { cn } from "@/lib/utils";
@@ -66,6 +68,9 @@ function Row({
 function SettingsPage() {
   const { user, signOut } = useAuth();
   const { canViewAccessControl } = useAccessControlPermissions();
+  const adminProbe = useAdminApiProbe();
+  const adminUnavailable =
+    canViewAccessControl && adminProbe.isError && isNotFoundError(adminProbe.error);
   const { theme, toggle } = useTheme();
   const probe = useTasks({ perPage: 1 });
 
@@ -94,13 +99,17 @@ function SettingsPage() {
           <Row
             icon={<ShieldCheck className="size-4" />}
             title="Access Control"
-            line="Manage users, roles, and what each person can access across Personal OS."
+            line={
+              adminUnavailable
+                ? "Your account can manage access, but the admin backend is not deployed on this environment yet."
+                : "Manage users, roles, and what each person can access across Personal OS."
+            }
           >
             <Link
               to="/settings/access"
               className="rounded-md border border-hairline px-3 py-1.5 text-xs font-medium transition hover:bg-muted/70"
             >
-              Open
+              {adminUnavailable ? "View status" : "Open"}
             </Link>
           </Row>
         </section>
