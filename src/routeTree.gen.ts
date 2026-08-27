@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChecklistsRouteImport } from './routes/checklists'
 import { Route as ExpensesRouteRouteImport } from './routes/expenses/route'
-import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
 import { Route as ExpensesBudgetsRouteImport } from './routes/expenses/budgets'
@@ -20,9 +20,17 @@ import { Route as ExpensesCategoriesRouteImport } from './routes/expenses/catego
 import { Route as ExpensesInsightsRouteImport } from './routes/expenses/insights'
 import { Route as ExpensesMembersRouteImport } from './routes/expenses/members'
 import { Route as ExpensesTransactionsRouteImport } from './routes/expenses/transactions'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as SettingsAccessRouteRouteImport } from './routes/settings/access/route'
 import { Route as SystemActivityRouteImport } from './routes/system/activity'
 import { Route as WealthIndexRouteImport } from './routes/wealth/index'
+import { Route as SettingsAccessIndexRouteImport } from './routes/settings/access/index'
+import { Route as SettingsAccessPermissionsRouteImport } from './routes/settings/access/permissions'
+import { Route as SettingsAccessRolesRouteImport } from './routes/settings/access/roles'
+import { Route as SettingsAccessUsersRouteImport } from './routes/settings/access/users'
 import { Route as WealthOauthCallbackRouteImport } from './routes/wealth/oauth/callback'
+import { Route as SettingsAccessRolesRoleKeyRouteImport } from './routes/settings/access/roles.$roleKey'
+import { Route as SettingsAccessUsersIdRouteImport } from './routes/settings/access/users.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -39,7 +47,7 @@ const ExpensesRouteRoute = ExpensesRouteRouteImport.update({
   path: '/expenses',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsRoute = SettingsRouteImport.update({
+const SettingsRouteRoute = SettingsRouteRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
@@ -79,6 +87,16 @@ const ExpensesTransactionsRoute = ExpensesTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => ExpensesRouteRoute,
 } as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
+const SettingsAccessRouteRoute = SettingsAccessRouteRouteImport.update({
+  id: '/access',
+  path: '/access',
+  getParentRoute: () => SettingsRouteRoute,
+} as any)
 const SystemActivityRoute = SystemActivityRouteImport.update({
   id: '/system/activity',
   path: '/system/activity',
@@ -89,18 +107,51 @@ const WealthIndexRoute = WealthIndexRouteImport.update({
   path: '/wealth/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsAccessIndexRoute = SettingsAccessIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsAccessRouteRoute,
+} as any)
+const SettingsAccessPermissionsRoute =
+  SettingsAccessPermissionsRouteImport.update({
+    id: '/permissions',
+    path: '/permissions',
+    getParentRoute: () => SettingsAccessRouteRoute,
+  } as any)
+const SettingsAccessRolesRoute = SettingsAccessRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => SettingsAccessRouteRoute,
+} as any)
+const SettingsAccessUsersRoute = SettingsAccessUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => SettingsAccessRouteRoute,
+} as any)
 const WealthOauthCallbackRoute = WealthOauthCallbackRouteImport.update({
   id: '/wealth/oauth/callback',
   path: '/wealth/oauth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsAccessRolesRoleKeyRoute =
+  SettingsAccessRolesRoleKeyRouteImport.update({
+    id: '/$roleKey',
+    path: '/$roleKey',
+    getParentRoute: () => SettingsAccessRolesRoute,
+  } as any)
+const SettingsAccessUsersIdRoute = SettingsAccessUsersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SettingsAccessUsersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/expenses': typeof ExpensesRouteRouteWithChildren
+  '/settings': typeof SettingsRouteRouteWithChildren
   '/checklists': typeof ChecklistsRoute
-  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
+  '/settings/access': typeof SettingsAccessRouteRouteWithChildren
   '/expenses/budgets': typeof ExpensesBudgetsRoute
   '/expenses/categories': typeof ExpensesCategoriesRoute
   '/expenses/insights': typeof ExpensesInsightsRoute
@@ -108,13 +159,19 @@ export interface FileRoutesByFullPath {
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/system/activity': typeof SystemActivityRoute
   '/expenses/': typeof ExpensesIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/wealth/': typeof WealthIndexRoute
+  '/settings/access/permissions': typeof SettingsAccessPermissionsRoute
+  '/settings/access/roles': typeof SettingsAccessRolesRouteWithChildren
+  '/settings/access/users': typeof SettingsAccessUsersRouteWithChildren
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
+  '/settings/access/': typeof SettingsAccessIndexRoute
+  '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
+  '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/checklists': typeof ChecklistsRoute
-  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/expenses/budgets': typeof ExpensesBudgetsRoute
   '/expenses/categories': typeof ExpensesCategoriesRoute
@@ -123,16 +180,24 @@ export interface FileRoutesByTo {
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/system/activity': typeof SystemActivityRoute
   '/expenses': typeof ExpensesIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/wealth': typeof WealthIndexRoute
+  '/settings/access/permissions': typeof SettingsAccessPermissionsRoute
+  '/settings/access/roles': typeof SettingsAccessRolesRouteWithChildren
+  '/settings/access/users': typeof SettingsAccessUsersRouteWithChildren
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
+  '/settings/access': typeof SettingsAccessIndexRoute
+  '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
+  '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/expenses': typeof ExpensesRouteRouteWithChildren
+  '/settings': typeof SettingsRouteRouteWithChildren
   '/checklists': typeof ChecklistsRoute
-  '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
+  '/settings/access': typeof SettingsAccessRouteRouteWithChildren
   '/expenses/budgets': typeof ExpensesBudgetsRoute
   '/expenses/categories': typeof ExpensesCategoriesRoute
   '/expenses/insights': typeof ExpensesInsightsRoute
@@ -140,17 +205,25 @@ export interface FileRoutesById {
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/system/activity': typeof SystemActivityRoute
   '/expenses/': typeof ExpensesIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/wealth/': typeof WealthIndexRoute
+  '/settings/access/permissions': typeof SettingsAccessPermissionsRoute
+  '/settings/access/roles': typeof SettingsAccessRolesRouteWithChildren
+  '/settings/access/users': typeof SettingsAccessUsersRouteWithChildren
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
+  '/settings/access/': typeof SettingsAccessIndexRoute
+  '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
+  '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/expenses'
-    | '/checklists'
     | '/settings'
+    | '/checklists'
     | '/tasks'
+    | '/settings/access'
     | '/expenses/budgets'
     | '/expenses/categories'
     | '/expenses/insights'
@@ -158,13 +231,19 @@ export interface FileRouteTypes {
     | '/expenses/transactions'
     | '/system/activity'
     | '/expenses/'
+    | '/settings/'
     | '/wealth/'
+    | '/settings/access/permissions'
+    | '/settings/access/roles'
+    | '/settings/access/users'
     | '/wealth/oauth/callback'
+    | '/settings/access/'
+    | '/settings/access/roles/$roleKey'
+    | '/settings/access/users/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/checklists'
-    | '/settings'
     | '/tasks'
     | '/expenses/budgets'
     | '/expenses/categories'
@@ -173,15 +252,23 @@ export interface FileRouteTypes {
     | '/expenses/transactions'
     | '/system/activity'
     | '/expenses'
+    | '/settings'
     | '/wealth'
+    | '/settings/access/permissions'
+    | '/settings/access/roles'
+    | '/settings/access/users'
     | '/wealth/oauth/callback'
+    | '/settings/access'
+    | '/settings/access/roles/$roleKey'
+    | '/settings/access/users/$id'
   id:
     | '__root__'
     | '/'
     | '/expenses'
-    | '/checklists'
     | '/settings'
+    | '/checklists'
     | '/tasks'
+    | '/settings/access'
     | '/expenses/budgets'
     | '/expenses/categories'
     | '/expenses/insights'
@@ -189,15 +276,22 @@ export interface FileRouteTypes {
     | '/expenses/transactions'
     | '/system/activity'
     | '/expenses/'
+    | '/settings/'
     | '/wealth/'
+    | '/settings/access/permissions'
+    | '/settings/access/roles'
+    | '/settings/access/users'
     | '/wealth/oauth/callback'
+    | '/settings/access/'
+    | '/settings/access/roles/$roleKey'
+    | '/settings/access/users/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExpensesRouteRoute: typeof ExpensesRouteRouteWithChildren
+  SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
   ChecklistsRoute: typeof ChecklistsRoute
-  SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
   SystemActivityRoute: typeof SystemActivityRoute
   WealthIndexRoute: typeof WealthIndexRoute
@@ -231,7 +325,7 @@ declare module '@tanstack/react-router' {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
+      preLoaderRoute: typeof SettingsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tasks': {
@@ -283,6 +377,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExpensesTransactionsRouteImport
       parentRoute: typeof ExpensesRouteRoute
     }
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
+    '/settings/access': {
+      id: '/settings/access'
+      path: '/access'
+      fullPath: '/settings/access'
+      preLoaderRoute: typeof SettingsAccessRouteRouteImport
+      parentRoute: typeof SettingsRouteRoute
+    }
     '/system/activity': {
       id: '/system/activity'
       path: '/system/activity'
@@ -297,12 +405,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WealthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/access/': {
+      id: '/settings/access/'
+      path: '/'
+      fullPath: '/settings/access/'
+      preLoaderRoute: typeof SettingsAccessIndexRouteImport
+      parentRoute: typeof SettingsAccessRouteRoute
+    }
+    '/settings/access/permissions': {
+      id: '/settings/access/permissions'
+      path: '/permissions'
+      fullPath: '/settings/access/permissions'
+      preLoaderRoute: typeof SettingsAccessPermissionsRouteImport
+      parentRoute: typeof SettingsAccessRouteRoute
+    }
+    '/settings/access/roles': {
+      id: '/settings/access/roles'
+      path: '/roles'
+      fullPath: '/settings/access/roles'
+      preLoaderRoute: typeof SettingsAccessRolesRouteImport
+      parentRoute: typeof SettingsAccessRouteRoute
+    }
+    '/settings/access/users': {
+      id: '/settings/access/users'
+      path: '/users'
+      fullPath: '/settings/access/users'
+      preLoaderRoute: typeof SettingsAccessUsersRouteImport
+      parentRoute: typeof SettingsAccessRouteRoute
+    }
     '/wealth/oauth/callback': {
       id: '/wealth/oauth/callback'
       path: '/wealth/oauth/callback'
       fullPath: '/wealth/oauth/callback'
       preLoaderRoute: typeof WealthOauthCallbackRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/settings/access/roles/$roleKey': {
+      id: '/settings/access/roles/$roleKey'
+      path: '/$roleKey'
+      fullPath: '/settings/access/roles/$roleKey'
+      preLoaderRoute: typeof SettingsAccessRolesRoleKeyRouteImport
+      parentRoute: typeof SettingsAccessRolesRoute
+    }
+    '/settings/access/users/$id': {
+      id: '/settings/access/users/$id'
+      path: '/$id'
+      fullPath: '/settings/access/users/$id'
+      preLoaderRoute: typeof SettingsAccessUsersIdRouteImport
+      parentRoute: typeof SettingsAccessUsersRoute
     }
   }
 }
@@ -329,11 +479,64 @@ const ExpensesRouteRouteWithChildren = ExpensesRouteRoute._addFileChildren(
   ExpensesRouteRouteChildren,
 )
 
+interface SettingsAccessRolesRouteChildren {
+  SettingsAccessRolesRoleKeyRoute: typeof SettingsAccessRolesRoleKeyRoute
+}
+
+const SettingsAccessRolesRouteChildren: SettingsAccessRolesRouteChildren = {
+  SettingsAccessRolesRoleKeyRoute: SettingsAccessRolesRoleKeyRoute,
+}
+
+const SettingsAccessRolesRouteWithChildren =
+  SettingsAccessRolesRoute._addFileChildren(SettingsAccessRolesRouteChildren)
+
+interface SettingsAccessUsersRouteChildren {
+  SettingsAccessUsersIdRoute: typeof SettingsAccessUsersIdRoute
+}
+
+const SettingsAccessUsersRouteChildren: SettingsAccessUsersRouteChildren = {
+  SettingsAccessUsersIdRoute: SettingsAccessUsersIdRoute,
+}
+
+const SettingsAccessUsersRouteWithChildren =
+  SettingsAccessUsersRoute._addFileChildren(SettingsAccessUsersRouteChildren)
+
+interface SettingsAccessRouteRouteChildren {
+  SettingsAccessPermissionsRoute: typeof SettingsAccessPermissionsRoute
+  SettingsAccessRolesRoute: typeof SettingsAccessRolesRouteWithChildren
+  SettingsAccessUsersRoute: typeof SettingsAccessUsersRouteWithChildren
+  SettingsAccessIndexRoute: typeof SettingsAccessIndexRoute
+}
+
+const SettingsAccessRouteRouteChildren: SettingsAccessRouteRouteChildren = {
+  SettingsAccessPermissionsRoute: SettingsAccessPermissionsRoute,
+  SettingsAccessRolesRoute: SettingsAccessRolesRouteWithChildren,
+  SettingsAccessUsersRoute: SettingsAccessUsersRouteWithChildren,
+  SettingsAccessIndexRoute: SettingsAccessIndexRoute,
+}
+
+const SettingsAccessRouteRouteWithChildren =
+  SettingsAccessRouteRoute._addFileChildren(SettingsAccessRouteRouteChildren)
+
+interface SettingsRouteRouteChildren {
+  SettingsAccessRouteRoute: typeof SettingsAccessRouteRouteWithChildren
+  SettingsIndexRoute: typeof SettingsIndexRoute
+}
+
+const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
+  SettingsAccessRouteRoute: SettingsAccessRouteRouteWithChildren,
+  SettingsIndexRoute: SettingsIndexRoute,
+}
+
+const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
+  SettingsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExpensesRouteRoute: ExpensesRouteRouteWithChildren,
+  SettingsRouteRoute: SettingsRouteRouteWithChildren,
   ChecklistsRoute: ChecklistsRoute,
-  SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
   SystemActivityRoute: SystemActivityRoute,
   WealthIndexRoute: WealthIndexRoute,
