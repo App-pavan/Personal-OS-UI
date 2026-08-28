@@ -5,6 +5,7 @@ import type {
   FamilyOwnerGroup,
   PresenceStatus,
 } from "@/lib/api/device-awareness-types";
+import { DEVICE_AWARENESS_STALE_MS } from "./sync-config";
 
 export type StatusFilter = "all" | "online" | "offline";
 
@@ -39,6 +40,69 @@ export function formatLastSeen(iso?: string | null, now = Date.now()): string | 
   if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
 
   return format(date, "MMM d, h:mm a");
+}
+
+/** Compact label for when list data was last reconciled with the backend. */
+export function formatSyncAge(lastSyncedAtMs: number | null, now = Date.now()): string | null {
+  if (lastSyncedAtMs == null) return null;
+  const diffMs = now - lastSyncedAtMs;
+  if (diffMs < 5_000) return "Updated just now";
+  const mins = Math.floor(diffMs / 60_000);
+  if (mins < 1) return "Updated just now";
+  if (mins < 60) return `Updated ${mins} min ago`;
+  return `Updated ${format(new Date(lastSyncedAtMs), "h:mm a")}`;
+}
+
+export function formatDeviceRegistered(iso?: string | null): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return format(date, "MMM d, yyyy");
+}
+
+export function isSyncStale(lastSyncedAtMs: number | null, now = Date.now()): boolean {
+  if (lastSyncedAtMs == null) return false;
+  return now - lastSyncedAtMs > DEVICE_AWARENESS_STALE_MS;
+}
+
+/** Status subtitle for cards — online shows freshness, offline shows last seen. */
+export function statusSubtitle(
+  status: PresenceStatus,
+  lastSeenAt: string,
+  lastSyncedAtMs: number | null,
+  now = Date.now(),
+): string | null {
+  if (status === "online") {
+    const synced = formatSyncAge(lastSyncedAtMs, now);
+    return synced ?? "Online";
+  }
+  return formatLastSeen(lastSeenAt, now);
+}
+
+function presenceSort(a: PresenceStatus, b: PresenceStatus): number {
+  if (a === b) return 0;
+  return a === "online" ? -1 : 1;
+}
+
+export function sortOwnDevices(devices: DeviceSummary[]): DeviceSummary[] {
+  return [...devices].sort((a, b) => {
+    const byStatus = presenceSort(a.status, b.status);
+    if (byStatus !== 0) return byStatus;
+    return a.deviceName.localeCompare(b.deviceName);
+  });
+}
+
+export function sortFamilyGroups(groups: FamilyOwnerGroup[]): FamilyOwnerGroup[] {
+  return [...groups]
+    .map((group) => ({
+      ...group,
+      devices: [...group.devices].sort((a, b) => {
+        const byStatus = presenceSort(a.device.status, b.device.status);
+        if (byStatus !== 0) return byStatus;
+        return a.device.deviceName.localeCompare(b.device.deviceName);
+      }),
+    }))
+    .sort((a, b) => a.owner.displayName.localeCompare(b.owner.displayName));
 }
 
 export function platformLabel(platform: string): string {

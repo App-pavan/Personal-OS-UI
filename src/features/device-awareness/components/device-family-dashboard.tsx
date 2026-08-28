@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import { RefreshCw, Smartphone } from "lucide-react";
 import {
   HudPanel,
@@ -8,80 +7,37 @@ import {
   SemanticBadge,
 } from "@/components/future";
 import { EmptyState, ErrorState, RowsSkeleton } from "@/components/os/state-views";
-import { useCapabilities } from "@/features/capabilities/capabilities-context";
-import {
-  useDeviceAwarenessRefresh,
-  useDeviceDetail,
-  useFamilyDevices,
-  useOwnDevices,
-} from "@/hooks/use-device-awareness";
-import { cn } from "@/lib/utils";
-import {
-  buildAllDeviceItems,
-  computePresenceSummary,
-  filterFamilyGroups,
-  filterOwnDevices,
-  type StatusFilter,
-} from "../lib/presence-utils";
 import { DeviceDetailPanel } from "./device-detail-panel";
 import { FamilyDeviceCard, OwnDeviceCard } from "./device-card";
+import { SyncStatusIndicator } from "./sync-status-indicator";
+import { useDeviceAwarenessPage } from "@/hooks/use-device-awareness-page";
+import { cn } from "@/lib/utils";
 
 export function DeviceFamilyDashboard() {
-  const { caps } = useCapabilities();
-  const currentUserId = caps?.user?.id;
+  const page = useDeviceAwarenessPage();
 
-  const ownQuery = useOwnDevices();
-  const familyQuery = useFamilyDevices();
-  const refreshAll = useDeviceAwarenessRefresh();
-
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-
-  const detailQuery = useDeviceDetail(selectedDeviceId);
-
-  const ownDevices = ownQuery.data ?? [];
-  const familyGroups = familyQuery.data?.owners ?? [];
-
-  const filteredOwn = useMemo(
-    () => filterOwnDevices(ownDevices, statusFilter),
-    [ownDevices, statusFilter],
-  );
-
-  const filteredFamily = useMemo(
-    () => filterFamilyGroups(familyGroups, currentUserId, statusFilter),
-    [familyGroups, currentUserId, statusFilter],
-  );
-
-  const summary = useMemo(
-    () =>
-      computePresenceSummary(
-        buildAllDeviceItems(ownDevices, familyGroups, currentUserId),
-      ),
-    [ownDevices, familyGroups, currentUserId],
-  );
-
-  const initialLoading =
-    (ownQuery.isLoading || familyQuery.isLoading) && !ownQuery.data && !familyQuery.data;
-  const loadError = ownQuery.error ?? familyQuery.error;
-  const isRefreshing = ownQuery.isFetching || familyQuery.isFetching;
-
-  const hasAnyDevices = ownDevices.length > 0 || filteredFamily.length > 0 || filteredOwn.length > 0;
-  const showEmpty =
-    !initialLoading &&
-    !loadError &&
-    ownDevices.length === 0 &&
-    familyGroups.filter((g) => g.owner.id !== currentUserId).every((g) => g.devices.length === 0);
-
-  const openDevice = (deviceId: string) => {
-    setSelectedDeviceId(deviceId);
-    setDetailOpen(true);
-  };
-
-  const handleRefresh = () => {
-    void refreshAll();
-    if (selectedDeviceId) void detailQuery.refetch();
-  };
+  const {
+    currentUserId,
+    statusFilter,
+    setStatusFilter,
+    filteredOwn,
+    filteredFamily,
+    summary,
+    initialLoading,
+    initialError,
+    refreshError,
+    isRefreshing,
+    showEmpty,
+    syncStatus,
+    lastSyncedAt,
+    recentTransitions,
+    detailQuery,
+    selectedDeviceId,
+    detailOpen,
+    openDevice,
+    closeDetail,
+    handleRefresh,
+  } = page;
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-6 md:space-y-8">
@@ -91,18 +47,34 @@ export function DeviceFamilyDashboard() {
         title="Family Device Awareness"
         subtitle="See the current availability of your family devices."
         actions={
+          <div className="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 rounded-md border border-hairline/60 px-3 py-2 text-xs text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+              aria-label={isRefreshing ? "Refreshing device awareness" : "Refresh device awareness"}
+            >
+              <RefreshCw className={cn("size-3.5", isRefreshing && "animate-spin")} />
+              {isRefreshing ? "Refreshing…" : "Refresh"}
+            </button>
+            <SyncStatusIndicator status={syncStatus} lastSyncedAt={lastSyncedAt} />
+          </div>
+        }
+      />
+
+      {refreshError && !initialError ? (
+        <div className="rounded-lg border border-hairline/60 bg-surface/40 px-4 py-3 text-sm text-muted-foreground">
+          <p>Unable to update device information.</p>
           <button
             type="button"
             onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-1.5 rounded-md border border-hairline/60 px-3 py-2 text-xs text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
-            aria-label="Refresh device awareness"
+            className="mt-2 text-xs text-primary hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
-            <RefreshCw className={cn("size-3.5", isRefreshing && "animate-spin")} />
-            Refresh
+            Retry
           </button>
-        }
-      />
+        </div>
+      ) : null}
 
       <MetricPanel accent="aqua">
         <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
@@ -110,7 +82,7 @@ export function DeviceFamilyDashboard() {
         </p>
         {initialLoading ? (
           <RowsSkeleton rows={1} />
-        ) : loadError ? (
+        ) : initialError ? (
           <p className="mt-2 text-sm text-muted-foreground">—</p>
         ) : (
           <>
@@ -129,7 +101,11 @@ export function DeviceFamilyDashboard() {
         )}
       </MetricPanel>
 
-      <div className="flex flex-wrap gap-2">
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label="Filter devices by presence status"
+      >
         {(["all", "online", "offline"] as const).map((filter) => (
           <PeriodChip
             key={filter}
@@ -145,9 +121,9 @@ export function DeviceFamilyDashboard() {
         <HudPanel glow className="p-5">
           <RowsSkeleton rows={4} />
         </HudPanel>
-      ) : loadError ? (
+      ) : initialError ? (
         <ErrorState
-          error={loadError}
+          error={initialError}
           title="Unable to load family devices"
           onRetry={handleRefresh}
         />
@@ -167,11 +143,20 @@ export function DeviceFamilyDashboard() {
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredOwn.map((device) => (
-                  <OwnDeviceCard
+                  <div
                     key={device.id}
-                    device={device}
-                    onClick={() => openDevice(device.id)}
-                  />
+                    className={cn(
+                      "animate-in fade-in duration-300",
+                      recentTransitions.has(device.id) && "animate-in fade-in duration-500",
+                    )}
+                  >
+                    <OwnDeviceCard
+                      device={device}
+                      statusTransition={recentTransitions.has(device.id)}
+                      lastSyncedAtMs={lastSyncedAt}
+                      onClick={() => openDevice(device.id)}
+                    />
+                  </div>
                 ))}
               </div>
             </section>
@@ -191,11 +176,17 @@ export function DeviceFamilyDashboard() {
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {group.devices.map((entry) => (
-                        <FamilyDeviceCard
+                        <div
                           key={entry.device.id}
-                          entry={entry}
-                          onClick={() => openDevice(entry.device.id)}
-                        />
+                          className="animate-in fade-in duration-300"
+                        >
+                          <FamilyDeviceCard
+                            entry={entry}
+                            statusTransition={recentTransitions.has(entry.device.id)}
+                            lastSyncedAtMs={lastSyncedAt}
+                            onClick={() => openDevice(entry.device.id)}
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -214,23 +205,22 @@ export function DeviceFamilyDashboard() {
         </div>
       )}
 
-      {!initialLoading && !loadError && hasAnyDevices ? (
+      {!initialLoading && !initialError && summary.total > 0 ? (
         <p className="text-[11px] text-muted-foreground">
-          Presence refreshes automatically every 45 seconds.
+          Presence syncs every 30 seconds while this page is open. Tab focus triggers an immediate
+          refresh.
         </p>
       ) : null}
 
       <DeviceDetailPanel
         deviceId={selectedDeviceId}
         open={detailOpen}
-        onOpenChange={(open) => {
-          setDetailOpen(open);
-          if (!open) setSelectedDeviceId(null);
-        }}
+        onOpenChange={closeDetail}
         view={detailQuery.data}
         currentUserId={currentUserId}
         loading={detailQuery.isLoading}
         error={detailQuery.error}
+        lastSyncedAtMs={lastSyncedAt}
         onRetry={() => void detailQuery.refetch()}
       />
     </div>
