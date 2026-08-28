@@ -48,4 +48,20 @@ describe("modules registry", () => {
   it("allows wealth route for owner", () => {
     expect(canAccessRoute(ownerCaps, "/wealth")).toBe(true);
   });
+
+  it("shows device awareness for user with permission", () => {
+    const nav = visibleModules(familyCaps);
+    expect(nav.some((m) => m.to === "/devices")).toBe(true);
+    expect(canAccessRoute(familyCaps, "/devices")).toBe(true);
+  });
+
+  it("hides device awareness without permission", () => {
+    const nav = visibleModules(ownerCaps);
+    expect(nav.some((m) => m.to === "/devices")).toBe(false);
+    expect(canAccessRoute(ownerCaps, "/devices")).toBe(false);
+  });
+
+  it("blocks direct devices route without permission", () => {
+    expect(canAccessRoute(ownerCaps, "/devices")).toBe(false);
+  });
 });

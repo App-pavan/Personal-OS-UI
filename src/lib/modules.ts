@@ -97,7 +97,6 @@ export const MODULE_REGISTRY: ModuleDef[] = [
     group: "core",
     blurb: "Family devices and presence",
     requiredPermission: PERM.DEVICE_AWARENESS_DEVICES_VIEW,
-    implemented: false,
   },
   {
     key: "settings",

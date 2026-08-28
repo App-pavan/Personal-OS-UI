@@ -124,7 +124,14 @@ export function budgetProgressTone(percent: number): SemanticTone {
 
 /** Module navigation accents */
 export const moduleAccent: Record<
-  "/" | "/tasks" | "/checklists" | "/expenses" | "/wealth" | "/settings" | "/system/activity",
+  | "/"
+  | "/tasks"
+  | "/checklists"
+  | "/expenses"
+  | "/wealth"
+  | "/devices"
+  | "/settings"
+  | "/system/activity",
   SemanticTone
 > = {
   "/": "primary",
@@ -132,6 +139,7 @@ export const moduleAccent: Record<
   "/checklists": "info",
   "/expenses": "aqua",
   "/wealth": "purple",
+  "/devices": "aqua",
   "/settings": "muted",
   "/system/activity": "info",
 };
