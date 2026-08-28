@@ -12,6 +12,7 @@ import type {
   AdminUser,
   CapabilitiesResponse,
   CreateRoleInput,
+  CreateUserInput,
   PermissionDefinition,
   UpdateRoleInput,
   UpdateUserInput,
@@ -54,6 +55,9 @@ export const rbacApi = {
     }),
     update: async (id: string, input: UpdateUserInput) => ({
       data: normalizeAdminUser((await api.patch<AdminUser>(`/admin/users/${id}`, input)).data),
+    }),
+    create: async (input: CreateUserInput) => ({
+      data: normalizeAdminUser((await api.post<AdminUser>("/admin/users", input)).data),
     }),
     listRoles: (id: string) => api.get<string[]>(`/admin/users/${id}/roles`),
     assignRole: (id: string, roleKey: string) =>

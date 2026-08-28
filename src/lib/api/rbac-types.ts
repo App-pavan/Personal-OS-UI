@@ -56,6 +56,14 @@ export type UpdateUserInput = {
   isActive?: boolean;
 };
 
+export type CreateUserInput = {
+  displayName: string;
+  email: string;
+  password: string;
+  roleKey: string;
+  isActive?: boolean;
+};
+
 /** Permissions required for Access Control UI visibility. */
 export const PERM_USERS_VIEW = "settings.users.view";
 export const PERM_USERS_MANAGE = "settings.users.manage";
