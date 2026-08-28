@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, Plus, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, ErrorState, RowsSkeleton } from "@/components/os/state-views";
+import { CreateUserDialog } from "@/features/access/components/create-user-dialog";
 import { buildPermissionTree, moduleLabel } from "@/features/access/lib/permission-tree";
+import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
 import { useAdminRoles, useAdminUsers, usePermissionCatalog } from "@/hooks/use-rbac";
 import { cn } from "@/lib/utils";
 import type { AdminUser } from "@/lib/api/rbac-types";
@@ -35,8 +38,10 @@ function userModuleSummary(user: AdminUser, roles: { key: string; permissions?: 
 export function UsersList() {
   const users = useAdminUsers();
   const roles = useAdminRoles();
+  const { canManageUsers } = useAccessControlPermissions();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -86,10 +91,25 @@ export function UsersList() {
             </button>
           ))}
         </div>
+        {canManageUsers && (
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" /> Create user
+          </Button>
+        )}
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState title="No users found" line="Adjust your search or filters." />
+        <EmptyState
+          title="No users found"
+          line={
+            canManageUsers ? "Create a user or adjust your search." : "Adjust your search or filters."
+          }
+          action={
+            canManageUsers ? (
+              <Button onClick={() => setCreateOpen(true)}>Create user</Button>
+            ) : undefined
+          }
+        />
       ) : (
         <ul className="surface-raised hairline-list divide-y divide-hairline rounded-xl">
           {filtered.map((user) => (
@@ -128,6 +148,8 @@ export function UsersList() {
           ))}
         </ul>
       )}
+
+      <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
 import { errorMessage } from "@/lib/api/errors";
 import { rbacApi } from "@/lib/api/rbac-service";
-import type { CreateRoleInput, UpdateRoleInput, UpdateUserInput } from "@/lib/api/rbac-types";
+import type { CreateRoleInput, CreateUserInput, UpdateRoleInput, UpdateUserInput } from "@/lib/api/rbac-types";
 import { capabilityKeys } from "./use-capabilities";
 
 export const rbacKeys = {
@@ -128,7 +128,16 @@ export function useUserMutations() {
     onError: fail("Unable to remove role"),
   });
 
-  return { update, assignRole, removeRole };
+  const create = useMutation({
+    mutationFn: (input: CreateUserInput) => rbacApi.users.create(input),
+    onSuccess: () => {
+      invalidateAccess(qc);
+      void qc.invalidateQueries({ queryKey: rbacKeys.users });
+      toast.success("User created successfully");
+    },
+  });
+
+  return { update, assignRole, removeRole, create };
 }
 
 export function useRoleMutations() {
