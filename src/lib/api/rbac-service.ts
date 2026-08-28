@@ -6,6 +6,7 @@ import {
   normalizeAdminUsers,
   normalizeCapabilities,
   normalizePermissionList,
+  normalizeUserAccess,
 } from "./rbac-normalize";
 import type {
   AdminRole,
@@ -15,7 +16,9 @@ import type {
   CreateUserInput,
   PermissionDefinition,
   UpdateRoleInput,
+  UpdateUserAccessInput,
   UpdateUserInput,
+  UserAccessView,
 } from "./rbac-types";
 
 /** Production exposes /identity/auth/capabilities; Phase 2 also adds /identity/me/capabilities. */
@@ -58,6 +61,12 @@ export const rbacApi = {
     }),
     create: async (input: CreateUserInput) => ({
       data: normalizeAdminUser((await api.post<AdminUser>("/admin/users", input)).data),
+    }),
+    getAccess: async (id: string) => ({
+      data: normalizeUserAccess((await api.get<UserAccessView>(`/admin/users/${id}/access`)).data),
+    }),
+    updateAccess: async (id: string, input: UpdateUserAccessInput) => ({
+      data: normalizeUserAccess((await api.patch<UserAccessView>(`/admin/users/${id}/access`, input)).data),
     }),
     listRoles: (id: string) => api.get<string[]>(`/admin/users/${id}/roles`),
     assignRole: (id: string, roleKey: string) =>

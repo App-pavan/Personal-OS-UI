@@ -3,6 +3,7 @@ import {
   grantedPermissions,
   normalizeCapabilities,
   normalizePermissionList,
+  normalizeUserAccess,
 } from "@/lib/api/rbac-normalize";
 
 describe("rbac-normalize", () => {
@@ -32,5 +33,22 @@ describe("rbac-normalize", () => {
       Modules: {},
     });
     expect(grantedPermissions(caps)).toEqual(["settings.users.view"]);
+  });
+
+  it("normalizes user access payloads", () => {
+    const view = normalizeUserAccess({
+      id: "u1",
+      email: "maa@example.com",
+      displayName: "Maa",
+      isActive: true,
+      roles: ["viewer"],
+      isProtectedOwner: false,
+      isSelf: false,
+      permissions: ["device_awareness.devices.view"],
+      modules: { device_awareness: { visible: true, permissions: ["device_awareness.devices.view"] } },
+    });
+    expect(view.isSelf).toBe(false);
+    expect(view.permissions).toHaveLength(1);
+    expect(view.modules.device_awareness?.visible).toBe(true);
   });
 });

@@ -14,6 +14,18 @@ export type AdminUser = {
   displayName: string;
   isActive: boolean;
   roles: string[];
+  isProtectedOwner?: boolean;
+};
+
+export type UserAccessView = AdminUser & {
+  permissions: string[];
+  modules: Record<string, ModuleCapability>;
+  isSelf: boolean;
+};
+
+export type UpdateUserAccessInput = {
+  roleKey?: string;
+  isActive?: boolean;
 };
 
 export type AdminRole = {

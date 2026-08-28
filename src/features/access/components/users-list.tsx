@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { CreateUserDialog } from "@/features/access/components/create-user-dialog";
-import { buildPermissionTree, moduleLabel } from "@/features/access/lib/permission-tree";
-import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
-import { useAdminRoles, useAdminUsers, usePermissionCatalog } from "@/hooks/use-rbac";
+import { summarizeFromRoles } from "@/features/access/lib/user-access-summary";
+import { useAuth } from "@/features/auth/auth-context";
+import { useCapabilities, useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
+import { useAdminRoles, useAdminUsers } from "@/hooks/use-rbac";
 import { cn } from "@/lib/utils";
 import type { AdminUser } from "@/lib/api/rbac-types";
 
@@ -16,32 +17,21 @@ function roleDisplayName(roleKey: string, roles: { key: string; name: string }[]
   return roles.find((r) => r.key === roleKey)?.name ?? roleKey.replace(/_/g, " ");
 }
 
-function userModuleSummary(user: AdminUser, roles: { key: string; permissions?: string[] }[]) {
-  const granted = new Set<string>();
-  for (const roleKey of user.roles) {
-    const role = roles.find((r) => r.key === roleKey);
-    for (const p of role?.permissions ?? []) granted.add(p);
-  }
-  const modules = new Set<string>();
-  for (const key of granted) {
-    const mod = key.split(".")[0];
-    if (mod) modules.add(mod);
-  }
-  if (user.roles.includes("owner")) return "All modules";
-  if (modules.size === 0) return "No modules";
-  if (modules.size <= 2) {
-    return [...modules].map(moduleLabel).join(", ");
-  }
-  return `${modules.size} modules`;
+function primaryRole(user: AdminUser): string {
+  return user.roles[0] ?? "";
 }
 
 export function UsersList() {
   const users = useAdminUsers();
   const roles = useAdminRoles();
+  const { user: sessionUser } = useAuth();
+  const { caps } = useCapabilities();
   const { canManageUsers } = useAccessControlPermissions();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [createOpen, setCreateOpen] = useState(false);
+
+  const currentUserId = caps?.user.id || sessionUser?.id || "";
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -112,60 +102,74 @@ export function UsersList() {
         />
       ) : (
         <ul className="surface-raised hairline-list divide-y divide-hairline rounded-xl">
-          {filtered.map((user) => (
-            <li key={user.id}>
-              <Link
-                to="/settings/access/users/$id"
-                params={{ id: user.id }}
-                className="flex items-center gap-4 px-4 py-4 transition hover:bg-muted/30"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{user.displayName || user.email}</p>
-                    {!user.isActive && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        Inactive
-                      </Badge>
+          {filtered.map((user) => {
+            const isSelf = user.id === currentUserId;
+            const summary = summarizeFromRoles(user.roles, roles.data ?? [], user.isProtectedOwner);
+            const roleKey = primaryRole(user);
+
+            return (
+              <li key={user.id}>
+                <Link
+                  to="/settings/access/users/$id"
+                  params={{ id: user.id }}
+                  className="flex items-center gap-4 px-4 py-4 transition hover:bg-muted/30"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{user.displayName || user.email}</p>
+                      {isSelf && (
+                        <Badge variant="outline" className="text-[10px]">
+                          YOU
+                        </Badge>
+                      )}
+                      {!user.isActive && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          Inactive
+                        </Badge>
+                      )}
+                      {user.isProtectedOwner && <Badge className="text-[10px]">Owner</Badge>}
+                    </div>
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">{user.email}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {roleKey && (
+                        <Badge variant="outline" className="text-[10px] font-normal">
+                          {roleDisplayName(roleKey, roles.data ?? [])}
+                        </Badge>
+                      )}
+                      <span className="text-[10px] text-muted-foreground">
+                        {user.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="hidden shrink-0 text-right sm:block">
+                    <p className="text-xs text-muted-foreground">
+                      {summary.protected ? "Protected" : "Module access"}
+                    </p>
+                    <p className="mt-0.5 text-sm">{summary.moduleLabel}</p>
+                    {!summary.protected && summary.permissionCount > 0 && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {summary.permissionCount} permissions
+                      </p>
                     )}
-                    {user.roles.includes("owner") && <Badge className="text-[10px]">Owner</Badge>}
                   </div>
-                  <p className="mt-0.5 truncate text-sm text-muted-foreground">{user.email}</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {user.roles.map((roleKey) => (
-                      <Badge key={roleKey} variant="outline" className="text-[10px] font-normal">
-                        {roleDisplayName(roleKey, roles.data ?? [])}
-                      </Badge>
-                    ))}
+                  <div className="hidden shrink-0 text-right md:block">
+                    <p className="text-xs text-primary">
+                      {isSelf && summary.protected
+                        ? "Protected"
+                        : canManageUsers && !isSelf && !user.isProtectedOwner
+                          ? "Manage access →"
+                          : "View →"}
+                    </p>
                   </div>
-                </div>
-                <div className="hidden shrink-0 text-right sm:block">
-                  <p className="text-xs text-muted-foreground">Module access</p>
-                  <p className="mt-0.5 text-sm">{userModuleSummary(user, roles.data ?? [])}</p>
-                </div>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </Link>
-            </li>
-          ))}
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
 
       <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
-}
-
-/** Compute effective permissions for a user from their assigned roles. */
-export function useEffectiveUserPermissions(userRoles: string[]) {
-  const roles = useAdminRoles();
-  const catalog = usePermissionCatalog();
-
-  return useMemo(() => {
-    const granted = new Set<string>();
-    for (const roleKey of userRoles) {
-      const role = roles.data?.find((r) => r.key === roleKey);
-      for (const p of role?.permissions ?? []) granted.add(p);
-    }
-    const tree = buildPermissionTree(catalog.data ?? []);
-    return { granted, tree, roles: roles.data ?? [] };
-  }, [userRoles, roles.data, catalog.data]);
 }
