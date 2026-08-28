@@ -1,4 +1,12 @@
 import { api, ApiRequestError } from "./client";
+import {
+  normalizeAdminRole,
+  normalizeAdminRoles,
+  normalizeAdminUser,
+  normalizeAdminUsers,
+  normalizeCapabilities,
+  normalizePermissionList,
+} from "./rbac-normalize";
 import type {
   AdminRole,
   AdminUser,
@@ -15,7 +23,8 @@ async function getCapabilities(): Promise<CapabilitiesResponse> {
   let lastError: unknown;
   for (const path of paths) {
     try {
-      return (await api.get<CapabilitiesResponse>(path)).data;
+      const data = (await api.get<CapabilitiesResponse>(path)).data;
+      return normalizeCapabilities(data);
     } catch (err) {
       if (err instanceof ApiRequestError && err.status === 404) {
         lastError = err;
@@ -31,15 +40,21 @@ export const rbacApi = {
   capabilities: () => getCapabilities().then((data) => ({ data })),
 
   permissions: {
-    list: () => api.get<PermissionDefinition[]>("/admin/permissions"),
+    list: async () => ({
+      data: normalizePermissionList((await api.get<PermissionDefinition[]>("/admin/permissions")).data),
+    }),
   },
 
   users: {
-    list: (params?: { limit?: number; offset?: number }) =>
-      api.get<AdminUser[]>("/admin/users", params),
-    get: (id: string) => api.get<AdminUser>(`/admin/users/${id}`),
-    update: (id: string, input: UpdateUserInput) =>
-      api.patch<AdminUser>(`/admin/users/${id}`, input),
+    list: async (params?: { limit?: number; offset?: number }) => ({
+      data: normalizeAdminUsers((await api.get<AdminUser[]>("/admin/users", params)).data),
+    }),
+    get: async (id: string) => ({
+      data: normalizeAdminUser((await api.get<AdminUser>(`/admin/users/${id}`)).data),
+    }),
+    update: async (id: string, input: UpdateUserInput) => ({
+      data: normalizeAdminUser((await api.patch<AdminUser>(`/admin/users/${id}`, input)).data),
+    }),
     listRoles: (id: string) => api.get<string[]>(`/admin/users/${id}/roles`),
     assignRole: (id: string, roleKey: string) =>
       api.post<null>(`/admin/users/${id}/roles`, { roleKey }),
@@ -48,11 +63,18 @@ export const rbacApi = {
   },
 
   roles: {
-    list: () => api.get<AdminRole[]>("/admin/roles"),
-    get: (roleKey: string) => api.get<AdminRole>(`/admin/roles/${roleKey}`),
-    create: (input: CreateRoleInput) => api.post<AdminRole>("/admin/roles", input),
-    update: (roleKey: string, input: UpdateRoleInput) =>
-      api.patch<AdminRole>(`/admin/roles/${roleKey}`, input),
+    list: async () => ({
+      data: normalizeAdminRoles((await api.get<AdminRole[]>("/admin/roles")).data),
+    }),
+    get: async (roleKey: string) => ({
+      data: normalizeAdminRole((await api.get<AdminRole>(`/admin/roles/${roleKey}`)).data),
+    }),
+    create: async (input: CreateRoleInput) => ({
+      data: normalizeAdminRole((await api.post<AdminRole>("/admin/roles", input)).data),
+    }),
+    update: async (roleKey: string, input: UpdateRoleInput) => ({
+      data: normalizeAdminRole((await api.patch<AdminRole>(`/admin/roles/${roleKey}`, input)).data),
+    }),
     delete: (roleKey: string) => api.delete<null>(`/admin/roles/${roleKey}`),
     listPermissions: (roleKey: string) => api.get<string[]>(`/admin/roles/${roleKey}/permissions`),
     replacePermissions: (roleKey: string, permissions: string[]) =>

@@ -1,15 +1,16 @@
 import type { CapabilitiesResponse } from "@/lib/api/rbac-types";
+import { grantedPermissions } from "@/lib/api/rbac-normalize";
 import { PERM_ROLES_VIEW, PERM_USERS_VIEW } from "@/lib/api/rbac-types";
 
 export function canViewAccessControl(caps: CapabilitiesResponse | undefined): boolean {
   if (!caps) return false;
-  const perms = new Set(caps.permissions);
+  const perms = new Set(grantedPermissions(caps));
   return perms.has(PERM_USERS_VIEW) || perms.has(PERM_ROLES_VIEW);
 }
 
 export function hasPermission(caps: CapabilitiesResponse | undefined, permission: string): boolean {
   if (!caps) return false;
-  return caps.permissions.includes(permission);
+  return grantedPermissions(caps).includes(permission);
 }
 
 export function canManageUsers(caps: CapabilitiesResponse | undefined): boolean {

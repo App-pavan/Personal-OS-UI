@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import type { CapabilitiesResponse } from "@/lib/api/rbac-types";
+import { grantedPermissions } from "@/lib/api/rbac-normalize";
 import { ACCESS_CONTROL_PERMISSIONS, PERM, type PermissionKey } from "@/lib/permissions";
 
 export type AppRoute =
@@ -37,7 +38,7 @@ export type ModuleDef = {
 
 function canAny(caps: CapabilitiesResponse | undefined, keys: PermissionKey[]): boolean {
   if (!caps) return false;
-  const granted = new Set(caps.permissions);
+  const granted = new Set(grantedPermissions(caps));
   return keys.some((k) => granted.has(k));
 }
 

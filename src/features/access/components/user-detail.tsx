@@ -20,7 +20,7 @@ import {
   moduleLabel,
   buildPermissionTree,
 } from "@/features/access/lib/permission-tree";
-import { useCapabilities } from "@/hooks/use-capabilities";
+import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
 import {
   useAdminRoles,
   useAdminUser,
@@ -35,7 +35,7 @@ export function UserDetail({ userId }: Props) {
   const user = useAdminUser(userId);
   const roles = useAdminRoles();
   const catalog = usePermissionCatalog();
-  const { canManageUsers } = useCapabilities();
+  const { canManageUsers } = useAccessControlPermissions();
   const mutations = useUserMutations();
   const [assignOpen, setAssignOpen] = useState(false);
   const [removeRoleKey, setRemoveRoleKey] = useState<string | null>(null);
