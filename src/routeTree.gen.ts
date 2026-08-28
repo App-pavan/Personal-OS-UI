@@ -15,6 +15,7 @@ import { Route as ChecklistsRouteImport } from './routes/checklists'
 import { Route as ExpensesRouteRouteImport } from './routes/expenses/route'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as DevicesIndexRouteImport } from './routes/devices/index'
 import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
 import { Route as ExpensesBudgetsRouteImport } from './routes/expenses/budgets'
 import { Route as ExpensesCategoriesRouteImport } from './routes/expenses/categories'
@@ -63,6 +64,11 @@ const SettingsRouteRoute = SettingsRouteRouteImport.update({
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevicesIndexRoute = DevicesIndexRouteImport.update({
+  id: '/devices/',
+  path: '/devices/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExpensesIndexRoute = ExpensesIndexRouteImport.update({
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/system/activity': typeof SystemActivityRoute
+  '/devices/': typeof DevicesIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/wealth/': typeof WealthIndexRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByTo {
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/system/activity': typeof SystemActivityRoute
+  '/devices': typeof DevicesIndexRoute
   '/expenses': typeof ExpensesIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/wealth': typeof WealthIndexRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/expenses/members': typeof ExpensesMembersRoute
   '/expenses/transactions': typeof ExpensesTransactionsRoute
   '/system/activity': typeof SystemActivityRoute
+  '/devices/': typeof DevicesIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/wealth/': typeof WealthIndexRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/expenses/members'
     | '/expenses/transactions'
     | '/system/activity'
+    | '/devices/'
     | '/expenses/'
     | '/settings/'
     | '/wealth/'
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
     | '/expenses/members'
     | '/expenses/transactions'
     | '/system/activity'
+    | '/devices'
     | '/expenses'
     | '/settings'
     | '/wealth'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/expenses/members'
     | '/expenses/transactions'
     | '/system/activity'
+    | '/devices/'
     | '/expenses/'
     | '/settings/'
     | '/wealth/'
@@ -329,6 +341,7 @@ export interface RootRouteChildren {
   ChecklistsRoute: typeof ChecklistsRoute
   TasksRoute: typeof TasksRoute
   SystemActivityRoute: typeof SystemActivityRoute
+  DevicesIndexRoute: typeof DevicesIndexRoute
   WealthIndexRoute: typeof WealthIndexRoute
   WealthOauthCallbackRoute: typeof WealthOauthCallbackRoute
 }
@@ -375,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/devices/': {
+      id: '/devices/'
+      path: '/devices'
+      fullPath: '/devices/'
+      preLoaderRoute: typeof DevicesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/expenses/': {
@@ -600,6 +620,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChecklistsRoute: ChecklistsRoute,
   TasksRoute: TasksRoute,
   SystemActivityRoute: SystemActivityRoute,
+  DevicesIndexRoute: DevicesIndexRoute,
   WealthIndexRoute: WealthIndexRoute,
   WealthOauthCallbackRoute: WealthOauthCallbackRoute,
 }
