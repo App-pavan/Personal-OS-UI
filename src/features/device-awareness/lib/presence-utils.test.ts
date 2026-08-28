@@ -10,9 +10,12 @@ import {
   filterFamilyGroups,
   filterOwnDevices,
   formatLastSeen,
+  formatSyncAge,
+  isSyncStale,
   matchesStatusFilter,
   platformLabel,
   presenceLabel,
+  sortOwnDevices,
 } from "./presence-utils";
 
 const ownDevice = (overrides: Partial<DeviceSummary> = {}): DeviceSummary => ({
@@ -106,5 +109,22 @@ describe("device list helpers", () => {
     const filtered = filterFamilyGroups(family, "user-a", "offline");
     expect(filtered[0]?.devices).toHaveLength(1);
     expect(filtered[0]?.devices[0]?.device.status).toBe("offline");
+  });
+
+  it("sorts own devices with online first", () => {
+    const sorted = sortOwnDevices(own);
+    expect(sorted[0]?.status).toBe("online");
+    expect(sorted[1]?.status).toBe("offline");
+  });
+
+  it("marks sync data stale after threshold", () => {
+    const now = Date.now();
+    expect(isSyncStale(now - 130_000, now)).toBe(true);
+    expect(isSyncStale(now - 30_000, now)).toBe(false);
+  });
+
+  it("formats sync age for recent updates", () => {
+    const now = Date.now();
+    expect(formatSyncAge(now - 2_000, now)).toBe("Updated just now");
   });
 });

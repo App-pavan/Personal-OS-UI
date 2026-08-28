@@ -3,46 +3,54 @@ import { SemanticBadge } from "@/components/future";
 import type { DeviceSummary, FamilyDeviceEntry } from "@/lib/api/device-awareness-types";
 import { cn } from "@/lib/utils";
 import {
-  formatLastSeen,
   platformLabel,
   presenceLabel,
   presenceTone,
+  statusSubtitle,
 } from "../lib/presence-utils";
 
 type DeviceCardProps = {
+  deviceId: string;
   deviceName: string;
   platform: string;
   status: "online" | "offline";
   lastSeenAt: string;
   ownerName?: string;
   isOwn?: boolean;
+  statusTransition?: boolean;
+  lastSyncedAtMs?: number | null;
   onClick?: () => void;
   className?: string;
 };
 
 export function DeviceCard({
+  deviceId,
   deviceName,
   platform,
   status,
   lastSeenAt,
   ownerName,
   isOwn,
+  statusTransition,
+  lastSyncedAtMs,
   onClick,
   className,
 }: DeviceCardProps) {
-  const lastSeen = formatLastSeen(lastSeenAt);
+  const subtitle = statusSubtitle(status, lastSeenAt, lastSyncedAtMs ?? null);
   const tone = presenceTone(status);
 
   return (
     <button
       type="button"
       onClick={onClick}
+      data-device-id={deviceId}
       className={cn(
-        "group hud-panel angular-clip w-full p-4 text-left transition",
+        "group hud-panel angular-clip w-full p-4 text-left transition-all duration-300",
         "border border-hairline/60 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        statusTransition && "ring-1 ring-primary/25",
         className,
       )}
-      aria-label={`${ownerName ? `${ownerName}, ` : ""}${deviceName}, ${presenceLabel(status)}${lastSeen ? `, last seen ${lastSeen}` : ""}`}
+      aria-label={`${ownerName ? `${ownerName}, ` : ""}${deviceName}, ${presenceLabel(status)}${subtitle ? `, ${subtitle}` : ""}`}
     >
       <div className="relative z-[1] space-y-3">
         <div className="flex items-start justify-between gap-3">
@@ -64,14 +72,27 @@ export function DeviceCard({
               Your device
             </span>
           ) : null}
-          <SemanticBadge tone={tone} dot>
+          <SemanticBadge
+            tone={tone}
+            dot
+            className={cn(statusTransition && "transition-opacity duration-500")}
+          >
             {presenceLabel(status)}
           </SemanticBadge>
         </div>
 
-        {lastSeen ? (
+        {subtitle ? (
           <p className="text-xs text-muted-foreground">
-            Last seen <span className="text-foreground/80">{lastSeen}</span>
+            {status === "online" ? (
+              <>
+                <span className="sr-only">Status updated: </span>
+                {subtitle}
+              </>
+            ) : (
+              <>
+                Last seen <span className="text-foreground/80">{subtitle}</span>
+              </>
+            )}
           </p>
         ) : null}
       </div>
@@ -81,18 +102,25 @@ export function DeviceCard({
 
 export function OwnDeviceCard({
   device,
+  statusTransition,
+  lastSyncedAtMs,
   onClick,
 }: {
   device: DeviceSummary;
+  statusTransition?: boolean;
+  lastSyncedAtMs?: number | null;
   onClick: () => void;
 }) {
   return (
     <DeviceCard
+      deviceId={device.id}
       deviceName={device.deviceName}
       platform={device.platform}
       status={device.status}
       lastSeenAt={device.lastSeenAt}
       isOwn
+      {...(statusTransition ? { statusTransition } : {})}
+      {...(lastSyncedAtMs != null ? { lastSyncedAtMs } : {})}
       onClick={onClick}
     />
   );
@@ -100,17 +128,24 @@ export function OwnDeviceCard({
 
 export function FamilyDeviceCard({
   entry,
+  statusTransition,
+  lastSyncedAtMs,
   onClick,
 }: {
   entry: FamilyDeviceEntry;
+  statusTransition?: boolean;
+  lastSyncedAtMs?: number | null;
   onClick: () => void;
 }) {
   return (
     <DeviceCard
+      deviceId={entry.device.id}
       deviceName={entry.device.deviceName}
       platform={entry.device.platform}
       status={entry.device.status}
       lastSeenAt={entry.awareness.lastSeenAt || entry.device.lastSeenAt}
+      {...(statusTransition ? { statusTransition } : {})}
+      {...(lastSyncedAtMs != null ? { lastSyncedAtMs } : {})}
       onClick={onClick}
     />
   );
