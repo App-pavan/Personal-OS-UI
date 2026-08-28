@@ -4,9 +4,13 @@ import { useCapabilities } from "@/features/capabilities/capabilities-context";
 import { ApiRequestError } from "@/lib/api/errors";
 import { PERM } from "@/lib/permissions";
 import { deviceAwarenessApi } from "@/lib/api/device-awareness-service";
+import type {
+  DeviceSummary,
+  DeviceViewResponse,
+  FamilyDevicesOverview,
+} from "@/lib/api/device-awareness-types";
 import {
   DEVICE_AWARENESS_POLL_MS,
-  DEVICE_AWARENESS_RECONCILE_MS,
 } from "@/features/device-awareness/lib/sync-config";
 
 export { DEVICE_AWARENESS_POLL_MS } from "@/features/device-awareness/lib/sync-config";
@@ -74,7 +78,6 @@ export function useOwnDevices(options: { enabled?: boolean } = {}) {
     queryFn: () => deviceAwarenessApi.listOwnDevices(),
     enabled,
     refetchInterval: enabled && visible ? DEVICE_AWARENESS_POLL_MS : false,
-    refetchIntervalInBackground: enabled ? DEVICE_AWARENESS_RECONCILE_MS : false,
     refetchOnWindowFocus: enabled,
     staleTime: 10_000,
     retry: (count, error) => {
@@ -84,7 +87,7 @@ export function useOwnDevices(options: { enabled?: boolean } = {}) {
       }
       return count < 1;
     },
-    placeholderData: (previous) => previous,
+    placeholderData: (previous: DeviceSummary[] | undefined) => previous,
   });
 }
 
@@ -98,7 +101,6 @@ export function useFamilyDevices(options: { enabled?: boolean } = {}) {
     queryFn: () => deviceAwarenessApi.listFamilyDevices(),
     enabled,
     refetchInterval: enabled && visible ? DEVICE_AWARENESS_POLL_MS : false,
-    refetchIntervalInBackground: enabled ? DEVICE_AWARENESS_RECONCILE_MS : false,
     refetchOnWindowFocus: enabled,
     staleTime: 10_000,
     retry: (count, error) => {
@@ -108,7 +110,7 @@ export function useFamilyDevices(options: { enabled?: boolean } = {}) {
       }
       return count < 1;
     },
-    placeholderData: (previous) => previous,
+    placeholderData: (previous: FamilyDevicesOverview | undefined) => previous,
   });
 }
 
@@ -134,7 +136,7 @@ export function useDeviceDetail(deviceId: string | null, detailOpen = false) {
       }
       return count < 1;
     },
-    placeholderData: (previous) => previous,
+    placeholderData: (previous: DeviceViewResponse | undefined) => previous,
   });
 }
 

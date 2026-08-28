@@ -63,7 +63,7 @@ function DetailBody({
         <EmptyState
           title="Device not available"
           line="This device may have been removed or you no longer have access."
-          tone="muted"
+          tone="aqua"
         />
       </div>
     );
@@ -191,7 +191,7 @@ export function DeviceDetailPanel({
             currentUserId={currentUserId}
             loading={loading && Boolean(deviceId)}
             error={error}
-            lastSyncedAtMs={lastSyncedAtMs}
+            {...(lastSyncedAtMs != null ? { lastSyncedAtMs } : {})}
             {...(onRetry ? { onRetry } : {})}
           />
         </DrawerContent>
@@ -210,7 +210,7 @@ export function DeviceDetailPanel({
           currentUserId={currentUserId}
           loading={loading && Boolean(deviceId)}
           error={error}
-          lastSyncedAtMs={lastSyncedAtMs}
+          {...(lastSyncedAtMs != null ? { lastSyncedAtMs } : {})}
           {...(onRetry ? { onRetry } : {})}
         />
       </SheetContent>

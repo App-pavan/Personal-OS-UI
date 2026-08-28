@@ -119,8 +119,8 @@ export function OwnDeviceCard({
       status={device.status}
       lastSeenAt={device.lastSeenAt}
       isOwn
-      statusTransition={statusTransition}
-      lastSyncedAtMs={lastSyncedAtMs}
+      {...(statusTransition ? { statusTransition } : {})}
+      {...(lastSyncedAtMs != null ? { lastSyncedAtMs } : {})}
       onClick={onClick}
     />
   );
@@ -144,8 +144,8 @@ export function FamilyDeviceCard({
       platform={entry.device.platform}
       status={entry.device.status}
       lastSeenAt={entry.awareness.lastSeenAt || entry.device.lastSeenAt}
-      statusTransition={statusTransition}
-      lastSyncedAtMs={lastSyncedAtMs}
+      {...(statusTransition ? { statusTransition } : {})}
+      {...(lastSyncedAtMs != null ? { lastSyncedAtMs } : {})}
       onClick={onClick}
     />
   );
