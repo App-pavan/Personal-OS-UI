@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
 import { errorMessage } from "@/lib/api/errors";
 import { rbacApi } from "@/lib/api/rbac-service";
-import type { CreateRoleInput, CreateUserInput, UpdateRoleInput, UpdateUserInput } from "@/lib/api/rbac-types";
+import type { CreateRoleInput, CreateUserInput, UpdateRoleInput, UpdateUserAccessInput, UpdateUserInput } from "@/lib/api/rbac-types";
 import { capabilityKeys } from "./use-capabilities";
 
 export const rbacKeys = {
@@ -12,6 +12,7 @@ export const rbacKeys = {
   permissions: ["rbac", "permissions"] as const,
   users: ["rbac", "users"] as const,
   user: (id: string) => ["rbac", "users", id] as const,
+  userAccess: (id: string) => ["rbac", "users", id, "access"] as const,
   userRoles: (id: string) => ["rbac", "users", id, "roles"] as const,
   roles: ["rbac", "roles"] as const,
   role: (key: string) => ["rbac", "roles", key] as const,
@@ -66,6 +67,16 @@ export function useAdminUser(id: string | null) {
   return useQuery({
     queryKey: rbacKeys.user(id ?? "none"),
     queryFn: async () => (await rbacApi.users.get(id!)).data,
+    enabled: Boolean(id) && isReady && canViewAccessControl,
+    retry: 1,
+  });
+}
+
+export function useAdminUserAccess(id: string | null) {
+  const { canViewAccessControl, isReady } = useAccessControlPermissions();
+  return useQuery({
+    queryKey: rbacKeys.userAccess(id ?? "none"),
+    queryFn: async () => (await rbacApi.users.getAccess(id!)).data,
     enabled: Boolean(id) && isReady && canViewAccessControl,
     retry: 1,
   });
@@ -137,7 +148,19 @@ export function useUserMutations() {
     },
   });
 
-  return { update, assignRole, removeRole, create };
+  const updateAccess = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateUserAccessInput }) =>
+      rbacApi.users.updateAccess(id, input),
+    onSuccess: (_, { id }) => {
+      invalidateAccess(qc);
+      void qc.invalidateQueries({ queryKey: rbacKeys.user(id) });
+      void qc.invalidateQueries({ queryKey: rbacKeys.userAccess(id) });
+      void qc.invalidateQueries({ queryKey: rbacKeys.users });
+      toast.success("Access updated");
+    },
+  });
+
+  return { update, assignRole, removeRole, create, updateAccess };
 }
 
 export function useRoleMutations() {

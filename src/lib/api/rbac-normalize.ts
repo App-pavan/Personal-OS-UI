@@ -4,6 +4,7 @@ import type {
   CapabilitiesResponse,
   ModuleCapability,
   PermissionDefinition,
+  UserAccessView,
 } from "./rbac-types";
 
 const str = (value: unknown): string =>
@@ -68,12 +69,17 @@ export function normalizeCapabilities(raw: unknown): CapabilitiesResponse {
 
 export function normalizeAdminUser(raw: unknown): AdminUser {
   const source = readRecord(raw) ?? {};
+  const roles = strList(source.roles ?? source.Roles);
+  const isProtectedOwner = Boolean(
+    source.isProtectedOwner ?? source.IsProtectedOwner ?? roles.includes("owner"),
+  );
   return {
     id: str(source.id ?? source.ID),
     email: str(source.email ?? source.Email),
     displayName: str(source.displayName ?? source.DisplayName),
     isActive: Boolean(source.isActive ?? source.IsActive ?? true),
-    roles: strList(source.roles ?? source.Roles),
+    roles,
+    isProtectedOwner,
   };
 }
 
@@ -97,6 +103,27 @@ export function normalizeAdminRole(raw: unknown): AdminRole {
 
 export function normalizeAdminRoles(value: unknown): AdminRole[] {
   return asArray<unknown>(value).map(normalizeAdminRole).filter((role) => role.key.length > 0);
+}
+
+export function normalizeUserAccess(raw: unknown): UserAccessView {
+  const source = readRecord(raw) ?? {};
+  const user = normalizeAdminUser(source);
+  const modulesRaw = readRecord(source.modules ?? source.Modules) ?? {};
+  const modules: Record<string, ModuleCapability> = {};
+  for (const [key, value] of Object.entries(modulesRaw)) {
+    const mod = readRecord(value);
+    if (!mod) continue;
+    modules[key] = {
+      visible: Boolean(mod.visible ?? mod.Visible),
+      permissions: strList(mod.permissions ?? mod.Permissions),
+    };
+  }
+  return {
+    ...user,
+    permissions: strList(source.permissions ?? source.Permissions),
+    modules,
+    isSelf: Boolean(source.isSelf ?? source.IsSelf),
+  };
 }
 
 export function grantedPermissions(caps: CapabilitiesResponse | undefined): string[] {
