@@ -53,7 +53,9 @@ export function UserDetail({ userId }: Props) {
       </Link>
 
       <header>
-        <p className="label-eyebrow">{isSelf ? "Your account" : "Manage access"}</p>
+        <p className="label-eyebrow">
+          {isSelf ? "My access" : canEdit ? "Manage access" : "View access"}
+        </p>
         <h2 className="display-lg mt-2">{a.displayName || a.email}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{a.email}</p>
         <div className="mt-3">
@@ -72,11 +74,11 @@ export function UserDetail({ userId }: Props) {
       </header>
 
       {isSelf && isProtected ? (
-        <ProtectedOwnerAccessPanel access={a} />
+        <ProtectedOwnerAccessPanel access={a} isSelf />
       ) : canEdit ? (
         <UserAccessEditor access={a} />
       ) : (
-        <ProtectedOwnerAccessPanel access={a} />
+        <ProtectedOwnerAccessPanel access={a} isSelf={isSelf} />
       )}
     </div>
   );

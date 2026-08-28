@@ -30,7 +30,9 @@ import { Route as SettingsAccessPermissionsRouteImport } from './routes/settings
 import { Route as SettingsAccessRolesRouteImport } from './routes/settings/access/roles'
 import { Route as SettingsAccessUsersRouteImport } from './routes/settings/access/users'
 import { Route as WealthOauthCallbackRouteImport } from './routes/wealth/oauth/callback'
+import { Route as SettingsAccessRolesIndexRouteImport } from './routes/settings/access/roles.index'
 import { Route as SettingsAccessRolesRoleKeyRouteImport } from './routes/settings/access/roles.$roleKey'
+import { Route as SettingsAccessUsersIndexRouteImport } from './routes/settings/access/users.index'
 import { Route as SettingsAccessUsersIdRouteImport } from './routes/settings/access/users.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -139,11 +141,23 @@ const WealthOauthCallbackRoute = WealthOauthCallbackRouteImport.update({
   path: '/wealth/oauth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsAccessRolesIndexRoute =
+  SettingsAccessRolesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => SettingsAccessRolesRoute,
+  } as any)
 const SettingsAccessRolesRoleKeyRoute =
   SettingsAccessRolesRoleKeyRouteImport.update({
     id: '/$roleKey',
     path: '/$roleKey',
     getParentRoute: () => SettingsAccessRolesRoute,
+  } as any)
+const SettingsAccessUsersIndexRoute =
+  SettingsAccessUsersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => SettingsAccessUsersRoute,
   } as any)
 const SettingsAccessUsersIdRoute = SettingsAccessUsersIdRouteImport.update({
   id: '/$id',
@@ -175,6 +189,8 @@ export interface FileRoutesByFullPath {
   '/settings/access/': typeof SettingsAccessIndexRoute
   '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
   '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
+  '/settings/access/roles/': typeof SettingsAccessRolesIndexRoute
+  '/settings/access/users/': typeof SettingsAccessUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -191,12 +207,12 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsIndexRoute
   '/wealth': typeof WealthIndexRoute
   '/settings/access/permissions': typeof SettingsAccessPermissionsRoute
-  '/settings/access/roles': typeof SettingsAccessRolesRouteWithChildren
-  '/settings/access/users': typeof SettingsAccessUsersRouteWithChildren
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
   '/settings/access': typeof SettingsAccessIndexRoute
   '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
   '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
+  '/settings/access/roles': typeof SettingsAccessRolesIndexRoute
+  '/settings/access/users': typeof SettingsAccessUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -223,6 +239,8 @@ export interface FileRoutesById {
   '/settings/access/': typeof SettingsAccessIndexRoute
   '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
   '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
+  '/settings/access/roles/': typeof SettingsAccessRolesIndexRoute
+  '/settings/access/users/': typeof SettingsAccessUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -250,6 +268,8 @@ export interface FileRouteTypes {
     | '/settings/access/'
     | '/settings/access/roles/$roleKey'
     | '/settings/access/users/$id'
+    | '/settings/access/roles/'
+    | '/settings/access/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -266,12 +286,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/wealth'
     | '/settings/access/permissions'
-    | '/settings/access/roles'
-    | '/settings/access/users'
     | '/wealth/oauth/callback'
     | '/settings/access'
     | '/settings/access/roles/$roleKey'
     | '/settings/access/users/$id'
+    | '/settings/access/roles'
+    | '/settings/access/users'
   id:
     | '__root__'
     | '/'
@@ -297,6 +317,8 @@ export interface FileRouteTypes {
     | '/settings/access/'
     | '/settings/access/roles/$roleKey'
     | '/settings/access/users/$id'
+    | '/settings/access/roles/'
+    | '/settings/access/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -460,12 +482,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WealthOauthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/access/roles/': {
+      id: '/settings/access/roles/'
+      path: '/'
+      fullPath: '/settings/access/roles/'
+      preLoaderRoute: typeof SettingsAccessRolesIndexRouteImport
+      parentRoute: typeof SettingsAccessRolesRoute
+    }
     '/settings/access/roles/$roleKey': {
       id: '/settings/access/roles/$roleKey'
       path: '/$roleKey'
       fullPath: '/settings/access/roles/$roleKey'
       preLoaderRoute: typeof SettingsAccessRolesRoleKeyRouteImport
       parentRoute: typeof SettingsAccessRolesRoute
+    }
+    '/settings/access/users/': {
+      id: '/settings/access/users/'
+      path: '/'
+      fullPath: '/settings/access/users/'
+      preLoaderRoute: typeof SettingsAccessUsersIndexRouteImport
+      parentRoute: typeof SettingsAccessUsersRoute
     }
     '/settings/access/users/$id': {
       id: '/settings/access/users/$id'
@@ -501,10 +537,12 @@ const ExpensesRouteRouteWithChildren = ExpensesRouteRoute._addFileChildren(
 
 interface SettingsAccessRolesRouteChildren {
   SettingsAccessRolesRoleKeyRoute: typeof SettingsAccessRolesRoleKeyRoute
+  SettingsAccessRolesIndexRoute: typeof SettingsAccessRolesIndexRoute
 }
 
 const SettingsAccessRolesRouteChildren: SettingsAccessRolesRouteChildren = {
   SettingsAccessRolesRoleKeyRoute: SettingsAccessRolesRoleKeyRoute,
+  SettingsAccessRolesIndexRoute: SettingsAccessRolesIndexRoute,
 }
 
 const SettingsAccessRolesRouteWithChildren =
@@ -512,10 +550,12 @@ const SettingsAccessRolesRouteWithChildren =
 
 interface SettingsAccessUsersRouteChildren {
   SettingsAccessUsersIdRoute: typeof SettingsAccessUsersIdRoute
+  SettingsAccessUsersIndexRoute: typeof SettingsAccessUsersIndexRoute
 }
 
 const SettingsAccessUsersRouteChildren: SettingsAccessUsersRouteChildren = {
   SettingsAccessUsersIdRoute: SettingsAccessUsersIdRoute,
+  SettingsAccessUsersIndexRoute: SettingsAccessUsersIndexRoute,
 }
 
 const SettingsAccessUsersRouteWithChildren =

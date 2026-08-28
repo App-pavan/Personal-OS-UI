@@ -1,10 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { UsersList } from "@/features/access/components/users-list";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/settings/access/users")({
-  component: UsersPage,
+  component: UsersLayout,
 });
 
-function UsersPage() {
-  return <UsersList />;
+function UsersLayout() {
+  return <Outlet />;
 }

@@ -106,13 +106,17 @@ export function UsersList() {
             const isSelf = user.id === currentUserId;
             const summary = summarizeFromRoles(user.roles, roles.data ?? [], user.isProtectedOwner);
             const roleKey = primaryRole(user);
+            const canManage =
+              canManageUsers && !isSelf && !user.isProtectedOwner;
+            const actionLabel = canManage ? "Manage access →" : "View access →";
 
             return (
               <li key={user.id}>
                 <Link
                   to="/settings/access/users/$id"
                   params={{ id: user.id }}
-                  className="flex items-center gap-4 px-4 py-4 transition hover:bg-muted/30"
+                  aria-label={`View access for ${user.displayName || user.email}`}
+                  className="flex items-center gap-4 px-4 py-4 transition hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -153,13 +157,7 @@ export function UsersList() {
                     )}
                   </div>
                   <div className="hidden shrink-0 text-right md:block">
-                    <p className="text-xs text-primary">
-                      {isSelf && summary.protected
-                        ? "Protected"
-                        : canManageUsers && !isSelf && !user.isProtectedOwner
-                          ? "Manage access →"
-                          : "View →"}
-                    </p>
+                    <p className="text-xs text-primary">{actionLabel}</p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </Link>
