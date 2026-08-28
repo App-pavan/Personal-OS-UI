@@ -276,22 +276,46 @@ export function UserAccessEditor({ access }: Props) {
   );
 }
 
-export function ProtectedOwnerAccessPanel({ access }: { access: UserAccessView }) {
+export function ProtectedOwnerAccessPanel({
+  access,
+  isSelf = false,
+}: {
+  access: UserAccessView;
+  isSelf?: boolean;
+}) {
   const catalog = usePermissionCatalog();
   const granted = useMemo(() => new Set(access.permissions), [access.permissions]);
   const tree = useMemo(() => buildPermissionTree(catalog.data ?? []), [catalog.data]);
+  const moduleCount = tree.filter((mod) => moduleHasAccess(mod.key, granted)).length;
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline">Read only</Badge>
+        {isSelf && <Badge variant="outline">YOU</Badge>}
+        <Badge variant="secondary">Protected account</Badge>
+      </div>
+
       <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary-soft/10 p-4">
         <Lock className="mt-0.5 size-4 shrink-0 text-primary" />
         <div>
-          <p className="text-sm font-medium">Owner access is protected</p>
+          <p className="text-sm font-medium">
+            {isSelf ? "Protected owner account" : "Owner access is protected"}
+          </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Your role, modules, and permissions cannot be changed from this screen.
+            {isSelf
+              ? "This account has full platform access and cannot be modified here."
+              : "This owner's role and permissions cannot be changed from Access Control."}
           </p>
         </div>
       </div>
+
+      <section className="surface-raised p-5">
+        <p className="label-eyebrow">Access summary</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {moduleCount} modules · {access.permissions.length} permissions
+        </p>
+      </section>
 
       <section className="surface-raised p-5">
         <p className="label-eyebrow">Module access</p>

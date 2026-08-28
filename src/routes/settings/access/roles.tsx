@@ -1,10 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { RolesList } from "@/features/access/components/roles-list";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/settings/access/roles")({
-  component: RolesPage,
+  component: RolesLayout,
 });
 
-function RolesPage() {
-  return <RolesList />;
+function RolesLayout() {
+  return <Outlet />;
 }
