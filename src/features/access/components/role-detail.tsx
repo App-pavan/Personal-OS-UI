@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { PermissionTreeEditor } from "@/features/access/components/permission-tree-editor";
 import { buildPermissionTree, moduleHasAccess } from "@/features/access/lib/permission-tree";
-import { useCapabilities } from "@/hooks/use-capabilities";
+import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
 import { useAdminRole, usePermissionCatalog, useRoleMutations } from "@/hooks/use-rbac";
 
 type Props = { roleKey: string };
@@ -24,7 +24,7 @@ type Props = { roleKey: string };
 export function RoleDetail({ roleKey }: Props) {
   const role = useAdminRole(roleKey);
   const catalog = usePermissionCatalog();
-  const { canManageRoles } = useCapabilities();
+  const { canManageRoles } = useAccessControlPermissions();
   const mutations = useRoleMutations();
   const [draft, setDraft] = useState<string[]>([]);
   const [deleteOpen, setDeleteOpen] = useState(false);

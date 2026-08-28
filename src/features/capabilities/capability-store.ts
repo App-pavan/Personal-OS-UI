@@ -1,4 +1,5 @@
 import type { CapabilitiesResponse } from "@/lib/api/rbac-types";
+import { grantedPermissions } from "@/lib/api/rbac-normalize";
 
 let cached: CapabilitiesResponse | null = null;
 let ownerUserId: string | null = null;
@@ -23,7 +24,7 @@ export function getCapabilityUserId(): string | null {
 
 export function canSync(permission: string): boolean {
   if (!cached) return false;
-  return cached.permissions.includes(permission);
+  return grantedPermissions(cached).includes(permission);
 }
 
 export function canAnySync(permissions: string[]): boolean {

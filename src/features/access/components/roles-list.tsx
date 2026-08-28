@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { buildPermissionTree, moduleHasAccess } from "@/features/access/lib/permission-tree";
-import { useCapabilities } from "@/hooks/use-capabilities";
+import { useAccessControlPermissions } from "@/features/capabilities/capabilities-context";
 import { useAdminRoles, usePermissionCatalog } from "@/hooks/use-rbac";
 import { CreateRoleDialog } from "./create-role-dialog";
 
 export function RolesList() {
   const roles = useAdminRoles();
   const catalog = usePermissionCatalog();
-  const { canManageRoles } = useCapabilities();
+  const { canManageRoles } = useAccessControlPermissions();
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
 

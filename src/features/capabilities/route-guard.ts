@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import { capabilityKeys } from "@/features/capabilities/capabilities-context";
 import { rbacApi } from "@/lib/api/rbac-service";
+import { grantedPermissions } from "@/lib/api/rbac-normalize";
 import type { PermissionKey } from "@/lib/permissions";
 
 async function loadCapabilities(queryClient: QueryClient) {
@@ -17,7 +18,7 @@ export function requirePermissions(permissions: PermissionKey | PermissionKey[])
   return async ({ context }: { context: { queryClient: QueryClient } }) => {
     try {
       const caps = await loadCapabilities(context.queryClient);
-      const granted = new Set(caps.permissions);
+      const granted = new Set(grantedPermissions(caps));
       const allowed = keys.some((k) => granted.has(k));
       if (!allowed) {
         throw redirect({ to: "/access-restricted" });

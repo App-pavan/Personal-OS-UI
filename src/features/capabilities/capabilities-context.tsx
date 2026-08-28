@@ -9,6 +9,7 @@ import {
 } from "@/features/capabilities/capability-store";
 import { rbacApi } from "@/lib/api/rbac-service";
 import type { CapabilitiesResponse } from "@/lib/api/rbac-types";
+import { grantedPermissions } from "@/lib/api/rbac-normalize";
 import { setForbiddenHandler } from "@/lib/api/client";
 
 export const capabilityKeys = {
@@ -83,12 +84,12 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
       isError: query.isError,
       error: query.error,
       can: (permission: string) => {
-        if (caps) return caps.permissions.includes(permission);
+        if (caps) return grantedPermissions(caps).includes(permission);
         return canSync(permission);
       },
       canAny: (permissions: string[]) => {
         if (caps) {
-          const granted = new Set(caps.permissions);
+          const granted = new Set(grantedPermissions(caps));
           return permissions.some((p) => granted.has(p));
         }
         return canAnySync(permissions);
