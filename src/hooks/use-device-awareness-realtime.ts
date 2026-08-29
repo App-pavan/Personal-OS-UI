@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCapabilities } from "@/features/capabilities/capabilities-context";
 import { applyRealtimeDeviceUpdate } from "@/features/device-awareness/lib/realtime-cache";
-import { DEVICE_AWARENESS_RECONNECT_MS } from "@/features/device-awareness/lib/sync-config";
 import {
-  deviceAwarenessKeys,
+  DEVICE_AWARENESS_RECONNECT_MS,
+  DEVICE_AWARENESS_RECONCILE_MS,
+} from "@/features/device-awareness/lib/sync-config";
+import {
   useDeviceAwarenessRefresh,
 } from "@/hooks/use-device-awareness";
 import {
@@ -15,6 +17,8 @@ import { PERM } from "@/lib/permissions";
 
 export type RealtimeConnectionStatus = "connecting" | "live" | "reconnecting" | "disconnected";
 
+const MAX_SSE_RETRIES = 3;
+
 export function useDeviceAwarenessRealtime(options: { enabled?: boolean } = {}) {
   const queryClient = useQueryClient();
   const { caps, can, isReady } = useCapabilities();
@@ -22,9 +26,13 @@ export function useDeviceAwarenessRealtime(options: { enabled?: boolean } = {}) 
   const enabled = (options.enabled ?? true) && isReady && can(PERM.DEVICE_AWARENESS_DEVICES_VIEW);
 
   const [status, setStatus] = useState<RealtimeConnectionStatus>("disconnected");
+  const [sseAvailable, setSseAvailable] = useState(true);
   const streamRef = useRef<{ close: () => void } | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconcileTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const hadConnectedRef = useRef(false);
+  const sseDisabledRef = useRef(false);
+  const retryCountRef = useRef(0);
 
   const clearReconnectTimer = useCallback(() => {
     if (reconnectTimer.current) {
@@ -33,9 +41,28 @@ export function useDeviceAwarenessRealtime(options: { enabled?: boolean } = {}) 
     }
   }, []);
 
+  const clearReconcileTimer = useCallback(() => {
+    if (reconcileTimer.current) {
+      clearInterval(reconcileTimer.current);
+      reconcileTimer.current = null;
+    }
+  }, []);
+
+  const disableSse = useCallback(() => {
+    sseDisabledRef.current = true;
+    setSseAvailable(false);
+    setStatus("disconnected");
+    streamRef.current?.close();
+    clearReconnectTimer();
+    clearReconcileTimer();
+    reconcileTimer.current = setInterval(() => {
+      void refreshAll();
+    }, DEVICE_AWARENESS_RECONCILE_MS);
+  }, [clearReconnectTimer, clearReconcileTimer, refreshAll]);
+
   const connect = useCallback(
     (isReconnect: boolean) => {
-      if (!enabled) return;
+      if (!enabled || sseDisabledRef.current) return;
       streamRef.current?.close();
       clearReconnectTimer();
       setStatus(isReconnect ? "reconnecting" : "connecting");
@@ -43,7 +70,10 @@ export function useDeviceAwarenessRealtime(options: { enabled?: boolean } = {}) 
       const stream = openDeviceAwarenessStream({
         onOpen: () => {
           hadConnectedRef.current = true;
+          retryCountRef.current = 0;
+          setSseAvailable(true);
           setStatus("live");
+          clearReconcileTimer();
           if (isReconnect) void refreshAll();
         },
         onEvent: (ev) => {
@@ -58,11 +88,25 @@ export function useDeviceAwarenessRealtime(options: { enabled?: boolean } = {}) 
           }
         },
         onError: () => {
-          setStatus(hadConnectedRef.current ? "reconnecting" : "disconnected");
+          retryCountRef.current += 1;
+          if (!hadConnectedRef.current || retryCountRef.current >= MAX_SSE_RETRIES) {
+            disableSse();
+            void refreshAll();
+            return;
+          }
+          setStatus("reconnecting");
         },
         onClose: () => {
+          if (sseDisabledRef.current || !enabled) return;
+          if (!hadConnectedRef.current) {
+            retryCountRef.current += 1;
+            if (retryCountRef.current >= MAX_SSE_RETRIES) {
+              disableSse();
+              void refreshAll();
+              return;
+            }
+          }
           setStatus(hadConnectedRef.current ? "reconnecting" : "disconnected");
-          if (!enabled) return;
           clearReconnectTimer();
           reconnectTimer.current = setTimeout(() => connect(true), DEVICE_AWARENESS_RECONNECT_MS);
         },
@@ -70,7 +114,15 @@ export function useDeviceAwarenessRealtime(options: { enabled?: boolean } = {}) 
 
       streamRef.current = stream;
     },
-    [caps?.user?.id, clearReconnectTimer, enabled, queryClient, refreshAll],
+    [
+      caps?.user?.id,
+      clearReconnectTimer,
+      clearReconcileTimer,
+      disableSse,
+      enabled,
+      queryClient,
+      refreshAll,
+    ],
   );
 
   useEffect(() => {
@@ -78,16 +130,24 @@ export function useDeviceAwarenessRealtime(options: { enabled?: boolean } = {}) 
       streamRef.current?.close();
       streamRef.current = null;
       hadConnectedRef.current = false;
+      sseDisabledRef.current = false;
+      retryCountRef.current = 0;
+      setSseAvailable(true);
       setStatus("disconnected");
+      clearReconnectTimer();
+      clearReconcileTimer();
       return;
     }
+    sseDisabledRef.current = false;
+    retryCountRef.current = 0;
     connect(false);
     return () => {
       clearReconnectTimer();
+      clearReconcileTimer();
       streamRef.current?.close();
       streamRef.current = null;
     };
-  }, [clearReconnectTimer, connect, enabled]);
+  }, [clearReconnectTimer, clearReconcileTimer, connect, enabled]);
 
-  return { realtimeStatus: status };
+  return { realtimeStatus: status, sseAvailable };
 }
