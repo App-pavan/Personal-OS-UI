@@ -216,7 +216,7 @@ export function DeviceFamilyDashboard() {
 
       {!initialLoading && !initialError && summary.total > 0 ? (
         <p className="text-[11px] text-muted-foreground">
-          {page.realtimeStatus === "live"
+          {realtimeStatus === "live"
             ? "Device updates stream live while this page is open."
             : "Live stream unavailable — reconciling via API. Use refresh to update now."}
         </p>

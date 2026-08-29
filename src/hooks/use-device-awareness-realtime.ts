@@ -6,9 +6,7 @@ import {
   DEVICE_AWARENESS_RECONNECT_MS,
   DEVICE_AWARENESS_RECONCILE_MS,
 } from "@/features/device-awareness/lib/sync-config";
-import {
-  useDeviceAwarenessRefresh,
-} from "@/hooks/use-device-awareness";
+import { useDeviceAwarenessRefresh } from "@/hooks/use-device-awareness";
 import {
   mapRealtimePayload,
   openDeviceAwarenessStream,
