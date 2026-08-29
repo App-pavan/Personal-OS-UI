@@ -71,8 +71,9 @@ export function useOwnDevices(options: { enabled?: boolean } = {}) {
     queryKey: deviceAwarenessKeys.own,
     queryFn: () => deviceAwarenessApi.listOwnDevices(),
     enabled,
-    refetchOnWindowFocus: enabled,
-    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
     retry: (count, error) => {
       if (error instanceof ApiRequestError && error.status === 403) {
         handleForbidden(queryClient);
@@ -92,8 +93,9 @@ export function useFamilyDevices(options: { enabled?: boolean } = {}) {
     queryKey: deviceAwarenessKeys.family,
     queryFn: () => deviceAwarenessApi.listFamilyDevices(),
     enabled,
-    refetchOnWindowFocus: enabled,
-    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
     retry: (count, error) => {
       if (error instanceof ApiRequestError && error.status === 403) {
         handleForbidden(queryClient);
@@ -105,7 +107,7 @@ export function useFamilyDevices(options: { enabled?: boolean } = {}) {
   });
 }
 
-export function useDeviceDetail(deviceId: string | null, detailOpen = false) {
+export function useDeviceDetail(deviceId: string | null) {
   const queryClient = useQueryClient();
   const enabled = useDeviceAwarenessEnabled() && Boolean(deviceId);
 
@@ -113,8 +115,9 @@ export function useDeviceDetail(deviceId: string | null, detailOpen = false) {
     queryKey: deviceAwarenessKeys.detail(deviceId ?? ""),
     queryFn: () => deviceAwarenessApi.getDevice(deviceId!),
     enabled,
-    refetchOnWindowFocus: enabled && detailOpen,
-    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
     retry: (count, error) => {
       if (error instanceof ApiRequestError) {
         if (error.status === 403) {

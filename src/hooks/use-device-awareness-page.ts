@@ -26,16 +26,12 @@ import {
   useFamilyDevices,
   useOwnDevices,
 } from "@/hooks/use-device-awareness";
-import { useDeviceAwarenessRealtime } from "@/hooks/use-device-awareness-realtime";
-
 export type SyncConnectionStatus =
   | "synced"
   | "syncing"
   | "stale"
   | "offline"
-  | "error"
-  | "live"
-  | "reconnecting";
+  | "error";
 
 export function useDeviceAwarenessPage() {
   const queryClient = useQueryClient();
@@ -43,8 +39,7 @@ export function useDeviceAwarenessPage() {
   const currentUserId = caps?.user?.id;
   const hasPermission = isReady && can(PERM.DEVICE_AWARENESS_DEVICES_VIEW);
 
-  const { visible, browserOnline } = useDeviceAwarenessSyncMeta();
-  const { realtimeStatus } = useDeviceAwarenessRealtime({ enabled: hasPermission && visible });
+  const { browserOnline } = useDeviceAwarenessSyncMeta();
   const ownQuery = useOwnDevices({ enabled: hasPermission });
   const familyQuery = useFamilyDevices({ enabled: hasPermission });
   const refreshAll = useDeviceAwarenessRefresh();
@@ -57,9 +52,7 @@ export function useDeviceAwarenessPage() {
 
   const statusSnapshotRef = useRef<ReturnType<typeof buildStatusSnapshot> | null>(null);
   const transitionTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const wasVisibleRef = useRef(visible);
-
-  const detailQuery = useDeviceDetail(selectedDeviceId, detailOpen);
+  const detailQuery = useDeviceDetail(selectedDeviceId);
 
   useEffect(() => {
     if (isReady && !can(PERM.DEVICE_AWARENESS_DEVICES_VIEW)) {
@@ -68,15 +61,6 @@ export function useDeviceAwarenessPage() {
       setDetailOpen(false);
     }
   }, [can, isReady, queryClient]);
-
-  useEffect(() => {
-    if (!hasPermission) return;
-    if (visible && !wasVisibleRef.current) {
-      void refreshAll();
-      if (selectedDeviceId && detailOpen) void detailQuery.refetch();
-    }
-    wasVisibleRef.current = visible;
-  }, [detailOpen, detailQuery, hasPermission, refreshAll, selectedDeviceId, visible]);
 
   const ownDevices = ownQuery.data ?? [];
   const familyGroups = familyQuery.data?.owners ?? [];
@@ -190,10 +174,8 @@ export function useDeviceAwarenessPage() {
 
   const syncStatus: SyncConnectionStatus = useMemo(() => {
     if (!browserOnline) return "offline";
-    if (realtimeStatus === "reconnecting") return "reconnecting";
     if (initialError || (refreshError && !ownQuery.data && !familyQuery.data)) return "error";
     if (isRefreshing) return "syncing";
-    if (realtimeStatus === "live") return "live";
     if (isSyncStale(lastSyncedAt)) return "stale";
     return "synced";
   }, [
@@ -203,7 +185,6 @@ export function useDeviceAwarenessPage() {
     isRefreshing,
     lastSyncedAt,
     ownQuery.data,
-    realtimeStatus,
     refreshError,
   ]);
 
@@ -242,7 +223,6 @@ export function useDeviceAwarenessPage() {
     isRefreshing,
     showEmpty,
     syncStatus,
-    realtimeStatus,
     lastSyncedAt,
     recentTransitions,
     detailQuery,

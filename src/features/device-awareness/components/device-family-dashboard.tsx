@@ -29,7 +29,6 @@ export function DeviceFamilyDashboard() {
     isRefreshing,
     showEmpty,
     syncStatus,
-    realtimeStatus,
     lastSyncedAt,
     recentTransitions,
     detailQuery,
@@ -216,9 +215,7 @@ export function DeviceFamilyDashboard() {
 
       {!initialLoading && !initialError && summary.total > 0 ? (
         <p className="text-[11px] text-muted-foreground">
-          {realtimeStatus === "live"
-            ? "Device updates stream live while this page is open."
-            : "Live stream unavailable — reconciling via API. Use refresh to update now."}
+          Device data loads once when you open this page. Use Refresh to fetch the latest state.
         </p>
       ) : null}
 
