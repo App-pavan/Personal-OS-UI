@@ -6,12 +6,15 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { SemanticBadge } from "@/components/future";
 import { EmptyState, ErrorState } from "@/components/os/state-views";
 import {
+  appStateLabel,
+  communicationLabel,
   formatDeviceRegistered,
-  formatLastSeen,
   formatSyncAge,
+  networkLabel,
   platformLabel,
   presenceLabel,
   presenceTone,
+  screenStateLabel,
   statusSubtitle,
 } from "../lib/presence-utils";
 
@@ -87,12 +90,17 @@ function DetailBody({
   const summary = view.device ?? view.deviceSummary;
   if (!summary) return null;
 
-  const status = view.awareness.status ?? summary.status;
-  const lastSeenAt = view.awareness.lastSeenAt || summary.lastSeenAt;
+  const awareness = view.awareness;
+  const status = awareness.status ?? summary.status;
+  const lastSeenAt = awareness.lastSeenAt || summary.lastSeenAt;
   const timing = statusSubtitle(status, lastSeenAt, lastSyncedAtMs ?? null);
-  const osVersion = view.awareness.osVersion ?? view.device?.osVersion;
+  const osVersion = awareness.osVersion ?? view.device?.osVersion;
   const registered = formatDeviceRegistered(view.device?.createdAt);
   const syncAge = formatSyncAge(lastSyncedAtMs ?? null);
+  const network = networkLabel(awareness.network);
+  const communication = communicationLabel(awareness.communication);
+  const appState = appStateLabel(awareness.activity);
+  const screenState = screenStateLabel(awareness.activity);
 
   return (
     <div className="space-y-6 overflow-y-auto p-4 md:p-6">
@@ -117,6 +125,9 @@ function DetailBody({
       <section className="space-y-3 rounded-lg border border-hairline/50 p-3">
         <p className="label-eyebrow">Device</p>
         <DetailRow label="Owner" value={view.owner.displayName} />
+        {!isOwn ? (
+          <DetailRow label="Relationship" value="Family member" />
+        ) : null}
         <DetailRow label="Status" value={presenceLabel(status)} />
         {timing ? (
           <DetailRow
@@ -127,28 +138,34 @@ function DetailBody({
         <DetailRow label="Platform" value={platformLabel(summary.platform)} />
         {summary.appVersion ? <DetailRow label="App version" value={summary.appVersion} /> : null}
         {osVersion ? <DetailRow label="OS version" value={osVersion} /> : null}
+        {awareness.timezone ? <DetailRow label="Timezone" value={awareness.timezone} /> : null}
+        {awareness.locale ? <DetailRow label="Locale" value={awareness.locale} /> : null}
         {registered ? <DetailRow label="Device registered" value={registered} /> : null}
       </section>
 
-      {view.awareness.battery?.level != null || view.awareness.network?.type ? (
+      {network ||
+      awareness.battery?.level != null ||
+      appState ||
+      screenState ||
+      communication ? (
         <section className="space-y-3 rounded-lg border border-hairline/50 p-3">
-          <p className="label-eyebrow">Device health</p>
-          {view.awareness.battery?.level != null ? (
+          <p className="label-eyebrow">Awareness</p>
+          {network ? <DetailRow label="Network" value={network} /> : null}
+          {awareness.battery?.level != null ? (
             <DetailRow
               label="Battery"
-              value={`${view.awareness.battery.level}%${view.awareness.battery.charging ? " · Charging" : ""}`}
+              value={`${awareness.battery.level}%`}
             />
           ) : null}
-          {view.awareness.network?.type ? (
+          {awareness.battery?.charging != null ? (
             <DetailRow
-              label="Network"
-              value={
-                view.awareness.network.connected === false
-                  ? `${view.awareness.network.type} (disconnected)`
-                  : view.awareness.network.type
-              }
+              label="Charging"
+              value={awareness.battery.charging ? "Yes" : "No"}
             />
           ) : null}
+          {appState ? <DetailRow label="Application state" value={appState} /> : null}
+          {screenState ? <DetailRow label="Screen state" value={screenState} /> : null}
+          {communication ? <DetailRow label="Communication" value={communication} /> : null}
         </section>
       ) : null}
     </div>

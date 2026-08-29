@@ -1,8 +1,15 @@
 import { Smartphone } from "lucide-react";
 import { SemanticBadge } from "@/components/future";
-import type { DeviceSummary, FamilyDeviceEntry } from "@/lib/api/device-awareness-types";
+import type {
+  AwarenessPayload,
+  DeviceSummary,
+  FamilyDeviceEntry,
+} from "@/lib/api/device-awareness-types";
 import { cn } from "@/lib/utils";
 import {
+  batteryLabel,
+  communicationLabel,
+  networkLabel,
   platformLabel,
   presenceLabel,
   presenceTone,
@@ -15,6 +22,7 @@ type DeviceCardProps = {
   platform: string;
   status: "online" | "offline";
   lastSeenAt: string;
+  awareness?: AwarenessPayload;
   ownerName?: string;
   isOwn?: boolean;
   statusTransition?: boolean;
@@ -23,12 +31,29 @@ type DeviceCardProps = {
   className?: string;
 };
 
+function AwarenessMeta({ awareness }: { awareness?: AwarenessPayload }) {
+  if (!awareness) return null;
+  const network = networkLabel(awareness.network);
+  const battery = batteryLabel(awareness.battery);
+  const communication = communicationLabel(awareness.communication);
+  if (!network && !battery && !communication) return null;
+
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+      {network ? <span>Network · {network}</span> : null}
+      {battery ? <span>Battery · {battery}</span> : null}
+      {communication ? <span>{communication}</span> : null}
+    </div>
+  );
+}
+
 export function DeviceCard({
   deviceId,
   deviceName,
   platform,
   status,
   lastSeenAt,
+  awareness,
   ownerName,
   isOwn,
   statusTransition,
@@ -95,6 +120,8 @@ export function DeviceCard({
             )}
           </p>
         ) : null}
+
+        <AwarenessMeta {...(awareness ? { awareness } : {})} />
       </div>
     </button>
   );
@@ -118,6 +145,7 @@ export function OwnDeviceCard({
       platform={device.platform}
       status={device.status}
       lastSeenAt={device.lastSeenAt}
+      awareness={device.awareness}
       isOwn
       {...(statusTransition ? { statusTransition } : {})}
       {...(lastSyncedAtMs != null ? { lastSyncedAtMs } : {})}
@@ -144,6 +172,8 @@ export function FamilyDeviceCard({
       platform={entry.device.platform}
       status={entry.device.status}
       lastSeenAt={entry.awareness.lastSeenAt || entry.device.lastSeenAt}
+      awareness={entry.awareness}
+      ownerName={entry.owner.displayName}
       {...(statusTransition ? { statusTransition } : {})}
       {...(lastSyncedAtMs != null ? { lastSyncedAtMs } : {})}
       onClick={onClick}

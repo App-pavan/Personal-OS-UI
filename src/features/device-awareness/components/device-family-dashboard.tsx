@@ -106,10 +106,18 @@ export function DeviceFamilyDashboard() {
         role="group"
         aria-label="Filter devices by presence status"
       >
-        {(["all", "online", "offline"] as const).map((filter) => (
+        {(["all", "online", "offline", "my_devices"] as const).map((filter) => (
           <PeriodChip
             key={filter}
-            label={filter === "all" ? "All" : filter === "online" ? "Online" : "Offline"}
+            label={
+              filter === "all"
+                ? "All"
+                : filter === "online"
+                  ? "Online"
+                  : filter === "offline"
+                    ? "Offline"
+                    : "My devices"
+            }
             active={statusFilter === filter}
             onClick={() => setStatusFilter(filter)}
             tone="aqua"
@@ -207,8 +215,7 @@ export function DeviceFamilyDashboard() {
 
       {!initialLoading && !initialError && summary.total > 0 ? (
         <p className="text-[11px] text-muted-foreground">
-          Presence syncs every 30 seconds while this page is open. Tab focus triggers an immediate
-          refresh.
+          Device updates stream live while this page is open. Use refresh to reconcile manually.
         </p>
       ) : null}
 

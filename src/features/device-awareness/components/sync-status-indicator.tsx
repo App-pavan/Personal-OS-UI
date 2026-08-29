@@ -26,6 +26,14 @@ export function SyncStatusIndicator({
     );
   }
 
+  if (status === "reconnecting") {
+    return (
+      <span className={cn("text-[11px] text-muted-foreground", className)} role="status">
+        Live stream reconnecting…
+      </span>
+    );
+  }
+
   if (status === "syncing") {
     return (
       <span className={cn("text-[11px] text-muted-foreground", className)} role="status">
@@ -51,6 +59,17 @@ export function SyncStatusIndicator({
     return (
       <span className={cn("text-[11px] text-muted-foreground", className)} role="status">
         Unable to update device information
+      </span>
+    );
+  }
+
+  if (status === "live") {
+    return (
+      <span className={cn("inline-flex items-center gap-2 text-[11px]", className)} role="status">
+        <SemanticBadge tone="success" dot className="text-[10px]">
+          Live
+        </SemanticBadge>
+        {syncAge ? <span className="text-muted-foreground">{syncAge}</span> : null}
       </span>
     );
   }

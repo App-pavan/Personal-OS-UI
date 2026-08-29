@@ -1,17 +1,12 @@
 /**
  * Device Awareness sync strategy.
  *
- * Backend publishes presence events on the internal event bus but does not
- * expose a device-awareness SSE/WebSocket stream to browsers yet. The web
- * app reconciles via authorized REST APIs on an interval and when the tab
- * becomes visible again.
+ * Primary updates arrive via authorized SSE (`/device_awareness/devices/stream`).
+ * REST APIs reconcile on initial load, manual refresh, tab focus, and reconnect.
  */
 
-/** Poll interval while the Device Awareness page tab is visible. */
-export const DEVICE_AWARENESS_POLL_MS = 30_000;
-
-/** Longer reconciliation interval used as a background safety net. */
-export const DEVICE_AWARENESS_RECONCILE_MS = 90_000;
+/** Delay before reconnecting SSE after disconnect. */
+export const DEVICE_AWARENESS_RECONNECT_MS = 3_000;
 
 /** After this many ms without a successful sync, data is considered stale. */
 export const DEVICE_AWARENESS_STALE_MS = 120_000;

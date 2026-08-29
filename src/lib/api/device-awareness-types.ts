@@ -1,4 +1,4 @@
-/** Device Awareness API types — mirrors backend Phase 1/2 contracts. */
+/** Device Awareness API types — mirrors backend contracts. */
 
 export type PresenceStatus = "online" | "offline";
 export type AwarenessScope = "basic" | "extended";
@@ -18,6 +18,16 @@ export type NetworkSnapshot = {
   connected?: boolean;
 };
 
+export type ActivitySnapshot = {
+  appState?: "foreground" | "background";
+  screenState?: "active" | "inactive" | "locked" | "unknown";
+};
+
+export type CommunicationSnapshot = {
+  state?: "none" | "active" | "ringing";
+  type?: "cellular" | "whatsapp" | "other";
+};
+
 export type AwarenessPayload = {
   status: PresenceStatus;
   lastSeenAt: string;
@@ -26,6 +36,8 @@ export type AwarenessPayload = {
   locale?: string;
   battery?: BatterySnapshot;
   network?: NetworkSnapshot;
+  activity?: ActivitySnapshot;
+  communication?: CommunicationSnapshot;
 };
 
 export type DeviceSummary = {
@@ -36,6 +48,7 @@ export type DeviceSummary = {
   status: PresenceStatus;
   lastSeenAt: string;
   appVersion?: string;
+  awareness: AwarenessPayload;
 };
 
 export type DeviceAwarenessSummary = {
@@ -78,4 +91,14 @@ export type DeviceViewResponse = {
   owner: OwnerSummary;
   awareness: AwarenessPayload;
   scope: AwarenessScope;
+};
+
+/** Authorized device snapshot from SSE realtime events. */
+export type RealtimeDevicePayload = {
+  event: string;
+  deviceId: string;
+  ownerId: string;
+  scope: AwarenessScope;
+  deviceSummary?: DeviceAwarenessSummary;
+  awareness: AwarenessPayload;
 };
