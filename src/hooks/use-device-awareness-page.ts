@@ -26,8 +26,16 @@ import {
   useFamilyDevices,
   useOwnDevices,
 } from "@/hooks/use-device-awareness";
+import { useDeviceAwarenessRealtime } from "@/hooks/use-device-awareness-realtime";
 
-export type SyncConnectionStatus = "synced" | "syncing" | "stale" | "offline" | "error";
+export type SyncConnectionStatus =
+  | "synced"
+  | "syncing"
+  | "stale"
+  | "offline"
+  | "error"
+  | "live"
+  | "reconnecting";
 
 export function useDeviceAwarenessPage() {
   const queryClient = useQueryClient();
@@ -36,6 +44,7 @@ export function useDeviceAwarenessPage() {
   const hasPermission = isReady && can(PERM.DEVICE_AWARENESS_DEVICES_VIEW);
 
   const { visible, browserOnline } = useDeviceAwarenessSyncMeta();
+  const { realtimeStatus } = useDeviceAwarenessRealtime({ enabled: hasPermission && visible });
   const ownQuery = useOwnDevices({ enabled: hasPermission });
   const familyQuery = useFamilyDevices({ enabled: hasPermission });
   const refreshAll = useDeviceAwarenessRefresh();
@@ -52,7 +61,6 @@ export function useDeviceAwarenessPage() {
 
   const detailQuery = useDeviceDetail(selectedDeviceId, detailOpen);
 
-  // Clear cached device data when permission is revoked while the page is open.
   useEffect(() => {
     if (isReady && !can(PERM.DEVICE_AWARENESS_DEVICES_VIEW)) {
       clearDeviceAwarenessCache(queryClient);
@@ -61,7 +69,6 @@ export function useDeviceAwarenessPage() {
     }
   }, [can, isReady, queryClient]);
 
-  // Reconcile when the tab becomes visible again (not on initial mount).
   useEffect(() => {
     if (!hasPermission) return;
     if (visible && !wasVisibleRef.current) {
@@ -74,15 +81,20 @@ export function useDeviceAwarenessPage() {
   const ownDevices = ownQuery.data ?? [];
   const familyGroups = familyQuery.data?.owners ?? [];
 
+  const presenceFilter: StatusFilter =
+    statusFilter === "my_devices" ? "all" : statusFilter;
+
   const filteredOwn = useMemo(
-    () => sortOwnDevices(filterOwnDevices(ownDevices, statusFilter)),
-    [ownDevices, statusFilter],
+    () => sortOwnDevices(filterOwnDevices(ownDevices, presenceFilter)),
+    [ownDevices, presenceFilter],
   );
 
   const filteredFamily = useMemo(
     () =>
-      sortFamilyGroups(filterFamilyGroups(familyGroups, currentUserId, statusFilter)),
-    [familyGroups, currentUserId, statusFilter],
+      statusFilter === "my_devices"
+        ? []
+        : sortFamilyGroups(filterFamilyGroups(familyGroups, currentUserId, presenceFilter)),
+    [familyGroups, currentUserId, presenceFilter, statusFilter],
   );
 
   const summary = useMemo(
@@ -119,7 +131,6 @@ export function useDeviceAwarenessPage() {
     ownDevices.length === 0 &&
     familyGroups.filter((g) => g.owner.id !== currentUserId).every((g) => g.devices.length === 0);
 
-  // Track successful sync timestamps and presence transitions.
   useEffect(() => {
     if (!hasPermission) return;
     if (ownQuery.isFetching || familyQuery.isFetching) return;
@@ -179,8 +190,10 @@ export function useDeviceAwarenessPage() {
 
   const syncStatus: SyncConnectionStatus = useMemo(() => {
     if (!browserOnline) return "offline";
+    if (realtimeStatus === "reconnecting") return "reconnecting";
     if (initialError || (refreshError && !ownQuery.data && !familyQuery.data)) return "error";
     if (isRefreshing) return "syncing";
+    if (realtimeStatus === "live") return "live";
     if (isSyncStale(lastSyncedAt)) return "stale";
     return "synced";
   }, [
@@ -190,6 +203,7 @@ export function useDeviceAwarenessPage() {
     isRefreshing,
     lastSyncedAt,
     ownQuery.data,
+    realtimeStatus,
     refreshError,
   ]);
 
@@ -228,6 +242,7 @@ export function useDeviceAwarenessPage() {
     isRefreshing,
     showEmpty,
     syncStatus,
+    realtimeStatus,
     lastSyncedAt,
     recentTransitions,
     detailQuery,

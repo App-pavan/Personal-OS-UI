@@ -1,5 +1,6 @@
 import { format, isToday, isYesterday } from "date-fns";
 import type {
+  AwarenessPayload,
   DeviceSummary,
   FamilyDeviceEntry,
   FamilyOwnerGroup,
@@ -7,7 +8,7 @@ import type {
 } from "@/lib/api/device-awareness-types";
 import { DEVICE_AWARENESS_STALE_MS } from "./sync-config";
 
-export type StatusFilter = "all" | "online" | "offline";
+export type StatusFilter = "all" | "online" | "offline" | "my_devices";
 
 export type DeviceListItem =
   | { kind: "own"; device: DeviceSummary }
@@ -130,8 +131,65 @@ export function presenceLabel(status: PresenceStatus): string {
 }
 
 export function matchesStatusFilter(status: PresenceStatus, filter: StatusFilter): boolean {
-  if (filter === "all") return true;
+  if (filter === "all" || filter === "my_devices") return true;
   return status === filter;
+}
+
+export function networkLabel(network?: AwarenessPayload["network"]): string | null {
+  if (!network?.type) return null;
+  const type = network.type.toLowerCase();
+  if (network.connected === false) return "None";
+  switch (type) {
+    case "wifi":
+      return "Wi-Fi";
+    case "mobile":
+      return "Mobile";
+    case "none":
+    case "offline":
+      return "None";
+    case "unknown":
+      return null;
+    default:
+      return type.charAt(0).toUpperCase() + type.slice(1);
+  }
+}
+
+export function batteryLabel(battery?: AwarenessPayload["battery"]): string | null {
+  if (battery?.level == null) return null;
+  const charging = battery.charging ? " · Charging" : "";
+  return `${battery.level}%${charging}`;
+}
+
+export function communicationLabel(
+  communication?: AwarenessPayload["communication"],
+): string | null {
+  if (!communication?.state) return null;
+  if (communication.state === "none") return "No call";
+  const type = communication.type ?? "other";
+  const isCellular = type === "cellular";
+  const isWhatsApp = type === "whatsapp";
+  if (communication.state === "ringing") {
+    if (isCellular) return "Incoming cellular call";
+    if (isWhatsApp) return "Incoming WhatsApp call";
+    return "Incoming call";
+  }
+  if (communication.state === "active") {
+    if (isCellular) return "Cellular call active";
+    if (isWhatsApp) return "WhatsApp call active";
+    return "Call active";
+  }
+  return null;
+}
+
+export function appStateLabel(activity?: AwarenessPayload["activity"]): string | null {
+  if (!activity?.appState) return null;
+  return activity.appState === "foreground" ? "Foreground" : "Background";
+}
+
+export function screenStateLabel(activity?: AwarenessPayload["activity"]): string | null {
+  if (!activity?.screenState || activity.screenState === "unknown") return null;
+  const label = activity.screenState.charAt(0).toUpperCase() + activity.screenState.slice(1);
+  return label;
 }
 
 export function computePresenceSummary(items: DeviceListItem[]): PresenceSummary {

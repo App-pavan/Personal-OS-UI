@@ -5,7 +5,9 @@ import type {
   FamilyOwnerGroup,
 } from "@/lib/api/device-awareness-types";
 import {
+  batteryLabel,
   buildAllDeviceItems,
+  communicationLabel,
   computePresenceSummary,
   filterFamilyGroups,
   filterOwnDevices,
@@ -13,10 +15,17 @@ import {
   formatSyncAge,
   isSyncStale,
   matchesStatusFilter,
+  networkLabel,
   platformLabel,
   presenceLabel,
   sortOwnDevices,
 } from "./presence-utils";
+
+const awareness = (overrides = {}) => ({
+  status: "online" as const,
+  lastSeenAt: "2026-08-28T16:00:00.000Z",
+  ...overrides,
+});
 
 const ownDevice = (overrides: Partial<DeviceSummary> = {}): DeviceSummary => ({
   id: "d1",
@@ -25,6 +34,7 @@ const ownDevice = (overrides: Partial<DeviceSummary> = {}): DeviceSummary => ({
   platform: "ios",
   status: "online",
   lastSeenAt: "2026-08-28T16:00:00.000Z",
+  awareness: awareness(),
   ...overrides,
 });
 
@@ -72,11 +82,27 @@ describe("presence helpers", () => {
     expect(matchesStatusFilter("online", "online")).toBe(true);
     expect(matchesStatusFilter("online", "offline")).toBe(false);
     expect(matchesStatusFilter("offline", "all")).toBe(true);
+    expect(matchesStatusFilter("online", "my_devices")).toBe(true);
+  });
+
+  it("labels network battery and communication from backend data", () => {
+    expect(networkLabel({ type: "wifi", connected: true })).toBe("Wi-Fi");
+    expect(networkLabel({ type: "mobile", connected: true })).toBe("Mobile");
+    expect(networkLabel({ type: "wifi", connected: false })).toBe("None");
+    expect(batteryLabel({ level: 84, charging: true })).toBe("84% · Charging");
+    expect(communicationLabel({ state: "active", type: "cellular" })).toBe(
+      "Cellular call active",
+    );
+    expect(communicationLabel({ state: "ringing", type: "cellular" })).toBe(
+      "Incoming cellular call",
+    );
+    expect(communicationLabel({ state: "none" })).toBe("No call");
+    expect(communicationLabel(undefined)).toBeNull();
   });
 });
 
 describe("device list helpers", () => {
-  const own = [ownDevice(), ownDevice({ id: "d3", status: "offline" })];
+  const own = [ownDevice(), ownDevice({ id: "d3", status: "offline", awareness: awareness({ status: "offline" }) })];
   const family: FamilyOwnerGroup[] = [
     {
       owner: { id: "user-b", displayName: "Maa" },

@@ -9,11 +9,6 @@ import type {
   DeviceViewResponse,
   FamilyDevicesOverview,
 } from "@/lib/api/device-awareness-types";
-import {
-  DEVICE_AWARENESS_POLL_MS,
-} from "@/features/device-awareness/lib/sync-config";
-
-export { DEVICE_AWARENESS_POLL_MS } from "@/features/device-awareness/lib/sync-config";
 
 export const deviceAwarenessKeys = {
   all: ["device-awareness"] as const,
@@ -71,15 +66,13 @@ function useDeviceAwarenessEnabled() {
 export function useOwnDevices(options: { enabled?: boolean } = {}) {
   const queryClient = useQueryClient();
   const enabled = useDeviceAwarenessEnabled() && (options.enabled ?? true);
-  const visible = useDocumentVisible();
 
   return useQuery({
     queryKey: deviceAwarenessKeys.own,
     queryFn: () => deviceAwarenessApi.listOwnDevices(),
     enabled,
-    refetchInterval: enabled && visible ? DEVICE_AWARENESS_POLL_MS : false,
     refetchOnWindowFocus: enabled,
-    staleTime: 10_000,
+    staleTime: 30_000,
     retry: (count, error) => {
       if (error instanceof ApiRequestError && error.status === 403) {
         handleForbidden(queryClient);
@@ -94,15 +87,13 @@ export function useOwnDevices(options: { enabled?: boolean } = {}) {
 export function useFamilyDevices(options: { enabled?: boolean } = {}) {
   const queryClient = useQueryClient();
   const enabled = useDeviceAwarenessEnabled() && (options.enabled ?? true);
-  const visible = useDocumentVisible();
 
   return useQuery({
     queryKey: deviceAwarenessKeys.family,
     queryFn: () => deviceAwarenessApi.listFamilyDevices(),
     enabled,
-    refetchInterval: enabled && visible ? DEVICE_AWARENESS_POLL_MS : false,
     refetchOnWindowFocus: enabled,
-    staleTime: 10_000,
+    staleTime: 30_000,
     retry: (count, error) => {
       if (error instanceof ApiRequestError && error.status === 403) {
         handleForbidden(queryClient);
@@ -117,15 +108,13 @@ export function useFamilyDevices(options: { enabled?: boolean } = {}) {
 export function useDeviceDetail(deviceId: string | null, detailOpen = false) {
   const queryClient = useQueryClient();
   const enabled = useDeviceAwarenessEnabled() && Boolean(deviceId);
-  const visible = useDocumentVisible();
 
   return useQuery({
     queryKey: deviceAwarenessKeys.detail(deviceId ?? ""),
     queryFn: () => deviceAwarenessApi.getDevice(deviceId!),
     enabled,
-    refetchInterval: enabled && detailOpen && visible ? DEVICE_AWARENESS_POLL_MS : false,
     refetchOnWindowFocus: enabled && detailOpen,
-    staleTime: 10_000,
+    staleTime: 30_000,
     retry: (count, error) => {
       if (error instanceof ApiRequestError) {
         if (error.status === 403) {

@@ -1,4 +1,5 @@
-import { api } from "./client";
+import { API_BASE_URL, api, buildQuery } from "./client";
+import { tokenStore } from "./token-store";
 import type {
   AwarenessPayload,
   DeviceAwarenessSummary,
@@ -7,6 +8,7 @@ import type {
   DeviceViewResponse,
   FamilyDevicesOverview,
   PresenceStatus,
+  RealtimeDevicePayload,
 } from "./device-awareness-types";
 
 /* Device Awareness service boundary: /api/v1/device_awareness/* */
@@ -22,14 +24,6 @@ const optStr = (value: unknown): string | undefined => {
   const next = str(value);
   return next ? next : undefined;
 };
-
-function mapOwner(v: unknown) {
-  const o = raw(v);
-  return {
-    id: str(o["id"]),
-    displayName: str(o["displayName"]),
-  };
-}
 
 function mapBattery(v: unknown): AwarenessPayload["battery"] {
   const o = raw(v);
@@ -55,7 +49,47 @@ function mapNetwork(v: unknown): AwarenessPayload["network"] {
   return out;
 }
 
-function mapAwareness(v: unknown): AwarenessPayload {
+function mapActivity(v: unknown): AwarenessPayload["activity"] {
+  const o = raw(v);
+  if (!Object.keys(o).length) return undefined;
+  const appState = optStr(o["appState"]) as AwarenessPayload["activity"] extends infer A
+    ? A extends { appState?: infer S }
+      ? S
+      : never
+    : never;
+  const screenState = optStr(o["screenState"]) as AwarenessPayload["activity"] extends infer A
+    ? A extends { screenState?: infer S }
+      ? S
+      : never
+    : never;
+  if (!appState && !screenState) return undefined;
+  const out: NonNullable<AwarenessPayload["activity"]> = {};
+  if (appState) out.appState = appState;
+  if (screenState) out.screenState = screenState;
+  return out;
+}
+
+function mapCommunication(v: unknown): AwarenessPayload["communication"] {
+  const o = raw(v);
+  if (!Object.keys(o).length) return undefined;
+  const state = optStr(o["state"]) as AwarenessPayload["communication"] extends infer C
+    ? C extends { state?: infer S }
+      ? S
+      : never
+    : never;
+  const type = optStr(o["type"]) as AwarenessPayload["communication"] extends infer C
+    ? C extends { type?: infer T }
+      ? T
+      : never
+    : never;
+  if (!state && !type) return undefined;
+  const out: NonNullable<AwarenessPayload["communication"]> = {};
+  if (state) out.state = state;
+  if (type) out.type = type;
+  return out;
+}
+
+export function mapAwareness(v: unknown): AwarenessPayload {
   const o = raw(v);
   const payload: AwarenessPayload = {
     status: str(o["status"], "offline") as PresenceStatus,
@@ -71,18 +105,24 @@ function mapAwareness(v: unknown): AwarenessPayload {
   if (battery) payload.battery = battery;
   const network = mapNetwork(o["network"]);
   if (network) payload.network = network;
+  const activity = mapActivity(o["activity"]);
+  if (activity) payload.activity = activity;
+  const communication = mapCommunication(o["communication"]);
+  if (communication) payload.communication = communication;
   return payload;
 }
 
 function mapDeviceSummary(v: unknown): DeviceSummary {
   const o = raw(v);
+  const awareness = mapAwareness(o["awareness"] ?? o);
   const summary: DeviceSummary = {
     id: str(o["id"]),
     userId: str(o["userId"]),
     deviceName: str(o["deviceName"]),
     platform: str(o["platform"]),
-    status: str(o["status"], "offline") as PresenceStatus,
-    lastSeenAt: str(o["lastSeenAt"]),
+    status: str(o["status"], awareness.status) as PresenceStatus,
+    lastSeenAt: str(o["lastSeenAt"], awareness.lastSeenAt),
+    awareness,
   };
   const appVersion = optStr(o["appVersion"]);
   if (appVersion) summary.appVersion = appVersion;
@@ -110,6 +150,14 @@ function mapFamilyEntry(v: unknown) {
     owner: mapOwner(o["owner"]),
     awareness: mapAwareness(o["awareness"]),
     scope: str(o["scope"], "basic") as "basic" | "extended",
+  };
+}
+
+function mapOwner(v: unknown) {
+  const o = raw(v);
+  return {
+    id: str(o["id"]),
+    displayName: str(o["displayName"]),
   };
 }
 
@@ -156,6 +204,119 @@ function mapDeviceView(data: unknown): DeviceViewResponse {
   if (o["device"]) view.device = mapDeviceDetails(o["device"]);
   if (o["deviceSummary"]) view.deviceSummary = mapAwarenessSummary(o["deviceSummary"]);
   return view;
+}
+
+export function mapRealtimePayload(data: unknown): RealtimeDevicePayload | null {
+  const o = raw(data);
+  const deviceId = str(o["deviceId"]);
+  if (!deviceId) return null;
+  const payload: RealtimeDevicePayload = {
+    event: str(o["event"]),
+    deviceId,
+    ownerId: str(o["ownerId"]),
+    scope: str(o["scope"], "basic") as "basic" | "extended",
+    awareness: mapAwareness(o["awareness"]),
+  };
+  if (o["deviceSummary"]) payload.deviceSummary = mapAwarenessSummary(o["deviceSummary"]);
+  return payload;
+}
+
+export type DeviceStreamEvent = {
+  event?: string;
+  data: string;
+};
+
+export type DeviceStreamHandlers = {
+  onEvent: (event: DeviceStreamEvent) => void;
+  onOpen?: () => void;
+  onError?: (error: unknown) => void;
+  onClose?: () => void;
+};
+
+function parseSSEBlock(block: string): DeviceStreamEvent | null {
+  const trimmed = block.trim();
+  if (!trimmed || trimmed.startsWith(":")) return null;
+
+  let event: string | undefined;
+  const dataLines: string[] = [];
+
+  for (const line of trimmed.split("\n")) {
+    if (line.startsWith("event:")) event = line.slice(6).trim();
+    else if (line.startsWith("data:")) dataLines.push(line.slice(5).trim());
+  }
+
+  if (!dataLines.length) return null;
+  return { event, data: dataLines.join("\n") };
+}
+
+/** Fetch-based SSE for device awareness (supports Authorization header). */
+export function openDeviceAwarenessStream(
+  handlers: DeviceStreamHandlers,
+  options: { signal?: AbortSignal } = {},
+): { close: () => void } {
+  const controller = new AbortController();
+  const signal = options.signal ?? controller.signal;
+
+  const headers: Record<string, string> = {
+    Accept: "text/event-stream",
+    "Cache-Control": "no-cache",
+  };
+  const token = tokenStore.accessToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let closed = false;
+
+  void (async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/device_awareness/devices/stream${buildQuery({})}`,
+        { method: "GET", headers, signal },
+      );
+
+      if (!response.ok) {
+        handlers.onError?.(new Error(`Stream failed (${response.status})`));
+        return;
+      }
+
+      handlers.onOpen?.();
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        handlers.onError?.(new Error("Stream body unavailable"));
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (!closed) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const blocks = buffer.split("\n\n");
+        buffer = blocks.pop() ?? "";
+
+        for (const block of blocks) {
+          const parsed = parseSSEBlock(block);
+          if (parsed) handlers.onEvent(parsed);
+        }
+      }
+    } catch (error) {
+      if (!closed && !(error instanceof DOMException && error.name === "AbortError")) {
+        handlers.onError?.(error);
+      }
+    } finally {
+      if (!closed) handlers.onClose?.();
+    }
+  })();
+
+  return {
+    close: () => {
+      closed = true;
+      controller.abort();
+    },
+  };
 }
 
 export const deviceAwarenessApi = {
