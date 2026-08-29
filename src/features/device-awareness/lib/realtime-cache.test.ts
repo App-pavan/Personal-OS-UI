@@ -98,18 +98,3 @@ describe("applyRealtimeDeviceUpdate", () => {
     expect(family?.owners[0]?.devices[0]?.device.status).toBe("offline");
   });
 });
-
-describe("device awareness SSE reconnect behavior", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("schedules reconnect after stream close", async () => {
-    const { DEVICE_AWARENESS_RECONNECT_MS } = await import("./sync-config");
-    expect(DEVICE_AWARENESS_RECONNECT_MS).toBe(3_000);
-  });
-});

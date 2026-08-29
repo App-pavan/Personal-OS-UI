@@ -1,15 +1,8 @@
 /**
  * Device Awareness sync strategy.
  *
- * Primary updates arrive via authorized SSE (`/device_awareness/devices/stream`).
- * REST APIs reconcile on initial load, manual refresh, tab focus, and reconnect.
+ * REST APIs load on initial page visit and manual Refresh only (no SSE or polling).
  */
-
-/** Delay before reconnecting SSE after disconnect. */
-export const DEVICE_AWARENESS_RECONNECT_MS = 3_000;
-
-/** Safety-net REST reconcile when SSE is unavailable (e.g. before deploy or on Lambda). */
-export const DEVICE_AWARENESS_RECONCILE_MS = 90_000;
 
 /** After this many ms without a successful sync, data is considered stale. */
 export const DEVICE_AWARENESS_STALE_MS = 120_000;
