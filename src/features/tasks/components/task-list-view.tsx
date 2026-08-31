@@ -1,53 +1,50 @@
 import type { TaskSummary } from "@/lib/api/types";
 import { buildDateTimeline, type TimelineFilter } from "../lib/task-timeline";
-import { TaskTimelineItem } from "./task-timeline-item";
+import { TaskContent } from "./task-content";
 
 interface TaskListViewProps {
   tasks: TaskSummary[];
+  completedTasks: TaskSummary[];
   filter: TimelineFilter;
   selectedId?: string | null;
   onOpen: (id: string) => void;
   onToggleComplete: (task: TaskSummary) => void;
+  onToggleFavorite?: (task: TaskSummary) => void;
+  onArchive?: (task: TaskSummary) => void;
+  onDelete?: (task: TaskSummary) => void;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 export function TaskListView({
   tasks,
+  completedTasks,
   filter,
   selectedId,
   onOpen,
   onToggleComplete,
+  onToggleFavorite,
+  onArchive,
+  onDelete,
+  canUpdate,
+  canDelete,
 }: TaskListViewProps) {
   const sections = buildDateTimeline(tasks, filter);
 
-  if (sections.length === 0) {
-    return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        Nothing matches this view.
-      </p>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {sections.map((section) => (
-        <section key={section.key}>
-          <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {section.headline}
-            {section.subline ? ` · ${section.subline}` : ""}
-          </h3>
-          <div className="space-y-1.5">
-            {section.tasks.map((task) => (
-              <TaskTimelineItem
-                key={task.id}
-                task={task}
-                selected={selectedId === task.id}
-                onOpen={() => onOpen(task.id)}
-                onToggleComplete={() => onToggleComplete(task)}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
+    <TaskContent
+      sections={sections}
+      completedTasks={completedTasks}
+      selectedId={selectedId ?? null}
+      onOpen={onOpen}
+      onToggleComplete={onToggleComplete}
+      onToggleFavorite={onToggleFavorite}
+      onArchive={onArchive}
+      onDelete={onDelete}
+      canUpdate={canUpdate}
+      canDelete={canDelete}
+      emptyTitle={filter === "today" ? "No tasks for today" : "No tasks"}
+      emptySubtitle="You're all caught up."
+    />
   );
 }
