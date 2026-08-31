@@ -4,6 +4,38 @@ import { cn } from "@/lib/utils";
 import { CompletedSection } from "./completed-section";
 import { TaskRow } from "./task-row";
 
+function SectionHeader({
+  headline,
+  count,
+  isOverdue,
+  isToday,
+}: {
+  headline: string;
+  count: number;
+  isOverdue?: boolean;
+  isToday?: boolean;
+}) {
+  return (
+    <header className="mb-2 flex items-center justify-between gap-3 px-1 pt-1">
+      <h3
+        className={cn(
+          "text-[11px] font-semibold uppercase tracking-[0.16em]",
+          isOverdue
+            ? "text-[var(--task-overdue)]"
+            : isToday
+              ? "text-[var(--task-accent)]"
+              : "text-[var(--task-section-header)]",
+        )}
+      >
+        {headline}
+      </h3>
+      <span className="tabular-nums text-[11px] font-medium text-[var(--task-text-secondary)]">
+        {count}
+      </span>
+    </header>
+  );
+}
+
 function TaskSectionBlock({
   section,
   selectedId,
@@ -28,25 +60,15 @@ function TaskSectionBlock({
   if (!section.tasks.length) return null;
 
   return (
-    <section className="mb-6">
-      <header className="mb-2 px-2">
-        <h3
-          className={cn(
-            "text-xs font-semibold uppercase tracking-[0.14em]",
-            section.isOverdueSection
-              ? "text-[var(--task-overdue)]"
-              : section.isToday
-                ? "text-[var(--task-accent)]"
-                : "text-[var(--task-section-header)]",
-          )}
-        >
-          {section.headline}
-        </h3>
-        {section.subline ? (
-          <p className="text-[11px] text-[var(--task-text-secondary)]">{section.subline}</p>
-        ) : null}
-      </header>
-      <div className="divide-y divide-[var(--task-border)]/50">
+    <section className="mb-5">
+      <SectionHeader
+        headline={section.headline}
+        count={section.tasks.length}
+        isOverdue={section.isOverdueSection}
+        isToday={section.isToday}
+      />
+      <div className="mb-2 h-px bg-[var(--task-border-subtle)]" />
+      <div className="space-y-0.5">
         {section.tasks.map((task) => (
           <TaskRow
             key={task.id}
@@ -97,15 +119,15 @@ export function TaskContent({
 
   if (!hasActive && !completedTasks.length) {
     return (
-      <div className="px-4 py-16 text-center">
+      <div className="rounded-xl border border-dashed border-[var(--task-border-subtle)] px-6 py-14 text-center">
         <p className="text-sm font-medium text-[var(--task-text)]">{emptyTitle}</p>
-        <p className="mt-1 text-sm text-[var(--task-text-secondary)]">{emptySubtitle}</p>
+        <p className="mt-1.5 text-[13px] text-[var(--task-text-secondary)]">{emptySubtitle}</p>
       </div>
     );
   }
 
   return (
-    <div className="pb-6">
+    <div className="pb-4">
       {sections.map((section) => (
         <TaskSectionBlock
           key={section.key}

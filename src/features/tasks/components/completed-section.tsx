@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { TaskSummary } from "@/lib/api/types";
 import { TaskRow } from "./task-row";
 import { cn } from "@/lib/utils";
@@ -32,29 +32,43 @@ export function CompletedSection({
   if (!tasks.length) return null;
 
   return (
-    <section className="mt-6 border-t border-[var(--task-border)] pt-4">
+    <section className="mt-2 border-t border-[var(--task-border-subtle)] pt-4">
       <button
         type="button"
         onClick={() => setCollapsed((v) => !v)}
-        className="mb-2 flex w-full items-center gap-2 text-left"
+        className="mb-2 flex w-full items-center justify-between gap-3 rounded-md px-1 py-1 text-left transition-colors hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
         aria-expanded={!collapsed}
       >
-        {collapsed ? (
-          <ChevronRight className="size-4 text-[var(--task-text-secondary)]" />
-        ) : (
-          <ChevronDown className="size-4 text-[var(--task-text-secondary)]" />
-        )}
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--task-section-header)]">
-          Completed ({tasks.length})
+        <span className="flex items-center gap-2">
+          <ChevronRight
+            className={cn(
+              "size-4 text-[var(--task-text-secondary)] transition-transform duration-200",
+              !collapsed && "rotate-90",
+            )}
+            strokeWidth={1.75}
+          />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--task-section-header)]">
+            Completed
+          </span>
+        </span>
+        <span className="tabular-nums text-[11px] font-medium text-[var(--task-text-secondary)]">
+          {tasks.length}
         </span>
       </button>
 
-      <div className={cn(!collapsed && "space-y-0.5")}>
-        {!collapsed
-          ? tasks.map((task) => (
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-200 ease-out",
+          collapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="space-y-0.5 pb-1">
+            {tasks.map((task) => (
               <TaskRow
                 key={task.id}
                 task={task}
+                compact
                 selected={selectedId === task.id}
                 onOpen={() => onOpen(task.id)}
                 onToggleComplete={() => onToggleComplete(task)}
@@ -64,8 +78,9 @@ export function CompletedSection({
                 canUpdate={canUpdate}
                 canDelete={canDelete}
               />
-            ))
-          : null}
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

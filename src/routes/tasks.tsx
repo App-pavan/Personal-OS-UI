@@ -24,6 +24,7 @@ import {
   type TaskListNav,
 } from "@/features/tasks/lib/task-filters";
 import { TaskThemeProvider } from "@/features/tasks/lib/task-theme-context";
+import { taskWorkspaceMax } from "@/features/tasks/lib/tasks-ui";
 import {
   buildDateTimeline,
   dateKey,
@@ -226,8 +227,6 @@ function TasksPage() {
   const canDelete = can(PERM.TASKS_DELETE);
   const isLgUp = useMediaQuery("(min-width: 1024px)");
 
-  const summaryLine = `${summary.today} today · ${summary.overdue} overdue · ${summary.upcoming} upcoming`;
-
   const rowHandlers = {
     onToggleFavorite: canUpdate ? handleToggleFavorite : undefined,
     onArchive: canUpdate ? handleArchive : undefined,
@@ -250,7 +249,7 @@ function TasksPage() {
     );
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] bg-[var(--task-bg)] text-[var(--task-text)]">
+    <div className="flex min-h-[calc(100dvh-4rem)] text-[var(--task-text)]">
       <TasksSidebar
         tasks={tasks}
         customLists={customLists}
@@ -275,16 +274,16 @@ function TasksPage() {
 
       <div className="flex min-w-0 flex-1 flex-col lg:flex-row">
         <main className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center gap-2 border-b border-[var(--task-border)] px-4 py-2 lg:hidden">
+          <div className="flex items-center gap-2 border-b border-[var(--task-border-subtle)] px-4 py-2.5 lg:hidden">
             <button
               type="button"
               aria-label="Open task navigation"
               onClick={() => setSidebarOpen(true)}
-              className="grid size-9 place-items-center rounded-md hover:bg-[var(--task-hover)]"
+              className="grid size-9 place-items-center rounded-lg border border-[var(--task-border-subtle)] bg-[var(--task-surface-secondary)] transition-colors hover:bg-[var(--task-hover)]"
             >
-              <Menu className="size-5" />
+              <Menu className="size-5" strokeWidth={1.75} />
             </button>
-            <span className="text-sm font-medium">{listNavLabel(listNav)}</span>
+            <span className="text-[13px] font-medium">{listNavLabel(listNav)}</span>
           </div>
 
           <TasksHeader
@@ -293,68 +292,43 @@ function TasksPage() {
             onSearchChange={setSearchQuery}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
-            summaryLine={summaryLine}
+            filter={filter}
+            onFilterChange={setFilter}
+            summary={summary}
           />
 
-          <div className="flex flex-wrap gap-1 border-b border-[var(--task-border)] px-4 py-2 sm:px-6">
-            {(
-              [
-                ["all", "All"],
-                ["today", "Today"],
-                ["upcoming", "Upcoming"],
-                ["overdue", "Overdue"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setFilter(key)}
-                className={cn(
-                  "rounded-md px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide transition-colors",
-                  filter === key
-                    ? "bg-[var(--task-accent-soft)] text-[var(--task-accent)]"
-                    : "text-[var(--task-text-secondary)] hover:bg-[var(--task-hover)]",
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
           <div className="flex-1 overflow-y-auto">
-            <div
-              ref={composerRef}
-              className="border-b border-[var(--task-border)] bg-[var(--task-surface)]"
-            >
-              <Can permission={PERM.TASKS_CREATE}>
-                <TaskComposer
-                  expandTrigger={composerBump}
-                  onSubmit={handleQuickCreate}
-                  pending={mutations.create.isPending}
-                />
-              </Can>
-            </div>
-
-            {viewMode === "timeline" ? (
-              <div className="border-b border-[var(--task-border)] px-4 py-3 sm:px-6">
-                <TaskDateNavigator
-                  focusDate={focusDate}
-                  onChange={onFocusDateChange}
-                  onJumpToday={jumpToToday}
-                  onJumpWeek={() => {
-                    setFocusDate(startOfDay());
-                    setFocusDateKey("scroll-today");
-                    setFilter("upcoming");
-                  }}
-                />
+            <div className={cn(taskWorkspaceMax, "px-4 py-4 sm:px-6 sm:py-5")}>
+              <div
+                ref={composerRef}
+                className="mb-4 rounded-xl border border-[var(--task-border-subtle)] bg-[var(--task-surface)]/60 px-1 shadow-[var(--task-shadow-sm)] backdrop-blur-sm"
+              >
+                <Can permission={PERM.TASKS_CREATE}>
+                  <TaskComposer
+                    expandTrigger={composerBump}
+                    onSubmit={handleQuickCreate}
+                    pending={mutations.create.isPending}
+                  />
+                </Can>
               </div>
-            ) : null}
 
-            <div className="px-1 sm:px-3">
-              {tasksQuery.isLoading ? (
-                <div className="mt-4">
-                  <RowsSkeleton rows={8} />
+              {viewMode === "timeline" ? (
+                <div className="mb-4 rounded-lg border border-[var(--task-border-subtle)] bg-[var(--task-surface-secondary)]/50 px-3 py-3">
+                  <TaskDateNavigator
+                    focusDate={focusDate}
+                    onChange={onFocusDateChange}
+                    onJumpToday={jumpToToday}
+                    onJumpWeek={() => {
+                      setFocusDate(startOfDay());
+                      setFocusDateKey("scroll-today");
+                      setFilter("upcoming");
+                    }}
+                  />
                 </div>
+              ) : null}
+
+              {tasksQuery.isLoading ? (
+                <RowsSkeleton rows={8} />
               ) : tasksQuery.isError ? (
                 <ErrorState
                   error={tasksQuery.error}
@@ -387,8 +361,8 @@ function TasksPage() {
         </main>
 
         {selectedTaskId ? (
-          <aside className="hidden w-[380px] shrink-0 border-l border-[var(--task-border)] bg-[var(--task-surface)] lg:block">
-            <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto p-4 sm:p-5">{detailBody}</div>
+          <aside className="hidden w-[380px] shrink-0 border-l border-[var(--task-border-subtle)] bg-[var(--task-surface)]/90 backdrop-blur-sm lg:block">
+            <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto p-5">{detailBody}</div>
           </aside>
         ) : null}
       </div>
