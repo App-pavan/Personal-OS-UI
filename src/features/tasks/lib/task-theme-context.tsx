@@ -43,10 +43,14 @@ export function TaskThemeProvider({ children }: { children: ReactNode }) {
   return (
     <TaskThemeContext.Provider value={value}>
       <div
-        className="tasks-workspace -mx-4 -mt-6 min-h-[calc(100dvh-6rem)] transition-[background-color] duration-300 md:-mx-8 md:-mt-9"
+        className="tasks-workspace relative -mx-4 -mt-6 min-h-[calc(100dvh-6rem)] bg-[var(--task-bg)] transition-[background-color] duration-300 md:-mx-8 md:-mt-9"
         style={themeToCssVars(theme) as CSSProperties}
       >
-        {children}
+        <div
+          className="pointer-events-none absolute inset-0 bg-[var(--task-bg)]/85"
+          aria-hidden
+        />
+        <div className="relative">{children}</div>
       </div>
     </TaskThemeContext.Provider>
   );
