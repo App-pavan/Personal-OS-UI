@@ -1,4 +1,4 @@
-import { List, MoreHorizontal, Palette, Rows3, Search, X } from "lucide-react";
+import { List, MoreHorizontal, Rows3, Search, X } from "lucide-react";
 import { TaskAppearanceMenu } from "./task-appearance-menu";
 import { TasksFilterTabs } from "./tasks-filter-tabs";
 import { TasksIconButton } from "./tasks-icon-button";
@@ -38,13 +38,7 @@ export function TasksHeader({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <TaskAppearanceMenu
-            trigger={
-              <TasksIconButton label="Appearance">
-                <Palette className="size-[15px]" strokeWidth={1.75} />
-              </TasksIconButton>
-            }
-          />
+          <TaskAppearanceMenu />
           <div
             className="inline-flex items-center rounded-lg border border-[var(--task-border)] bg-[var(--task-surface-secondary)] p-0.5"
             role="group"
