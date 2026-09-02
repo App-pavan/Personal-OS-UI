@@ -4,7 +4,6 @@ import { TaskContent } from "./task-content";
 
 interface TaskListViewProps {
   tasks: TaskSummary[];
-  completedTasks: TaskSummary[];
   filter: TimelineFilter;
   selectedId?: string | null;
   onOpen: (id: string) => void;
@@ -18,7 +17,6 @@ interface TaskListViewProps {
 
 export function TaskListView({
   tasks,
-  completedTasks,
   filter,
   selectedId,
   onOpen,
@@ -34,7 +32,6 @@ export function TaskListView({
   return (
     <TaskContent
       sections={sections}
-      completedTasks={completedTasks}
       selectedId={selectedId ?? null}
       onOpen={onOpen}
       onToggleComplete={onToggleComplete}
@@ -43,7 +40,7 @@ export function TaskListView({
       onDelete={onDelete}
       canUpdate={canUpdate}
       canDelete={canDelete}
-      emptyTitle={filter === "today" ? "No tasks for today" : "No tasks"}
+      emptyTitle={filter === "today" ? "No tasks for today" : "No active tasks"}
       emptySubtitle="You're all caught up."
     />
   );

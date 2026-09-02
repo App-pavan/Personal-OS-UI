@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TaskSummary } from "@/lib/api/types";
-import { buildExecutionHistory } from "./execution-history";
+import { buildExecutionHistory, getCompletionTimestamp } from "./execution-history";
 
 function task(partial: Partial<TaskSummary> & Pick<TaskSummary, "id" | "title">): TaskSummary {
   return {
@@ -21,7 +21,7 @@ function task(partial: Partial<TaskSummary> & Pick<TaskSummary, "id" | "title">)
     dependencyCount: 0,
     hasReminder: false,
     createdAt: "2026-08-01T10:00:00.000Z",
-    updatedAt: "2026-08-01T10:00:00.000Z",
+    updatedAt: "2026-08-17T16:22:00.000Z",
     ...partial,
   };
 }
@@ -48,5 +48,21 @@ describe("execution-history", () => {
     expect(groups).toHaveLength(1);
     expect(groups[0]?.label).toBe("Today");
     expect(groups[0]?.entries).toHaveLength(2);
+    expect(groups[0]?.entries[0]?.metaLabel).toContain("Completed ·");
+  });
+
+  it("falls back to updatedAt when completedAt is missing", () => {
+    const groups = buildExecutionHistory([
+      task({
+        id: "3",
+        title: "Legacy completed task",
+        status: "completed",
+        completedAt: undefined,
+        updatedAt: "2026-08-17T16:22:00.000Z",
+      }),
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(getCompletionTimestamp(groups[0]!.entries[0]!.task)).toBe("2026-08-17T16:22:00.000Z");
   });
 });

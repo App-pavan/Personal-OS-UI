@@ -68,19 +68,25 @@ function TasksPage() {
     [searchQuery, tasks],
   );
 
-  const { active: activeTasks, completed: completedTasks } = useMemo(
+  const { active: activeTasks } = useMemo(
     () => partitionTasks(filteredTasks),
     [filteredTasks],
   );
 
-  const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
-  const executionGroups = useMemo(
-    () => buildExecutionHistory(completedTasks),
-    [completedTasks],
+  const allCompletedTasks = useMemo(
+    () => partitionTasks(tasks).completed,
+    [tasks],
   );
 
-  const progressTotal = activeTasks.length + completedTasks.length;
-  const progressCompleted = completedTasks.length;
+  const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
+  const executionGroups = useMemo(
+    () => buildExecutionHistory(allCompletedTasks),
+    [allCompletedTasks],
+  );
+
+  const { active: allActive } = useMemo(() => partitionTasks(tasks), [tasks]);
+  const progressTotal = allActive.length + allCompletedTasks.length;
+  const progressCompleted = allCompletedTasks.length;
 
   const setFilter = useCallback(
     (next: TimelineFilter) => {
@@ -171,7 +177,7 @@ function TasksPage() {
   };
 
   const mainContent = (
-    <>
+    <div className="space-y-7">
       <TaskProgress completed={progressCompleted} total={progressTotal} />
 
       <TaskDateNavigator
@@ -181,7 +187,7 @@ function TasksPage() {
         onJumpWeek={() => setFilter("upcoming")}
       />
 
-      <div ref={composerRef} className="mb-6">
+      <div ref={composerRef}>
         <Can permission={PERM.TASKS_CREATE}>
           <TaskComposer
             expandTrigger={composerBump}
@@ -202,7 +208,6 @@ function TasksPage() {
       ) : (
         <TaskListView
           tasks={activeTasks}
-          completedTasks={completedTasks}
           filter={filter}
           selectedId={selectedTaskId}
           onOpen={openTask}
@@ -210,7 +215,7 @@ function TasksPage() {
           {...rowHandlers}
         />
       )}
-    </>
+    </div>
   );
 
   return (

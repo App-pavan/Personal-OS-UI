@@ -21,8 +21,8 @@ export function TasksHeader({
   summary: { today: number; overdue: number; upcoming: number };
 }) {
   return (
-    <header className="shrink-0 border-b border-[var(--task-border)] px-5 py-6 sm:px-8 sm:py-8">
-      <div className="mx-auto flex max-w-[920px] flex-wrap items-start justify-between gap-6">
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-start justify-between gap-6">
         <div className="min-w-0">
           <p className={taskEyebrow}>Tasks</p>
           <h1 className={cn(taskPageTitle, "mt-2")}>All tasks</h1>
@@ -41,9 +41,9 @@ export function TasksHeader({
         </div>
       </div>
 
-      <div className="mx-auto mt-8 flex max-w-[920px] flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <TasksFilterTabs value={filter} onChange={onFilterChange} />
-        <div className="relative w-full lg:max-w-[300px]">
+        <div className="relative w-full lg:max-w-[280px] lg:shrink-0">
           <Search
             className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--task-text-muted)]"
             strokeWidth={1.75}
@@ -67,6 +67,6 @@ export function TasksHeader({
           ) : null}
         </div>
       </div>
-    </header>
+    </div>
   );
 }
