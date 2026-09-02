@@ -56,7 +56,6 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
     if (status === "signed_out") {
       clearCapabilityStore();
       queryClient.removeQueries({ queryKey: capabilityKeys.all });
-      queryClient.clear();
     }
   }, [status, queryClient]);
 
@@ -73,14 +72,13 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const caps = query.data;
-
-  const settled = status === "signed_in" && query.isFetched && !query.isFetching;
+  const hasCaps = Boolean(caps);
 
   const value = useMemo<CapabilitiesValue>(
     () => ({
       caps,
-      isLoading: status === "signed_in" && (query.isLoading || query.isFetching),
-      isReady: settled && (Boolean(caps) || query.isError),
+      isLoading: status === "signed_in" && !hasCaps && (query.isLoading || query.isFetching),
+      isReady: status === "signed_in" && query.isFetched && (hasCaps || query.isError),
       isError: query.isError,
       error: query.error,
       can: (permission: string) => {
@@ -96,7 +94,7 @@ export function CapabilitiesProvider({ children }: { children: ReactNode }) {
       },
       refresh,
     }),
-    [caps, status, settled, query.isError, query.error, refresh],
+    [caps, hasCaps, status, query.isFetched, query.isLoading, query.isFetching, query.isError, query.error, refresh],
   );
 
   return <CapabilitiesContext.Provider value={value}>{children}</CapabilitiesContext.Provider>;
