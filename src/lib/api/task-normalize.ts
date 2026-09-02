@@ -188,6 +188,7 @@ export function normalizeTaskSummary(raw: Raw): TaskSummary {
     dueAt: iso(raw.dueAt),
     startAt: iso(raw.startAt),
     completedAt: iso(raw.completedAt),
+    archivedAt: iso(raw.archivedAt),
     pinned: bool(raw.pinned),
     favorite: bool(raw.favorite),
     archived: bool(raw.archived) || Boolean(iso(raw.archivedAt)),

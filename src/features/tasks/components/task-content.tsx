@@ -34,9 +34,11 @@ function TaskSectionBlock({
   onToggleComplete,
   onToggleFavorite,
   onArchive,
+  onUnarchive,
   onDelete,
   canUpdate,
   canDelete,
+  archivedView,
 }: {
   section: DateSection;
   selectedId: string | null;
@@ -44,13 +46,17 @@ function TaskSectionBlock({
   onToggleComplete: (task: TaskSummary) => void;
   onToggleFavorite?: (task: TaskSummary) => void;
   onArchive?: (task: TaskSummary) => void;
+  onUnarchive?: (task: TaskSummary) => void;
   onDelete?: (task: TaskSummary) => void;
   canUpdate?: boolean;
   canDelete?: boolean;
+  archivedView?: boolean;
 }) {
   if (!section.tasks.length) return null;
 
-  const headline = section.isOverdueSection
+  const headline = archivedView
+    ? "Archived"
+    : section.isOverdueSection
     ? "Overdue"
     : section.isToday
       ? "Today"
@@ -73,9 +79,11 @@ function TaskSectionBlock({
             onToggleComplete={() => onToggleComplete(task)}
             onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(task) : undefined}
             onArchive={onArchive ? () => onArchive(task) : undefined}
+            onUnarchive={onUnarchive ? () => onUnarchive(task) : undefined}
             onDelete={onDelete ? () => onDelete(task) : undefined}
             canUpdate={canUpdate}
             canDelete={canDelete}
+            archivedView={archivedView}
           />
         ))}
       </div>
@@ -90,9 +98,11 @@ export function TaskContent({
   onToggleComplete,
   onToggleFavorite,
   onArchive,
+  onUnarchive,
   onDelete,
   canUpdate,
   canDelete,
+  archivedView,
   emptyTitle = "No tasks",
   emptySubtitle = "You're all caught up.",
 }: {
@@ -102,9 +112,11 @@ export function TaskContent({
   onToggleComplete: (task: TaskSummary) => void;
   onToggleFavorite?: (task: TaskSummary) => void;
   onArchive?: (task: TaskSummary) => void;
+  onUnarchive?: (task: TaskSummary) => void;
   onDelete?: (task: TaskSummary) => void;
   canUpdate?: boolean;
   canDelete?: boolean;
+  archivedView?: boolean;
   emptyTitle?: string;
   emptySubtitle?: string;
 }) {
@@ -130,9 +142,11 @@ export function TaskContent({
           onToggleComplete={onToggleComplete}
           onToggleFavorite={onToggleFavorite}
           onArchive={onArchive}
+          onUnarchive={onUnarchive}
           onDelete={onDelete}
           canUpdate={canUpdate}
           canDelete={canDelete}
+          archivedView={archivedView}
         />
       ))}
     </div>

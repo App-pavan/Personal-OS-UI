@@ -151,6 +151,7 @@ export type TaskSummary = {
   dueAt?: string;
   startAt?: string;
   completedAt?: string;
+  archivedAt?: string;
   pinned: boolean;
   favorite: boolean;
   archived: boolean;

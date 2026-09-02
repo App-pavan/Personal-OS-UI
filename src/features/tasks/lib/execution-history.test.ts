@@ -65,4 +65,35 @@ describe("execution-history", () => {
     expect(groups).toHaveLength(1);
     expect(getCompletionTimestamp(groups[0]!.entries[0]!.task)).toBe("2026-08-17T16:22:00.000Z");
   });
+
+  it("includes archived incomplete tasks with correct metadata", () => {
+    const groups = buildExecutionHistory([
+      task({
+        id: "4",
+        title: "Cancelled client presentation",
+        status: "inbox",
+        archived: true,
+        archivedAt: "2026-08-18T00:00:00.000Z",
+      }),
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.entries[0]?.metaLabel).toBe("Archived · Not completed");
+  });
+
+  it("shows completed + archived metadata separately", () => {
+    const groups = buildExecutionHistory([
+      task({
+        id: "5",
+        title: "Review project proposal",
+        status: "completed",
+        completedAt: "2026-08-18T10:42:00.000Z",
+        archived: true,
+        archivedAt: "2026-08-18T18:00:00.000Z",
+      }),
+    ]);
+
+    expect(groups[0]?.entries[0]?.metaLabel).toContain("Completed ·");
+    expect(groups[0]?.entries[0]?.secondaryMeta).toBe("Archived");
+  });
 });

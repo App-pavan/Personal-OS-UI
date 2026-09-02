@@ -6,6 +6,7 @@ const FILTERS: { key: TimelineFilter; label: string }[] = [
   { key: "today", label: "Today" },
   { key: "upcoming", label: "Upcoming" },
   { key: "overdue", label: "Overdue" },
+  { key: "archived", label: "Archived" },
 ];
 
 export function TasksFilterTabs({

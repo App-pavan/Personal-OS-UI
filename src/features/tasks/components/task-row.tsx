@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Check, Flag, Loader2, MoreHorizontal, Star } from "lucide-react";
 import { formatDueLabel, isOverdue } from "@/features/tasks/lib/task-dates";
-import { isTaskCompleted } from "@/features/tasks/lib/task-filters";
+import { isTaskArchived, isTaskCompleted } from "@/features/tasks/lib/task-filters";
 import { taskRowGrid } from "@/features/tasks/lib/tasks-ui";
 import type { TaskPriority, TaskSummary } from "@/lib/api/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -32,9 +33,11 @@ export function TaskRow({
   onToggleComplete,
   onToggleFavorite,
   onArchive,
+  onUnarchive,
   onDelete,
   canUpdate,
   canDelete,
+  archivedView,
 }: {
   task: TaskSummary;
   selected?: boolean;
@@ -42,13 +45,17 @@ export function TaskRow({
   onToggleComplete: () => void;
   onToggleFavorite?: () => void;
   onArchive?: () => void;
+  onUnarchive?: () => void;
   onDelete?: () => void;
   canUpdate?: boolean;
   canDelete?: boolean;
   compact?: boolean;
+  archivedView?: boolean;
 }) {
   const [completing, setCompleting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const done = isTaskCompleted(task);
+  const archived = isTaskArchived(task);
   const inProgress = task.status === "in_progress";
   const overdue = isOverdue(task) && !done;
   const due = formatDueLabel(task.dueAt);
@@ -65,6 +72,15 @@ export function TaskRow({
     }, 180);
   };
 
+  const handleArchive = () => {
+    if (!onArchive) return;
+    setArchiving(true);
+    window.setTimeout(() => {
+      onArchive();
+      setArchiving(false);
+    }, 160);
+  };
+
   return (
     <div
       className={cn(
@@ -73,13 +89,14 @@ export function TaskRow({
         selected
           ? "border-[var(--task-accent)]/25 bg-[var(--task-selected)]"
           : "hover:border-[var(--task-border)] hover:bg-[var(--task-surface-elevated)]",
-        completing && "pointer-events-none scale-[0.99] opacity-40",
+        (completing || archiving) && "pointer-events-none scale-[0.99] opacity-40",
       )}
     >
       <button
         type="button"
         onClick={handleComplete}
-        aria-label={done ? `Reopen ${task.title}` : `Complete ${task.title}`}
+        disabled={archivedView && !canUpdate}
+        aria-label={done ? `Mark ${task.title} incomplete` : `Complete ${task.title}`}
         className={cn(
           "grid size-8 place-items-center rounded-full border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]",
           done || completing
@@ -106,11 +123,22 @@ export function TaskRow({
         onClick={onOpen}
         className="min-w-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)] rounded-md"
       >
-        <p className="text-base leading-snug font-medium text-[var(--task-text)] sm:text-[17px]">
+        <p
+          className={cn(
+            "text-base leading-snug font-medium text-[var(--task-text)] sm:text-[17px]",
+            done && "text-[var(--task-text-secondary)] line-through decoration-[var(--task-completed)]/60",
+          )}
+        >
           {task.title}
         </p>
         <p className="mt-1 text-[13px] leading-relaxed text-[var(--task-text-secondary)] sm:text-sm">
-          {overdue ? (
+          {archivedView ? (
+            archived && done ? (
+              "Archived · Completed"
+            ) : archived ? (
+              "Archived · Not completed"
+            ) : null
+          ) : overdue ? (
             <span className="font-medium text-[var(--task-overdue)]">Overdue</span>
           ) : due ? (
             due
@@ -121,16 +149,23 @@ export function TaskRow({
       </button>
 
       <div className="relative flex items-start justify-end pt-0.5">
-        <span
-          className="grid size-8 place-items-center text-[var(--task-text-muted)]"
-          title={`${task.priority} priority`}
-          aria-label={`${task.priority} priority`}
-        >
-          <Flag className="size-4" style={{ color: priorityColor(task.priority) }} strokeWidth={1.75} />
-        </span>
+        {!archivedView ? (
+          <span
+            className="grid size-8 place-items-center text-[var(--task-text-muted)]"
+            title={`${task.priority} priority`}
+            aria-label={`${task.priority} priority`}
+          >
+            <Flag className="size-4" style={{ color: priorityColor(task.priority) }} strokeWidth={1.75} />
+          </span>
+        ) : null}
 
-        <div className="absolute top-0 right-8 flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-          {canUpdate && onToggleFavorite ? (
+        <div
+          className={cn(
+            "absolute top-0 flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
+            archivedView ? "right-0" : "right-8",
+          )}
+        >
+          {canUpdate && onToggleFavorite && !archivedView ? (
             <button
               type="button"
               onClick={(e) => {
@@ -147,7 +182,7 @@ export function TaskRow({
             </button>
           ) : null}
 
-          {(canUpdate || canDelete) && (onArchive || onDelete) ? (
+          {(canUpdate || canDelete) ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -158,14 +193,33 @@ export function TaskRow({
                   <MoreHorizontal className="size-4" strokeWidth={1.75} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[140px]">
-                {canUpdate && onArchive ? (
-                  <DropdownMenuItem onClick={onArchive}>Archive</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="min-w-[168px]">
+                {canUpdate ? (
+                  done ? (
+                    <DropdownMenuItem onClick={onToggleComplete}>Mark as incomplete</DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem onClick={onToggleComplete}>Mark as complete</DropdownMenuItem>
+                  )
+                ) : null}
+                {canUpdate && onToggleFavorite && !archivedView ? (
+                  <DropdownMenuItem onClick={onToggleFavorite}>
+                    {task.favorite ? "Unstar" : "Star"}
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem onClick={onOpen}>Edit</DropdownMenuItem>
+                {canUpdate && archived && onUnarchive ? (
+                  <DropdownMenuItem onClick={onUnarchive}>Unarchive</DropdownMenuItem>
+                ) : null}
+                {canUpdate && !archived && onArchive ? (
+                  <DropdownMenuItem onClick={handleArchive}>Archive</DropdownMenuItem>
                 ) : null}
                 {canDelete && onDelete ? (
-                  <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                    Delete
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                      Delete
+                    </DropdownMenuItem>
+                  </>
                 ) : null}
               </DropdownMenuContent>
             </DropdownMenu>

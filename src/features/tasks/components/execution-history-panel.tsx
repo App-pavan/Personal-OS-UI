@@ -1,8 +1,12 @@
+import type { CSSProperties } from "react";
 import { History } from "lucide-react";
 import type { ExecutionHistoryGroup } from "@/features/tasks/lib/execution-history";
+import { isTaskCompleted } from "@/features/tasks/lib/task-filters";
 import { taskSectionTitle } from "@/features/tasks/lib/tasks-ui";
 import type { TaskSummary } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+
+const TIMELINE_X = 7;
 
 export function ExecutionHistoryPanel({
   groups,
@@ -16,7 +20,7 @@ export function ExecutionHistoryPanel({
       <p className={cn(taskSectionTitle, "mb-1 text-[var(--task-text-muted)]")}>Execution</p>
       <h2 className="text-base font-semibold text-[var(--task-text)]">Timeline</h2>
       <p className="mt-1 text-[13px] leading-relaxed text-[var(--task-text-muted)]">
-        What you&apos;ve completed
+        Completed work and archived tasks
       </p>
 
       {!groups.length ? (
@@ -27,27 +31,37 @@ export function ExecutionHistoryPanel({
             aria-hidden
           />
           <p className="text-[13px] leading-relaxed text-[var(--task-text-muted)]">
-            Your completed work will appear here.
+            Your activity will appear here as you complete or archive tasks.
           </p>
         </div>
       ) : (
         <div className="relative mt-8">
           <div
-            className="absolute top-2 bottom-2 left-[7px] w-px bg-[var(--task-timeline-muted)]"
+            className="absolute top-3 bottom-3 w-px bg-[var(--task-timeline-muted)]"
+            style={{ left: TIMELINE_X }}
             aria-hidden
           />
-          <div className="space-y-8">
+          <div className="space-y-10">
             {groups.map((group) => (
               <section key={group.key}>
-                <h3 className="mb-4 pl-8 text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--task-text-muted)]">
-                  {group.label}
-                </h3>
-                <ul className="space-y-5">
-                  {group.entries.map(({ task, metaLabel }) => (
-                    <TimelineEvent
+                <div className="relative mb-5">
+                  <span
+                    className="absolute top-1/2 z-10 size-[14px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--task-accent)] shadow-[0_0_0_3px_var(--task-bg)]"
+                    style={{ left: TIMELINE_X }}
+                    aria-hidden
+                  />
+                  <h3 className="pl-[calc(var(--timeline-x,28px))] text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--task-text-muted)]" style={{ "--timeline-x": `${TIMELINE_X + 20}px` } as CSSProperties}>
+                    {group.label}
+                  </h3>
+                </div>
+                <ul className="space-y-4">
+                  {group.entries.map(({ task, metaLabel, secondaryMeta }, index) => (
+                    <TimelineTaskEntry
                       key={task.id}
                       task={task}
                       metaLabel={metaLabel}
+                      secondaryMeta={secondaryMeta}
+                      isLast={index === group.entries.length - 1}
                       onOpen={() => onOpen(task.id)}
                     />
                   ))}
@@ -61,30 +75,53 @@ export function ExecutionHistoryPanel({
   );
 }
 
-function TimelineEvent({
+function TimelineTaskEntry({
   task,
   metaLabel,
+  secondaryMeta,
+  isLast,
   onOpen,
 }: {
   task: TaskSummary;
   metaLabel: string;
+  secondaryMeta?: string;
+  isLast: boolean;
   onOpen: () => void;
 }) {
+  const completed = isTaskCompleted(task);
+
   return (
-    <li className="relative pl-8">
+    <li className="relative">
       <span
-        className="absolute top-2 left-0 size-[15px] rounded-full border-2 border-[var(--task-timeline)] bg-[var(--task-bg)]"
+        className="absolute top-[0.85rem] h-px bg-[var(--task-timeline-muted)]"
+        style={{ left: TIMELINE_X, width: 14 }}
         aria-hidden
       />
+      <span
+        className="absolute top-[0.65rem] text-[11px] leading-none text-[var(--task-timeline-muted)]"
+        style={{ left: TIMELINE_X + 12 }}
+        aria-hidden
+      >
+        {isLast ? "└" : "├"}
+      </span>
       <button
         type="button"
         onClick={onOpen}
-        className="w-full rounded-lg py-1 text-left transition-colors duration-150 hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
+        className="w-full rounded-lg py-1 pl-[calc(var(--timeline-x,28px))] text-left transition-colors duration-150 hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
+        style={{ "--timeline-x": `${TIMELINE_X + 28}px` } as CSSProperties}
       >
-        <p className="text-[15px] leading-snug font-medium text-[var(--task-text-secondary)] line-through decoration-[var(--task-completed)]/60">
+        <p
+          className={cn(
+            "text-[15px] leading-snug font-medium text-[var(--task-text-secondary)]",
+            completed && "line-through decoration-[var(--task-completed)]/60",
+          )}
+        >
           {task.title}
         </p>
         <p className="mt-1 text-[12px] text-[var(--task-text-muted)]">{metaLabel}</p>
+        {secondaryMeta ? (
+          <p className="mt-0.5 text-[12px] text-[var(--task-text-muted)]">{secondaryMeta}</p>
+        ) : null}
       </button>
     </li>
   );
