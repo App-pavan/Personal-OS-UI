@@ -18,17 +18,26 @@ import type { TaskSummary } from "@/lib/api/types";
 
 let tagListeners = new Set<() => void>();
 
+/** Stable snapshot reference — required by useSyncExternalStore. */
+let tagSnapshot: TaskTag[] = listStoredTags();
+
+function refreshTagSnapshot(): TaskTag[] {
+  tagSnapshot = listStoredTags();
+  return tagSnapshot;
+}
+
 function subscribeTags(cb: () => void) {
   tagListeners.add(cb);
   return () => tagListeners.delete(cb);
 }
 
 export function notifyTaskTagListeners() {
+  refreshTagSnapshot();
   tagListeners.forEach((cb) => cb());
 }
 
-function getTagSnapshot() {
-  return listStoredTags();
+function getTagSnapshot(): TaskTag[] {
+  return tagSnapshot;
 }
 
 /** Subscribe to the tag registry. Call useSyncTaskTagsFromList once at page level. */
@@ -95,8 +104,6 @@ export function useTaskTagAssignment() {
 
 export function useTaskTag(task: Pick<TaskSummary, "tags">, registry: TaskTag[]) {
   const visibleId = getVisibleTaskTagId(task);
-  const tag = visibleId
-    ? (registry.find((t) => t.id === visibleId) ?? ensureTagInStore(visibleId))
-    : null;
+  const tag = visibleId ? registry.find((t) => t.id === visibleId) ?? null : null;
   return { tag, visibleId };
 }
