@@ -16,6 +16,11 @@ import { TaskTagPicker } from "@/features/tasks/components/task-tag-picker";
 import { formatDueLabel, isOverdue } from "@/features/tasks/lib/task-dates";
 import { isTaskArchived, isTaskCompleted } from "@/features/tasks/lib/task-filters";
 import { getVisibleTaskTagId } from "@/features/tasks/lib/task-tags";
+import {
+  taskPanelInput,
+  taskPanelPopover,
+  taskPanelSectionLabel,
+} from "@/features/tasks/lib/tasks-ui";
 import { useTaskTagAssignment, useTaskTagRegistry } from "@/hooks/use-task-tags";
 import type { useTaskMutations } from "@/hooks/use-tasks";
 import { PERM } from "@/lib/permissions";
@@ -155,9 +160,9 @@ export function TaskDetailPane({
 
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col">
-        {/* Header */}
-        <header className="shrink-0 border-b border-[var(--task-border)] px-6 pb-5 pt-6">
+      <div className="flex h-full min-h-0 flex-col bg-[var(--task-panel-bg)]">
+        {/* Header — fixed, solid surface */}
+        <header className="sticky top-0 z-10 shrink-0 border-b border-[var(--task-panel-divider)] bg-[var(--task-panel-bg)] px-6 pb-6 pt-6">
           <div className="flex items-start justify-between gap-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--task-accent)]">
               Task
@@ -173,7 +178,10 @@ export function TaskDetailPane({
                     <MoreHorizontal className="size-4" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[160px]">
+                <DropdownMenuContent
+                  align="end"
+                  className={cn(taskPanelPopover, "min-w-[160px]")}
+                >
                   <DropdownMenuItem onClick={() => m.favorite.mutate([task.id, !task.favorite])}>
                     <Star className="mr-2 size-4" />
                     {task.favorite ? "Unstar" : "Star"}
@@ -227,7 +235,7 @@ export function TaskDetailPane({
             rows={Math.min(4, Math.max(1, Math.ceil(draft.title.length / 42)))}
             aria-label="Task title"
             className={cn(
-              "mt-4 w-full resize-none bg-transparent text-[1.375rem] font-semibold leading-snug tracking-[-0.02em] text-[var(--task-text)] outline-none sm:text-[1.625rem]",
+              "mt-5 w-full resize-none bg-transparent text-[1.375rem] font-semibold leading-[1.3] tracking-[-0.02em] text-[var(--task-text)] outline-none sm:text-[1.625rem]",
               titleFocused && "ring-0",
             )}
           />
@@ -235,32 +243,32 @@ export function TaskDetailPane({
           <button
             type="button"
             onClick={() => (done ? m.reopen.mutate([task.id]) : m.complete.mutate([task.id]))}
-            className="mt-4 inline-flex items-center gap-2.5 rounded-lg py-1 text-[15px] text-[var(--task-text-secondary)] transition-colors hover:text-[var(--task-text)]"
+            className="mt-5 inline-flex items-center gap-3 rounded-lg px-1 py-2 text-[15px] text-[var(--task-text-secondary)] transition-colors hover:text-[var(--task-text)]"
           >
             <span
               className={cn(
-                "grid size-[18px] shrink-0 place-items-center rounded-full border-2 transition-all",
+                "grid size-5 shrink-0 place-items-center rounded-full border-2 transition-all",
                 done
                   ? "border-[var(--task-accent)] bg-[var(--task-accent)] text-[#041018]"
                   : "border-[var(--task-checkbox-border)]",
               )}
             >
-              {done ? <Check className="size-3" /> : null}
+              {done ? <Check className="size-3.5" /> : null}
             </span>
             {done ? "Completed" : "Not completed"}
           </button>
         </header>
 
-        {/* Scrollable content */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
-          <div className="space-y-6">
+        {/* Scrollable content — solid surface */}
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--task-panel-bg)] px-6 py-7">
+          <div className="space-y-7">
             <PanelField label="Due date">
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="date"
                   value={draft.dueAt}
                   onChange={(e) => setDraft((d) => ({ ...d, dueAt: e.target.value }))}
-                  className="h-9 rounded-lg border border-[var(--task-border)] bg-[var(--task-surface-secondary)] px-3 text-sm text-[var(--task-text)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
+                  className={cn(taskPanelInput, "w-auto min-w-[180px] text-[14px]")}
                 />
                 <button
                   type="button"
@@ -288,10 +296,12 @@ export function TaskDetailPane({
                 value={draft.priority}
                 onValueChange={(v) => setDraft((d) => ({ ...d, priority: v as TaskPriority }))}
               >
-                <SelectTrigger className="h-9 w-full max-w-[240px] border-[var(--task-border)] bg-[var(--task-surface-secondary)] text-sm capitalize">
+                <SelectTrigger
+                  className={cn(taskPanelInput, "w-full max-w-none capitalize sm:max-w-[280px]")}
+                >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className={taskPanelPopover}>
                   {(["low", "normal", "high", "urgent"] as TaskPriority[]).map((p) => (
                     <SelectItem key={p} value={p} className="capitalize">
                       {p}
@@ -317,7 +327,10 @@ export function TaskDetailPane({
                 onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
                 placeholder="Add a note…"
                 rows={draft.description.trim() ? 5 : 3}
-                className="resize-y min-h-[80px] border-[var(--task-border)] bg-[var(--task-surface-secondary)] text-[15px] leading-relaxed text-[var(--task-text)] placeholder:text-[var(--task-text-muted)]"
+                className={cn(
+                  taskPanelInput,
+                  "min-h-[88px] w-full resize-y py-2.5 leading-relaxed",
+                )}
               />
             </PanelField>
 
@@ -365,7 +378,7 @@ export function TaskDetailPane({
                   value={subDraft}
                   onChange={(e) => setSubDraft(e.target.value)}
                   placeholder="Add a step…"
-                  className="h-9 w-full rounded-lg border border-[var(--task-border)] bg-[var(--task-surface-secondary)] px-3 text-sm text-[var(--task-text)] outline-none placeholder:text-[var(--task-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
+                  className={cn(taskPanelInput, "w-full text-[14px]")}
                 />
               </form>
             </div>
@@ -399,21 +412,21 @@ export function TaskDetailPane({
                   value={commentDraft}
                   onChange={(e) => setCommentDraft(e.target.value)}
                   placeholder="Write a comment…"
-                  className="h-9 w-full rounded-lg border border-[var(--task-border)] bg-[var(--task-surface-secondary)] px-3 text-sm text-[var(--task-text)] outline-none placeholder:text-[var(--task-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
+                  className={cn(taskPanelInput, "w-full text-[14px]")}
                 />
               </form>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="shrink-0 border-t border-[var(--task-border)] px-6 py-4">
+        {/* Footer — fixed, solid surface */}
+        <footer className="sticky bottom-0 z-10 shrink-0 border-t border-[var(--task-panel-divider)] bg-[var(--task-panel-bg)] px-6 py-4">
           <div className="flex items-center justify-end gap-3">
             <Button
               type="button"
               variant="ghost"
               onClick={isDirty ? () => setDraft(baseline) : requestClose}
-              className="text-[var(--task-text-secondary)] hover:bg-[var(--task-hover)] hover:text-[var(--task-text)]"
+              className="h-10 px-4 text-[14px] text-[var(--task-text-secondary)] hover:bg-[var(--task-hover)] hover:text-[var(--task-text)]"
             >
               Cancel
             </Button>
@@ -421,7 +434,7 @@ export function TaskDetailPane({
               type="button"
               onClick={handleSave}
               disabled={m.update.isPending || !draft.title.trim()}
-              className="bg-[var(--task-accent)] text-[#041018] hover:bg-[var(--task-accent)]/90"
+              className="h-10 min-w-[128px] px-6 text-[14px] font-semibold bg-[var(--task-accent)] text-[#041018] hover:bg-[var(--task-accent)]/90 disabled:opacity-50"
             >
               {m.update.isPending ? "Saving…" : "Save changes"}
             </Button>
@@ -430,7 +443,7 @@ export function TaskDetailPane({
       </div>
 
       <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
-        <AlertDialogContent className="border-[var(--task-border)] bg-[var(--task-surface)]">
+        <AlertDialogContent className={cn(taskPanelPopover, "z-[120]")}>
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
             <AlertDialogDescription>
@@ -458,18 +471,12 @@ export function TaskDetailPane({
 function PanelField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--task-text-muted)]">
-        {label}
-      </p>
+      <p className={taskPanelSectionLabel}>{label}</p>
       <div className="mt-2">{children}</div>
     </div>
   );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--task-text-muted)]">
-      {children}
-    </p>
-  );
+  return <p className={taskPanelSectionLabel}>{children}</p>;
 }

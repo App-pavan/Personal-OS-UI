@@ -393,7 +393,19 @@ export function resolveTaskThemeId(stored: string | null): TaskThemeId {
   return DEFAULT_TASK_THEME_ID;
 }
 
+const LIGHT_TASK_THEME_IDS = new Set<TaskThemeId>([
+  "light-minimal",
+  "warm-sand",
+  "arctic",
+  "soft-lavender",
+]);
+
+export function isLightTaskTheme(id: TaskThemeId): boolean {
+  return LIGHT_TASK_THEME_IDS.has(id);
+}
+
 export function themeToCssVars(tokens: TaskThemeTokens): Record<string, string> {
+  const light = isLightTaskTheme(tokens.id);
   return {
     "--task-bg": tokens.background,
     "--task-surface": tokens.surface,
@@ -428,5 +440,13 @@ export function themeToCssVars(tokens: TaskThemeTokens): Record<string, string> 
     "--task-priority-high": tokens.priority.high,
     "--task-priority-normal": tokens.priority.normal,
     "--task-priority-low": tokens.priority.low,
+    "--task-panel-bg": tokens.surfaceElevated,
+    "--task-panel-input-bg": tokens.surfaceSecondary,
+    "--task-panel-border": tokens.borderStrong,
+    "--task-panel-divider": tokens.border,
+    "--task-panel-overlay": light ? "rgba(15, 23, 42, 0.42)" : "rgba(0, 0, 0, 0.48)",
+    "--task-panel-shadow": light
+      ? "-12px 0 40px rgba(15, 23, 42, 0.14)"
+      : "-12px 0 40px rgba(0, 0, 0, 0.38)",
   };
 }
