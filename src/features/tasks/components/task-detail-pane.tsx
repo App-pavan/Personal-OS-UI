@@ -90,7 +90,7 @@ export function TaskDetailPane({
   const [discardOpen, setDiscardOpen] = useState(false);
   const [titleFocused, setTitleFocused] = useState(false);
 
-  const { tags } = useTaskTagRegistry([task]);
+  const tags = useTaskTagRegistry();
   const { assignTag, createAndAssign } = useTaskTagAssignment();
 
   const baseline = useMemo(() => draftFromTask(task), [task]);

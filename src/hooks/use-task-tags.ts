@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import {
   createTag,
@@ -23,7 +23,7 @@ function subscribeTags(cb: () => void) {
   return () => tagListeners.delete(cb);
 }
 
-function notifyTagListeners() {
+export function notifyTaskTagListeners() {
   tagListeners.forEach((cb) => cb());
 }
 
@@ -31,26 +31,28 @@ function getTagSnapshot() {
   return listStoredTags();
 }
 
-export function useTaskTagRegistry(tasks: TaskSummary[] = []) {
-  const tags = useSyncExternalStore(subscribeTags, getTagSnapshot, getTagSnapshot);
+/** Subscribe to the tag registry. Call useSyncTaskTagsFromList once at page level. */
+export function useTaskTagRegistry(): TaskTag[] {
+  return useSyncExternalStore(subscribeTags, getTagSnapshot, getTagSnapshot);
+}
+
+/** Sync tag names from the loaded task list — call once from the Tasks page. */
+export function useSyncTaskTagsFromList(tasks: TaskSummary[]) {
+  const tagIdsKey = useMemo(
+    () =>
+      tasks
+        .map((t) => getTaskTagId(t))
+        .filter((id) => !isGeneralTag(id))
+        .sort()
+        .join("|"),
+    [tasks],
+  );
 
   useEffect(() => {
-    syncTagsFromTasks(tasks.map((t) => getTaskTagId(t)).filter((id) => !isGeneralTag(id)));
-    notifyTagListeners();
-  }, [tasks]);
-
-  const registerTag = useCallback((name: string): TaskTag => {
-    const tag = createTag(name);
-    notifyTagListeners();
-    return tag;
-  }, []);
-
-  const resolveTag = useCallback((tagId: string | null | undefined): TaskTag | null => {
-    if (!tagId || isGeneralTag(tagId)) return null;
-    return ensureTagInStore(tagId);
-  }, []);
-
-  return { tags, registerTag, resolveTag };
+    if (!tagIdsKey) return;
+    const changed = syncTagsFromTasks(tagIdsKey.split("|"));
+    if (changed) notifyTaskTagListeners();
+  }, [tagIdsKey]);
 }
 
 export function useTaskTagAssignment() {
@@ -63,7 +65,7 @@ export function useTaskTagAssignment() {
         {
           onSuccess: () => {
             ensureTagInStore(tagId);
-            notifyTagListeners();
+            notifyTaskTagListeners();
             options?.onSuccess?.();
           },
           onError: () => toast.error("Couldn't assign tag. Try again."),
@@ -77,7 +79,7 @@ export function useTaskTagAssignment() {
     (taskId: string, name: string) => {
       try {
         const tag = createTag(name);
-        notifyTagListeners();
+        notifyTaskTagListeners();
         assignTag(taskId, tag.id);
         return tag;
       } catch {

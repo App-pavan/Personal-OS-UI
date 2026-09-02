@@ -32,6 +32,7 @@ import {
 } from "@/features/tasks/lib/task-timeline";
 import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { useTask, useTaskMutations, useTasks } from "@/hooks/use-tasks";
+import { useSyncTaskTagsFromList } from "@/hooks/use-task-tags";
 import { PERM } from "@/lib/permissions";
 import type { TaskSummary } from "@/lib/api/types";
 
@@ -63,6 +64,7 @@ function TasksPage() {
 
   const tasksQuery = useTasks({ perPage: 200 });
   const tasks = useMemo(() => tasksQuery.data?.items ?? [], [tasksQuery.data]);
+  useSyncTaskTagsFromList(tasks);
   const mutations = useTaskMutations();
   const detailQuery = useTask(selectedTaskId);
   const composerRef = useRef<HTMLDivElement>(null);
