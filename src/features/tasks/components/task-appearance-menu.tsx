@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TASK_THEME_IDS, TASK_THEMES } from "@/features/tasks/lib/task-theme";
 import { useTaskTheme } from "@/features/tasks/lib/task-theme-context";
-import type { ReactNode } from "react";
 import { Check } from "lucide-react";
+import type { ReactNode } from "react";
 
 export function TaskAppearanceMenu({ trigger }: { trigger: ReactNode }) {
   const { themeId, setThemeId } = useTaskTheme();
@@ -17,8 +17,11 @@ export function TaskAppearanceMenu({ trigger }: { trigger: ReactNode }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 border-[var(--task-border)] bg-[var(--task-surface)] p-1">
-        <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--task-text-secondary)]">
+      <DropdownMenuContent
+        align="end"
+        className="max-h-[min(420px,70vh)] w-64 overflow-y-auto border-[var(--task-border-strong)] bg-[var(--task-surface)] p-1"
+      >
+        <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--task-text-secondary)]">
           Appearance
         </DropdownMenuLabel>
         <DropdownMenuRadioGroup value={themeId} onValueChange={(v) => setThemeId(v as typeof themeId)}>
@@ -31,7 +34,7 @@ export function TaskAppearanceMenu({ trigger }: { trigger: ReactNode }) {
                 value={id}
                 className="gap-3 rounded-md py-2.5 pl-2 pr-8 focus:bg-[var(--task-hover)]"
               >
-                <span className="flex h-5 w-10 shrink-0 overflow-hidden rounded-md border border-[var(--task-border-subtle)] shadow-[var(--task-shadow-sm)]">
+                <span className="flex h-5 w-10 shrink-0 overflow-hidden rounded-md border border-[var(--task-border-strong)] shadow-[var(--task-shadow-sm)]">
                   {theme.preview.map((color) => (
                     <span key={color} className="h-full flex-1" style={{ backgroundColor: color }} />
                   ))}
