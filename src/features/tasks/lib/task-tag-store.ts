@@ -78,8 +78,8 @@ export function createTag(name: string): TaskTag {
   return created;
 }
 
-/** Merge tag names discovered on tasks into the local registry. */
-export function syncTagsFromTasks(taskTagIds: string[]) {
+/** Merge tag names discovered on tasks into the local registry. Returns true if store changed. */
+export function syncTagsFromTasks(taskTagIds: string[]): boolean {
   const tags = readStore();
   let changed = false;
   for (const raw of taskTagIds) {
@@ -95,4 +95,5 @@ export function syncTagsFromTasks(taskTagIds: string[]) {
     changed = true;
   }
   if (changed) writeStore(tags);
+  return changed;
 }
