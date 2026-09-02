@@ -1,31 +1,85 @@
 import type { QueryClient } from "@tanstack/react-query";
-import { redirect } from "@tanstack/react-router";
-import { capabilityKeys } from "@/features/capabilities/capabilities-context";
-import { rbacApi } from "@/lib/api/rbac-service";
-import { grantedPermissions } from "@/lib/api/rbac-normalize";
+import { isRedirect, redirect } from "@tanstack/react-router";
+import {
+  hasRequiredPermission,
+  logAuthDecision,
+  permissionsSource,
+  resolveCapabilitiesForGuard,
+} from "@/features/capabilities/resolve-capabilities";
+import { ApiRequestError } from "@/lib/api/errors";
 import type { PermissionKey } from "@/lib/permissions";
 
-async function loadCapabilities(queryClient: QueryClient) {
-  return queryClient.fetchQuery({
-    queryKey: capabilityKeys.me,
-    queryFn: async () => (await rbacApi.capabilities()).data,
-    staleTime: 60_000,
-  });
+function isAuthTransportError(error: ApiRequestError): boolean {
+  return (
+    error.kind === "network" ||
+    error.kind === "timeout" ||
+    error.kind === "server" ||
+    error.status >= 500
+  );
 }
 
 export function requirePermissions(permissions: PermissionKey | PermissionKey[]) {
   const keys = Array.isArray(permissions) ? permissions : [permissions];
-  return async ({ context }: { context: { queryClient: QueryClient } }) => {
+
+  return async ({
+    context,
+    location,
+  }: {
+    context: { queryClient: QueryClient };
+    location: { pathname: string };
+  }) => {
+    const route = location.pathname;
+
     try {
-      const caps = await loadCapabilities(context.queryClient);
-      const granted = new Set(grantedPermissions(caps));
-      const allowed = keys.some((k) => granted.has(k));
+      const caps = await resolveCapabilitiesForGuard(context.queryClient);
+      const allowed = hasRequiredPermission(caps, keys);
+
+      logAuthDecision({
+        route,
+        required: keys,
+        result: allowed ? "allowed" : "denied",
+        authState: "ready",
+        permissionsSource: permissionsSource(context.queryClient, caps),
+        redirectReason: allowed ? undefined : "missing_permission",
+      });
+
       if (!allowed) {
         throw redirect({ to: "/access-restricted" });
       }
     } catch (error) {
-      if (error && typeof error === "object" && "to" in error) throw error;
-      throw redirect({ to: "/access-restricted" });
+      if (isRedirect(error)) throw error;
+
+      if (error instanceof ApiRequestError) {
+        logAuthDecision({
+          route,
+          required: keys,
+          result: "error",
+          authState: "ready",
+          permissionsSource: "fetched",
+          errorKind: error.kind,
+          redirectReason:
+            error.status === 403
+              ? "capabilities_forbidden"
+              : error.status === 401
+                ? "session_expired"
+                : "transport_error",
+        });
+
+        if (error.status === 401) throw error;
+        if (error.status === 403) throw redirect({ to: "/access-restricted" });
+        if (isAuthTransportError(error)) throw error;
+        throw error;
+      }
+
+      logAuthDecision({
+        route,
+        required: keys,
+        result: "error",
+        authState: "ready",
+        permissionsSource: "fetched",
+        redirectReason: "unknown_error",
+      });
+      throw error;
     }
   };
 }
