@@ -38,8 +38,8 @@ function toBackendCreateTaskBody(input: CreateTaskInput): Record<string, unknown
   if (input.type) body.type = input.type;
   if (input.dueAt) body.dueAt = input.dueAt;
   if (input.startAt) body.startAt = input.startAt;
-  if (input.tags?.length) body.tags = input.tags;
   if (input.priority) body.priority = priorityToBackend(input.priority);
+  body.tags = input.tags?.length ? input.tags : ["general"];
   return body;
 }
 

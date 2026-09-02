@@ -8,6 +8,7 @@ import { requirePermissions } from "@/features/capabilities/route-guard";
 import { ExecutionHistoryPanel } from "@/features/tasks/components/execution-history-panel";
 import { TaskComposer } from "@/features/tasks/components/task-composer";
 import { TaskDateNavigator } from "@/features/tasks/components/task-controls";
+import { TaskEditorSheet } from "@/features/tasks/components/task-editor-sheet";
 import { TaskDetailPanel } from "@/features/tasks/components/task-detail-panel";
 import { TaskListView } from "@/features/tasks/components/task-list-view";
 import { TaskProgress } from "@/features/tasks/components/task-progress";
@@ -30,7 +31,6 @@ import {
   type TimelineFilter,
 } from "@/features/tasks/lib/task-timeline";
 import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useTask, useTaskMutations, useTasks } from "@/hooks/use-tasks";
 import { PERM } from "@/lib/permissions";
 import type { TaskSummary } from "@/lib/api/types";
@@ -270,19 +270,14 @@ function TasksPage() {
       />
 
       {selectedTaskId ? (
-        <Sheet open onOpenChange={(open) => !open && closeDetail()}>
-          <SheetContent
-            side="right"
-            className="w-full border-[var(--task-border)] bg-[var(--task-surface)] p-0 sm:max-w-lg"
-          >
-            <TaskDetailPanel
-              taskId={selectedTaskId}
-              detailQuery={detailQuery}
-              mutations={mutations}
-              onClose={closeDetail}
-            />
-          </SheetContent>
-        </Sheet>
+        <TaskEditorSheet open onOpenChange={() => {}}>
+          <TaskDetailPanel
+            taskId={selectedTaskId}
+            detailQuery={detailQuery}
+            mutations={mutations}
+            onClose={closeDetail}
+          />
+        </TaskEditorSheet>
       ) : null}
     </>
   );
