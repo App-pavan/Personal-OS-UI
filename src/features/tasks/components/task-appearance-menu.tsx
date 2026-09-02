@@ -6,20 +6,30 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TASK_THEME_IDS, TASK_THEMES } from "@/features/tasks/lib/task-theme";
 import { useTaskTheme } from "@/features/tasks/lib/task-theme-context";
-import { Check } from "lucide-react";
-import type { ReactNode } from "react";
+import { taskIconBtn } from "@/features/tasks/lib/tasks-ui";
+import { Check, Palette } from "lucide-react";
 
-export function TaskAppearanceMenu({ trigger }: { trigger: ReactNode }) {
+export function TaskAppearanceMenu() {
   const { themeId, setThemeId } = useTaskTheme();
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <button type="button" aria-label="Appearance" className={taskIconBtn}>
+              <Palette className="size-[15px]" strokeWidth={1.75} />
+            </button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Appearance</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent
         align="end"
-        className="max-h-[min(420px,70vh)] w-64 overflow-y-auto border-[var(--task-border-strong)] bg-[var(--task-surface)] p-1"
+        className="z-[100] max-h-[min(420px,70vh)] w-64 overflow-y-auto border-[var(--task-border-strong)] bg-[var(--task-surface)] p-1 text-[var(--task-text)]"
       >
         <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--task-text-secondary)]">
           Appearance
