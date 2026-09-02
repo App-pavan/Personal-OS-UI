@@ -62,7 +62,7 @@ export function TaskRow({
   const inProgress = task.status === "in_progress";
   const overdue = isOverdue(task) && !done;
   const due = formatDueLabel(task.dueAt);
-  const { tags } = useTaskTagRegistry([task]);
+  const tags = useTaskTagRegistry();
   const { assignTag, createAndAssign } = useTaskTagAssignment();
   const visibleTagId = getVisibleTaskTagId(task);
 
