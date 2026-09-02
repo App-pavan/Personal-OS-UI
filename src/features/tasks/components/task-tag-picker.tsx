@@ -8,6 +8,7 @@ import {
   normalizeTagId,
   type TaskTag,
 } from "@/features/tasks/lib/task-tags";
+import { taskPanelPopover } from "@/features/tasks/lib/tasks-ui";
 import {
   Command,
   CommandEmpty,
@@ -135,7 +136,7 @@ export function TaskTagPicker({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[240px] border-[var(--task-border)] bg-[var(--task-surface)] p-0"
+        className={cn(taskPanelPopover, "w-[240px] p-0")}
         align="start"
         onClick={(e) => e.stopPropagation()}
       >

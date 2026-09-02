@@ -31,3 +31,13 @@ export const taskSegmentItem = (active: boolean) =>
 
 export const taskRowGrid =
   "grid grid-cols-[32px_minmax(0,1fr)_32px] items-start gap-x-4";
+
+/** Task detail panel — shared control styling */
+export const taskPanelSectionLabel =
+  "text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--task-text-muted)]";
+
+export const taskPanelInput =
+  "h-10 rounded-lg border border-[var(--task-panel-border)] bg-[var(--task-panel-input-bg)] px-3 text-[15px] text-[var(--task-text)] outline-none placeholder:text-[var(--task-text-muted)] focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]";
+
+export const taskPanelPopover =
+  "z-[110] border-[var(--task-panel-border)] bg-[var(--task-panel-bg)] text-[var(--task-text)] shadow-lg";

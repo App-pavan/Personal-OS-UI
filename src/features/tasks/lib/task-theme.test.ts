@@ -32,5 +32,7 @@ describe("task-theme", () => {
     expect(vars["--task-accent"]).toBe(TASK_THEMES["deep-ocean"].accent);
     expect(vars["--task-progress-fill"]).toBeDefined();
     expect(vars["--task-timeline"]).toBeDefined();
+    expect(vars["--task-panel-bg"]).toBe(TASK_THEMES["deep-ocean"].surfaceElevated);
+    expect(vars["--task-panel-overlay"]).toBeDefined();
   });
 });
