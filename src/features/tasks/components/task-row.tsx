@@ -82,7 +82,7 @@ export function TaskRow({
         "group relative flex items-start gap-3 rounded-lg border border-transparent px-2.5 transition-[background-color,border-color,box-shadow] duration-150",
         compact ? "py-2" : "py-2.5",
         selected
-          ? "border-[var(--task-accent)]/25 bg-[var(--task-accent-soft)] shadow-[var(--task-shadow-sm)]"
+          ? "border-[var(--task-accent)]/30 bg-[var(--task-surface-selected)] shadow-[var(--task-shadow-sm)]"
           : "hover:border-[var(--task-border-subtle)] hover:bg-[var(--task-surface-elevated)] hover:shadow-[var(--task-shadow-sm)]",
         done && !selected && "opacity-75 hover:opacity-90",
       )}

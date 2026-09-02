@@ -47,7 +47,7 @@ export function CompletedSection({
             )}
             strokeWidth={1.75}
           />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--task-section-header)]">
+          <span className="text-[11px] font-medium tracking-wide text-[var(--task-text-secondary)]">
             Completed
           </span>
         </span>
