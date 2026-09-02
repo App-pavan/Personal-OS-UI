@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,12 +33,12 @@ export function TaskComposer({
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-[background-color,box-shadow] duration-150 hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
+        className="group flex w-full items-center gap-3 rounded-xl px-2 py-3.5 text-left transition-colors duration-150 hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
       >
-        <span className="grid size-5 place-items-center rounded-full border border-dashed border-[var(--task-accent)]/40 text-[var(--task-accent)] transition-colors group-hover:border-[var(--task-accent)] group-hover:bg-[var(--task-accent-soft)]">
-          <Plus className="size-3.5" strokeWidth={2} />
+        <span className="grid size-7 place-items-center rounded-full text-[var(--task-accent)]">
+          <Plus className="size-5" strokeWidth={1.75} />
         </span>
-        <span className="text-[14px] text-[var(--task-text-secondary)] group-hover:text-[var(--task-text)]">
+        <span className="text-base text-[var(--task-text-secondary)] group-hover:text-[var(--task-text)]">
           {placeholder}…
         </span>
       </button>
@@ -51,12 +51,9 @@ export function TaskComposer({
         e.preventDefault();
         submit();
       }}
-      className="flex items-center gap-3 rounded-lg border border-[var(--task-accent)]/25 bg-[var(--task-surface-elevated)] px-3 py-2.5 shadow-[var(--task-shadow-sm)]"
+      className="flex items-center gap-3 rounded-xl bg-[var(--task-surface-elevated)] px-3 py-3"
     >
-      <span
-        className="size-5 shrink-0 rounded-full border border-[var(--task-checkbox-border)]"
-        aria-hidden
-      />
+      <span className="size-7 shrink-0 rounded-full border-2 border-[var(--task-checkbox-border)]" aria-hidden />
       <input
         autoFocus
         value={value}
@@ -69,15 +66,14 @@ export function TaskComposer({
         }}
         placeholder="What needs to be done?"
         aria-label="New task title"
-        className="min-w-0 flex-1 bg-transparent text-[15px] text-[var(--task-text)] outline-none placeholder:text-[var(--task-text-secondary)]"
+        className="min-w-0 flex-1 bg-transparent text-base text-[var(--task-text)] outline-none placeholder:text-[var(--task-text-muted)]"
       />
       <button
         type="submit"
         disabled={pending || !value.trim()}
         className={cn(
-          "shrink-0 rounded-md px-3 py-1.5 text-[13px] font-medium transition-opacity duration-150",
+          "shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-opacity duration-150",
           "text-[var(--task-accent)] hover:bg-[var(--task-accent-soft)] disabled:opacity-40",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]",
         )}
       >
         Add

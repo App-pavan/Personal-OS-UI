@@ -4,18 +4,18 @@ import { z } from "zod";
 import { Can } from "@/features/capabilities/can";
 import { useCapabilities } from "@/features/capabilities/capabilities-context";
 import { requirePermissions } from "@/features/capabilities/route-guard";
+import { ExecutionHistoryPanel } from "@/features/tasks/components/execution-history-panel";
 import { TaskComposer } from "@/features/tasks/components/task-composer";
 import { TaskDateNavigator } from "@/features/tasks/components/task-controls";
 import { TaskDetailPanel } from "@/features/tasks/components/task-detail-panel";
-import { TaskExecutionTimeline } from "@/features/tasks/components/task-execution-timeline";
 import { TaskListView } from "@/features/tasks/components/task-list-view";
+import { TaskProgress } from "@/features/tasks/components/task-progress";
 import { TasksHeader } from "@/features/tasks/components/tasks-header";
 import { TasksWorkspace } from "@/features/tasks/components/tasks-workspace";
-import { filterBySearch, partitionTasks, TASK_VIEW_MODE_KEY } from "@/features/tasks/lib/task-filters";
+import { buildExecutionHistory } from "@/features/tasks/lib/execution-history";
+import { filterBySearch, partitionTasks } from "@/features/tasks/lib/task-filters";
 import { TaskThemeProvider } from "@/features/tasks/lib/task-theme-context";
 import {
-  buildDateTimeline,
-  dateKey,
   defaultDueForDate,
   startOfDay,
   summarizeTasks,
@@ -24,7 +24,6 @@ import {
 import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useTask, useTaskMutations, useTasks } from "@/hooks/use-tasks";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { PERM } from "@/lib/permissions";
 import type { TaskSummary } from "@/lib/api/types";
 
@@ -39,8 +38,6 @@ export const Route = createFileRoute("/tasks")({
   head: () => ({ meta: [{ title: "Tasks — Personal OS" }] }),
   component: TasksPageRoute,
 });
-
-type ViewMode = "timeline" | "list";
 
 function TasksPageRoute() {
   return (
@@ -62,20 +59,9 @@ function TasksPage() {
   const detailQuery = useTask(selectedTaskId);
   const composerRef = useRef<HTMLDivElement>(null);
 
-  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
-    if (typeof window === "undefined") return "list";
-    const stored = window.localStorage.getItem(TASK_VIEW_MODE_KEY);
-    return stored === "timeline" ? "timeline" : "list";
-  });
   const [focusDate, setFocusDate] = useState(() => startOfDay());
-  const [focusDateKey, setFocusDateKey] = useState<string | undefined>("scroll-today");
   const [searchQuery, setSearchQuery] = useState("");
   const [composerBump, setComposerBump] = useState(0);
-
-  const setViewMode = useCallback((mode: ViewMode) => {
-    setViewModeState(mode);
-    window.localStorage.setItem(TASK_VIEW_MODE_KEY, mode);
-  }, []);
 
   const filteredTasks = useMemo(
     () => filterBySearch(tasks, searchQuery),
@@ -88,7 +74,13 @@ function TasksPage() {
   );
 
   const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
-  const sections = useMemo(() => buildDateTimeline(activeTasks, filter), [activeTasks, filter]);
+  const executionGroups = useMemo(
+    () => buildExecutionHistory(completedTasks),
+    [completedTasks],
+  );
+
+  const progressTotal = activeTasks.length + completedTasks.length;
+  const progressCompleted = completedTasks.length;
 
   const setFilter = useCallback(
     (next: TimelineFilter) => {
@@ -160,18 +152,15 @@ function TasksPage() {
 
   const jumpToToday = useCallback(() => {
     setFocusDate(startOfDay());
-    setFocusDateKey("scroll-today");
     setFilter("today");
   }, [setFilter]);
 
   const onFocusDateChange = useCallback((date: Date) => {
     setFocusDate(startOfDay(date));
-    setFocusDateKey(dateKey(startOfDay(date)));
   }, []);
 
   const canUpdate = can(PERM.TASKS_UPDATE);
   const canDelete = can(PERM.TASKS_DELETE);
-  const isLgUp = useMediaQuery("(min-width: 1024px)");
 
   const rowHandlers = {
     onToggleFavorite: canUpdate ? handleToggleFavorite : undefined,
@@ -181,9 +170,18 @@ function TasksPage() {
     canDelete,
   };
 
-  const listContent = (
+  const mainContent = (
     <>
-      <div ref={composerRef} className="mb-4 border-b border-[var(--task-border-subtle)] pb-3">
+      <TaskProgress completed={progressCompleted} total={progressTotal} />
+
+      <TaskDateNavigator
+        focusDate={focusDate}
+        onChange={onFocusDateChange}
+        onJumpToday={jumpToToday}
+        onJumpWeek={() => setFilter("upcoming")}
+      />
+
+      <div ref={composerRef} className="mb-6">
         <Can permission={PERM.TASKS_CREATE}>
           <TaskComposer
             expandTrigger={composerBump}
@@ -193,21 +191,6 @@ function TasksPage() {
         </Can>
       </div>
 
-      {viewMode === "timeline" ? (
-        <div className="mb-4 border-b border-[var(--task-border-subtle)] pb-4">
-          <TaskDateNavigator
-            focusDate={focusDate}
-            onChange={onFocusDateChange}
-            onJumpToday={jumpToToday}
-            onJumpWeek={() => {
-              setFocusDate(startOfDay());
-              setFocusDateKey("scroll-today");
-              setFilter("upcoming");
-            }}
-          />
-        </div>
-      ) : null}
-
       {tasksQuery.isLoading ? (
         <RowsSkeleton rows={8} />
       ) : tasksQuery.isError ? (
@@ -215,16 +198,6 @@ function TasksPage() {
           error={tasksQuery.error}
           title="Unable to load tasks."
           onRetry={() => tasksQuery.refetch()}
-        />
-      ) : viewMode === "timeline" ? (
-        <TaskExecutionTimeline
-          sections={sections}
-          completedTasks={completedTasks}
-          focusDateKey={focusDateKey}
-          selectedId={selectedTaskId}
-          onOpen={openTask}
-          onToggleComplete={handleToggleComplete}
-          {...rowHandlers}
         />
       ) : (
         <TaskListView
@@ -247,29 +220,20 @@ function TasksPage() {
           <TasksHeader
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
             filter={filter}
             onFilterChange={setFilter}
             summary={summary}
           />
         }
-        list={listContent}
-        detail={
-          <TaskDetailPanel
-            taskId={selectedTaskId}
-            detailQuery={detailQuery}
-            mutations={mutations}
-            onClose={closeDetail}
-          />
-        }
+        main={mainContent}
+        timeline={<ExecutionHistoryPanel groups={executionGroups} onOpen={openTask} />}
       />
 
-      {!isLgUp && selectedTaskId ? (
+      {selectedTaskId ? (
         <Sheet open onOpenChange={(open) => !open && closeDetail()}>
           <SheetContent
             side="right"
-            className="w-full border-[var(--task-border)] bg-[var(--task-surface)] p-0 sm:max-w-md"
+            className="w-full border-[var(--task-border)] bg-[var(--task-surface)] p-0 sm:max-w-lg"
           >
             <TaskDetailPanel
               taskId={selectedTaskId}

@@ -1,3 +1,6 @@
+import { taskSummaryText } from "@/features/tasks/lib/tasks-ui";
+import { cn } from "@/lib/utils";
+
 export function TasksSummaryStats({
   today,
   overdue,
@@ -8,7 +11,7 @@ export function TasksSummaryStats({
   upcoming: number;
 }) {
   return (
-    <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--task-text-secondary)]">
+    <p className={cn(taskSummaryText, "mt-3 flex flex-wrap items-center gap-x-3 gap-y-1")}>
       <span>
         <span className="font-medium tabular-nums text-[var(--task-text)]">{today}</span> today
       </span>

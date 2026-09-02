@@ -1,33 +1,37 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-/** Master-detail Tasks workspace — list + always-visible detail column on desktop. */
+/** Two-column Tasks workspace — main task area + execution timeline. */
 export function TasksWorkspace({
   header,
-  list,
-  detail,
+  main,
+  timeline,
   className,
 }: {
   header: ReactNode;
-  list: ReactNode;
-  detail: ReactNode;
+  main: ReactNode;
+  timeline: ReactNode;
   className?: string;
 }) {
   return (
     <div className={cn("flex min-h-[calc(100dvh-5rem)] flex-col", className)}>
       {header}
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col xl:flex-row">
         <section
-          className="flex min-h-0 min-w-0 flex-[3] flex-col border-b border-[var(--task-border-subtle)] lg:border-b-0 lg:border-r"
-          aria-label="Task list"
+          className="flex min-h-0 min-w-0 flex-1 flex-col xl:flex-[3]"
+          aria-label="Tasks"
         >
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">{list}</div>
+          <div className="mx-auto min-h-0 w-full max-w-[920px] flex-1 overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
+            {main}
+          </div>
         </section>
         <aside
-          className="hidden min-h-0 min-w-0 flex-[2] flex-col bg-[var(--task-surface)]/40 lg:flex lg:max-w-[440px] xl:max-w-[480px]"
-          aria-label="Task details"
+          className="min-h-0 min-w-0 border-t border-[var(--task-border)] xl:flex-[1] xl:border-t-0 xl:border-l"
+          aria-label="Execution timeline"
         >
-          <div className="min-h-0 flex-1 overflow-y-auto">{detail}</div>
+          <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-6 xl:max-h-[calc(100dvh-12rem)] xl:py-8">
+            {timeline}
+          </div>
         </aside>
       </div>
     </div>
