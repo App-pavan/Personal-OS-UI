@@ -1,7 +1,6 @@
 import type { DateSection } from "@/features/tasks/lib/task-timeline";
 import type { TaskSummary } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
-import { CompletedSection } from "./completed-section";
 import { TaskRow } from "./task-row";
 
 function SectionHeader({
@@ -14,16 +13,16 @@ function SectionHeader({
   isOverdue?: boolean;
 }) {
   return (
-    <header className="mb-3 flex items-center justify-between gap-3">
+    <header className="mb-4 flex items-center justify-between gap-3">
       <h3
         className={cn(
-          "text-[13px] font-semibold tracking-wide",
+          "text-sm font-semibold tracking-wide",
           isOverdue ? "text-[var(--task-overdue)]" : "text-[var(--task-section-header)]",
         )}
       >
         {headline}
       </h3>
-      <span className="tabular-nums text-[13px] text-[var(--task-text-muted)]">{count}</span>
+      <span className="tabular-nums text-sm text-[var(--task-text-muted)]">{count}</span>
     </header>
   );
 }
@@ -51,17 +50,20 @@ function TaskSectionBlock({
 }) {
   if (!section.tasks.length) return null;
 
-  const headline =
-    section.isOverdueSection
-      ? "Overdue"
-      : section.isToday
-        ? "Today"
-        : section.headline.charAt(0) + section.headline.slice(1).toLowerCase();
+  const headline = section.isOverdueSection
+    ? "Overdue"
+    : section.isToday
+      ? "Today"
+      : section.key === "unscheduled"
+        ? "No date"
+        : section.headline === "TOMORROW"
+          ? "Tomorrow"
+          : section.headline.charAt(0) + section.headline.slice(1).toLowerCase();
 
   return (
-    <section className="mb-8">
+    <section className="mb-10">
       <SectionHeader headline={headline} count={section.tasks.length} isOverdue={section.isOverdueSection} />
-      <div className="space-y-1">
+      <div className="space-y-2">
         {section.tasks.map((task) => (
           <TaskRow
             key={task.id}
@@ -83,7 +85,6 @@ function TaskSectionBlock({
 
 export function TaskContent({
   sections,
-  completedTasks,
   selectedId,
   onOpen,
   onToggleComplete,
@@ -96,7 +97,6 @@ export function TaskContent({
   emptySubtitle = "You're all caught up.",
 }: {
   sections: DateSection[];
-  completedTasks: TaskSummary[];
   selectedId: string | null;
   onOpen: (id: string) => void;
   onToggleComplete: (task: TaskSummary) => void;
@@ -110,7 +110,7 @@ export function TaskContent({
 }) {
   const hasActive = sections.some((s) => s.tasks.length > 0);
 
-  if (!hasActive && !completedTasks.length) {
+  if (!hasActive) {
     return (
       <div className="py-16 text-center">
         <p className="text-base font-medium text-[var(--task-text)]">{emptyTitle}</p>
@@ -120,7 +120,7 @@ export function TaskContent({
   }
 
   return (
-    <div className="pb-6">
+    <div>
       {sections.map((section) => (
         <TaskSectionBlock
           key={section.key}
@@ -135,18 +135,6 @@ export function TaskContent({
           canDelete={canDelete}
         />
       ))}
-
-      <CompletedSection
-        tasks={completedTasks}
-        selectedId={selectedId}
-        onOpen={onOpen}
-        onToggleComplete={onToggleComplete}
-        onToggleFavorite={onToggleFavorite}
-        onArchive={onArchive}
-        onDelete={onDelete}
-        canUpdate={canUpdate}
-        canDelete={canDelete}
-      />
     </div>
   );
 }

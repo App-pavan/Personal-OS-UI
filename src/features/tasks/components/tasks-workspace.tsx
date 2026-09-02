@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
+import { tasksPageShell, tasksWorkspaceGrid } from "@/features/tasks/lib/tasks-ui";
 import { cn } from "@/lib/utils";
 
-/** Two-column Tasks workspace — main task area + execution timeline. */
+/** Unified Tasks page grid — header + main workspace + execution timeline. */
 export function TasksWorkspace({
   header,
   main,
@@ -14,22 +15,19 @@ export function TasksWorkspace({
   className?: string;
 }) {
   return (
-    <div className={cn("flex min-h-[calc(100dvh-5rem)] flex-col", className)}>
-      {header}
-      <div className="flex min-h-0 flex-1 flex-col xl:flex-row">
-        <section
-          className="flex min-h-0 min-w-0 flex-1 flex-col xl:flex-[3]"
-          aria-label="Tasks"
-        >
-          <div className="mx-auto min-h-0 w-full max-w-[920px] flex-1 overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
-            {main}
-          </div>
+    <div className={cn(tasksPageShell, "pb-10", className)}>
+      <div className={cn(tasksWorkspaceGrid, "min-h-[calc(100dvh-5rem)]")}>
+        <header className="xl:col-span-2">{header}</header>
+
+        <section className="min-w-0" aria-label="Active tasks">
+          {main}
         </section>
+
         <aside
-          className="min-h-0 min-w-0 border-t border-[var(--task-border)] xl:flex-[1] xl:border-t-0 xl:border-l"
+          className="min-w-0 border-t border-[var(--task-border)] pt-10 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-10"
           aria-label="Execution timeline"
         >
-          <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-6 xl:max-h-[calc(100dvh-12rem)] xl:py-8">
+          <div className="xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto xl:pr-1 [scrollbar-width:thin]">
             {timeline}
           </div>
         </aside>

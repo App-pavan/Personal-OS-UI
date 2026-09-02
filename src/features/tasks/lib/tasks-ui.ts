@@ -1,4 +1,8 @@
-/** Shared Tasks workspace utility classes (theme-token driven). */
+/** Shared layout classes for the Tasks page grid. */
+export const tasksPageShell = "tasks-page mx-auto w-full max-w-[1440px] px-6 sm:px-8 lg:px-10";
+
+export const tasksWorkspaceGrid =
+  "grid grid-cols-1 gap-y-10 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-x-10 xl:gap-y-0";
 
 export const taskEyebrow =
   "text-xs font-medium uppercase tracking-[0.14em] text-[var(--task-accent)]";
@@ -24,3 +28,6 @@ export const taskSegmentItem = (active: boolean) =>
       ? "bg-[var(--task-accent-soft)] text-[var(--task-accent)]"
       : "text-[var(--task-text-secondary)] hover:text-[var(--task-text)] hover:bg-[var(--task-hover)]",
   ].join(" ");
+
+export const taskRowGrid =
+  "grid grid-cols-[32px_minmax(0,1fr)_32px] items-start gap-x-4";

@@ -1,9 +1,10 @@
 import type { TaskSummary } from "@/lib/api/types";
+import { isTaskCompleted } from "./task-filters";
 import { localDateKey, startOfLocalDay } from "./task-dates";
 
 export type ExecutionHistoryEntry = {
   task: TaskSummary;
-  timeLabel: string;
+  metaLabel: string;
 };
 
 export type ExecutionHistoryGroup = {
@@ -11,6 +12,13 @@ export type ExecutionHistoryGroup = {
   label: string;
   entries: ExecutionHistoryEntry[];
 };
+
+/** Best available completion timestamp for timeline ordering. */
+export function getCompletionTimestamp(task: TaskSummary): string | null {
+  if (task.completedAt) return task.completedAt;
+  if (isTaskCompleted(task) && task.updatedAt) return task.updatedAt;
+  return null;
+}
 
 function groupLabel(key: string, now: Date): string {
   const todayKey = localDateKey(now);
@@ -20,19 +28,26 @@ function groupLabel(key: string, now: Date): string {
   if (key === yesterdayKey) return "Yesterday";
 
   const date = new Date(`${key}T12:00:00`);
-  const daysAgo = Math.floor((startOfLocalDay(now).getTime() - startOfLocalDay(date).getTime()) / 86_400_000);
+  const daysAgo = Math.floor(
+    (startOfLocalDay(now).getTime() - startOfLocalDay(date).getTime()) / 86_400_000,
+  );
   if (daysAgo >= 2 && daysAgo <= 6) {
     return date.toLocaleDateString([], { weekday: "long" });
   }
-  return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  return date
+    .toLocaleDateString([], { month: "short", day: "numeric" })
+    .toUpperCase();
 }
 
-function formatTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  } catch {
-    return "";
-  }
+function formatCompletionMeta(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "Completed";
+
+  const time = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const hasMeaningfulTime =
+    date.getHours() !== 0 || date.getMinutes() !== 0 || date.getSeconds() !== 0;
+
+  return hasMeaningfulTime ? `Completed · ${time}` : "Completed";
 }
 
 /** Group completed tasks into chronological execution history. */
@@ -41,16 +56,16 @@ export function buildExecutionHistory(
   now = new Date(),
 ): ExecutionHistoryGroup[] {
   const sorted = [...completedTasks]
-    .filter((t) => t.completedAt)
-    .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
+    .map((task) => ({ task, at: getCompletionTimestamp(task) }))
+    .filter((entry): entry is { task: TaskSummary; at: string } => Boolean(entry.at))
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
 
   const groups = new Map<string, ExecutionHistoryEntry[]>();
 
-  for (const task of sorted) {
-    const at = task.completedAt!;
+  for (const { task, at } of sorted) {
     const key = localDateKey(new Date(at));
     const bucket = groups.get(key) ?? [];
-    bucket.push({ task, timeLabel: formatTime(at) });
+    bucket.push({ task, metaLabel: formatCompletionMeta(at) });
     groups.set(key, bucket);
   }
 
