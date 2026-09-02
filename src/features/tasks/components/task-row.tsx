@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Check, Flag, Loader2, MoreHorizontal, Star } from "lucide-react";
+import { TaskTagPicker } from "@/features/tasks/components/task-tag-picker";
 import { formatDueLabel, isOverdue } from "@/features/tasks/lib/task-dates";
 import { isTaskArchived, isTaskCompleted } from "@/features/tasks/lib/task-filters";
+import { getVisibleTaskTagId } from "@/features/tasks/lib/task-tags";
 import { taskRowGrid } from "@/features/tasks/lib/tasks-ui";
+import { useTaskTagAssignment, useTaskTagRegistry } from "@/hooks/use-task-tags";
 import type { TaskPriority, TaskSummary } from "@/lib/api/types";
 import {
   DropdownMenu,
@@ -59,6 +62,9 @@ export function TaskRow({
   const inProgress = task.status === "in_progress";
   const overdue = isOverdue(task) && !done;
   const due = formatDueLabel(task.dueAt);
+  const { tags } = useTaskTagRegistry([task]);
+  const { assignTag, createAndAssign } = useTaskTagAssignment();
+  const visibleTagId = getVisibleTaskTagId(task);
 
   const handleComplete = () => {
     if (done) {
@@ -131,7 +137,7 @@ export function TaskRow({
         >
           {task.title}
         </p>
-        <p className="mt-1 text-[13px] leading-relaxed text-[var(--task-text-secondary)] sm:text-sm">
+        <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] leading-relaxed text-[var(--task-text-secondary)] sm:text-sm">
           {archivedView ? (
             archived && done ? (
               "Archived · Completed"
@@ -141,10 +147,23 @@ export function TaskRow({
           ) : overdue ? (
             <span className="font-medium text-[var(--task-overdue)]">Overdue</span>
           ) : due ? (
-            due
+            <span>{due}</span>
           ) : (
-            "No date"
+            <span>No date</span>
           )}
+          {!archivedView && canUpdate ? (
+            <>
+              <span className="text-[var(--task-text-muted)]">·</span>
+              <TaskTagPicker
+                tags={tags}
+                value={visibleTagId}
+                onSelect={(tagId) => assignTag(task.id, tagId)}
+                onCreate={(name) => createAndAssign(task.id, name)}
+                compact
+                placeholder="+ tag"
+              />
+            </>
+          ) : null}
         </p>
       </button>
 
