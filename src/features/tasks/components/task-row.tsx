@@ -1,7 +1,7 @@
-import { Check, Loader2, MoreHorizontal, Star } from "lucide-react";
+import { Check, Flag, Loader2, MoreHorizontal, Star } from "lucide-react";
 import { formatDueLabel, isOverdue } from "@/features/tasks/lib/task-dates";
 import { isTaskCompleted } from "@/features/tasks/lib/task-filters";
-import type { TaskSummary } from "@/lib/api/types";
+import type { TaskPriority, TaskSummary } from "@/lib/api/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,43 +10,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-type MetaPart = { text: string; tone?: "overdue" | "default" };
-
-function buildMetadataParts(task: TaskSummary): MetaPart[] {
-  const parts: MetaPart[] = [{ text: task.priority }];
-  const overdue = isOverdue(task) && !isTaskCompleted(task);
-  if (overdue) parts.push({ text: "overdue", tone: "overdue" });
-  const due = formatDueLabel(task.dueAt);
-  if (due) parts.push({ text: due.toLowerCase() });
-  if (task.status === "inbox") parts.push({ text: "inbox" });
-  else if (task.status !== "completed") parts.push({ text: task.status.replace(/_/g, " ") });
-  if (task.projectName) parts.push({ text: task.projectName });
-  return parts;
-}
-
-function TaskMetadata({ parts, done }: { parts: MetaPart[]; done: boolean }) {
-  if (!parts.length) return null;
-  return (
-    <p
-      className={cn(
-        "mt-0.5 text-[11px] leading-relaxed",
-        done ? "text-[var(--task-completed)]" : "text-[var(--task-text-secondary)]",
-      )}
-    >
-      {parts.map((part, index) => (
-        <span key={`${part.text}-${index}`}>
-          {index > 0 ? <span className="mx-1 opacity-40">·</span> : null}
-          <span
-            className={cn(
-              part.tone === "overdue" && !done && "font-medium text-[var(--task-overdue)]",
-            )}
-          >
-            {part.text}
-          </span>
-        </span>
-      ))}
-    </p>
-  );
+function priorityColor(priority: TaskPriority): string {
+  switch (priority) {
+    case "urgent":
+      return "var(--task-priority-urgent)";
+    case "high":
+      return "var(--task-priority-high)";
+    case "normal":
+      return "var(--task-priority-normal)";
+    default:
+      return "var(--task-priority-low)";
+  }
 }
 
 export function TaskRow({
@@ -74,17 +48,18 @@ export function TaskRow({
 }) {
   const done = isTaskCompleted(task);
   const inProgress = task.status === "in_progress";
-  const metadataParts = buildMetadataParts(task);
+  const overdue = isOverdue(task) && !done;
+  const due = formatDueLabel(task.dueAt);
 
   return (
     <div
       className={cn(
-        "group relative flex items-start gap-3 rounded-lg border border-transparent px-2.5 transition-[background-color,border-color,box-shadow] duration-150",
-        compact ? "py-2" : "py-2.5",
+        "group relative flex items-start gap-4 rounded-xl border border-transparent px-3 transition-[background-color,border-color] duration-150",
+        compact ? "py-3" : "py-4",
         selected
-          ? "border-[var(--task-accent)]/30 bg-[var(--task-surface-selected)] shadow-[var(--task-shadow-sm)]"
-          : "hover:border-[var(--task-border-subtle)] hover:bg-[var(--task-surface-elevated)] hover:shadow-[var(--task-shadow-sm)]",
-        done && !selected && "opacity-75 hover:opacity-90",
+          ? "border-[var(--task-accent)]/25 bg-[var(--task-selected)]"
+          : "hover:border-[var(--task-border)] hover:bg-[var(--task-surface-elevated)]",
+        done && !selected && "opacity-70",
       )}
     >
       <button
@@ -92,21 +67,21 @@ export function TaskRow({
         onClick={onToggleComplete}
         aria-label={done ? `Reopen ${task.title}` : `Complete ${task.title}`}
         className={cn(
-          "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]",
+          "grid size-7 shrink-0 place-items-center rounded-full border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]",
           done
-            ? "scale-100 border-[var(--task-accent)] bg-[var(--task-accent)] text-[#041018]"
+            ? "border-[var(--task-accent)] bg-[var(--task-accent)] text-[#041018]"
             : inProgress
               ? "border-[var(--task-accent)] text-[var(--task-accent)]"
-              : "border-[var(--task-checkbox-border)] text-transparent hover:border-[var(--task-accent)] hover:bg-[var(--task-accent-soft)]",
+              : "border-[var(--task-checkbox-border)] hover:border-[var(--task-accent)] hover:bg-[var(--task-accent-soft)]",
         )}
       >
         {inProgress && !done ? (
-          <Loader2 className="size-3 animate-spin" aria-hidden />
+          <Loader2 className="size-3.5 animate-spin" aria-hidden />
         ) : (
           <Check
             className={cn(
-              "size-3 transition-all duration-150",
-              done ? "scale-100 opacity-100" : "scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-50",
+              "size-3.5 transition-all duration-200",
+              done ? "scale-100 opacity-100" : "scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-60",
             )}
           />
         )}
@@ -115,71 +90,90 @@ export function TaskRow({
       <button
         type="button"
         onClick={onOpen}
-        className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)] rounded-sm"
+        className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)] rounded-md"
       >
         <p
           className={cn(
-            "text-[15px] leading-snug font-medium text-[var(--task-text)]",
+            "text-base leading-snug font-medium text-[var(--task-text)] sm:text-[17px]",
             done && "font-normal text-[var(--task-completed)] line-through decoration-[var(--task-completed)]/70",
           )}
         >
           {task.title}
         </p>
-        <TaskMetadata parts={metadataParts} done={done} />
+        <p
+          className={cn(
+            "mt-1 text-[13px] leading-relaxed sm:text-sm",
+            done ? "text-[var(--task-completed)]" : "text-[var(--task-text-secondary)]",
+          )}
+        >
+          {overdue ? (
+            <span className="font-medium text-[var(--task-overdue)]">Overdue</span>
+          ) : due ? (
+            due
+          ) : (
+            "No date"
+          )}
+          {task.projectName ? (
+            <>
+              <span className="mx-1.5 opacity-40">·</span>
+              {task.projectName}
+            </>
+          ) : null}
+        </p>
       </button>
 
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-        {canUpdate && onToggleFavorite ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite();
-            }}
-            aria-label={task.favorite ? "Remove star" : "Star task"}
-            className={cn(
-              "grid size-8 place-items-center rounded-md text-[var(--task-text-secondary)] transition-colors hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]",
-              task.favorite && "text-[var(--task-accent)] opacity-100",
-            )}
-          >
-            <Star className={cn("size-[15px]", task.favorite && "fill-current")} strokeWidth={1.75} />
-          </button>
-        ) : null}
+      <div className="flex shrink-0 items-center gap-1 pt-0.5">
+        <span
+          className="grid size-8 place-items-center text-[var(--task-text-muted)]"
+          title={`${task.priority} priority`}
+          aria-label={`${task.priority} priority`}
+        >
+          <Flag className="size-4" style={{ color: priorityColor(task.priority) }} strokeWidth={1.75} />
+        </span>
 
-        {(canUpdate || canDelete) && (onArchive || onDelete) ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="More actions"
-                className="grid size-8 place-items-center rounded-md text-[var(--task-text-secondary)] transition-colors hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
-              >
-                <MoreHorizontal className="size-[15px]" strokeWidth={1.75} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[140px]">
-              {canUpdate && onArchive ? (
-                <DropdownMenuItem onClick={onArchive}>Archive</DropdownMenuItem>
-              ) : null}
-              {canDelete && onDelete ? (
-                <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                  Delete
-                </DropdownMenuItem>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
+        <div className="flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+          {canUpdate && onToggleFavorite ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite();
+              }}
+              aria-label={task.favorite ? "Remove star" : "Star task"}
+              className={cn(
+                "grid size-9 place-items-center rounded-lg text-[var(--task-text-secondary)] transition-colors hover:bg-[var(--task-hover)]",
+                task.favorite && "text-[var(--task-accent)] opacity-100",
+              )}
+            >
+              <Star className={cn("size-4", task.favorite && "fill-current")} strokeWidth={1.75} />
+            </button>
+          ) : null}
+
+          {(canUpdate || canDelete) && (onArchive || onDelete) ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="More actions"
+                  className="grid size-9 place-items-center rounded-lg text-[var(--task-text-secondary)] transition-colors hover:bg-[var(--task-hover)]"
+                >
+                  <MoreHorizontal className="size-4" strokeWidth={1.75} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[140px]">
+                {canUpdate && onArchive ? (
+                  <DropdownMenuItem onClick={onArchive}>Archive</DropdownMenuItem>
+                ) : null}
+                {canDelete && onDelete ? (
+                  <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                    Delete
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
+        </div>
       </div>
     </div>
   );
-}
-
-/** @deprecated Use TaskRow */
-export function TaskTimelineItem(props: Parameters<typeof TaskRow>[0]) {
-  return <TaskRow {...props} />;
-}
-
-/** @deprecated Use TaskRow */
-export function TaskListRow(props: Parameters<typeof TaskRow>[0]) {
-  return <TaskRow {...props} />;
 }

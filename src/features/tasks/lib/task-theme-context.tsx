@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  DEFAULT_TASK_THEME_ID,
   resolveTaskThemeId,
   TASK_THEME_STORAGE_KEY,
   TASK_THEMES,
@@ -26,7 +27,7 @@ type TaskThemeContextValue = {
 const TaskThemeContext = createContext<TaskThemeContextValue | null>(null);
 
 export function TaskThemeProvider({ children }: { children: ReactNode }) {
-  const [themeId, setThemeIdState] = useState<TaskThemeId>("personal-os-dark");
+  const [themeId, setThemeIdState] = useState<TaskThemeId>(DEFAULT_TASK_THEME_ID);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(TASK_THEME_STORAGE_KEY);

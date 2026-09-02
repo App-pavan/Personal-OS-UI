@@ -32,28 +32,24 @@ export function CompletedSection({
   if (!tasks.length) return null;
 
   return (
-    <section className="mt-2 border-t border-[var(--task-border-subtle)] pt-4">
+    <section className="mt-4 border-t border-[var(--task-border)] pt-6">
       <button
         type="button"
         onClick={() => setCollapsed((v) => !v)}
-        className="mb-2 flex w-full items-center justify-between gap-3 rounded-md px-1 py-1 text-left transition-colors hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
+        className="mb-3 flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[var(--task-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--task-focus-ring)]"
         aria-expanded={!collapsed}
       >
         <span className="flex items-center gap-2">
           <ChevronRight
             className={cn(
-              "size-4 text-[var(--task-text-secondary)] transition-transform duration-200",
+              "size-4 text-[var(--task-text-muted)] transition-transform duration-200",
               !collapsed && "rotate-90",
             )}
             strokeWidth={1.75}
           />
-          <span className="text-[11px] font-medium tracking-wide text-[var(--task-text-secondary)]">
-            Completed
-          </span>
+          <span className="text-sm font-medium text-[var(--task-text-secondary)]">Completed</span>
         </span>
-        <span className="tabular-nums text-[11px] font-medium text-[var(--task-text-secondary)]">
-          {tasks.length}
-        </span>
+        <span className="tabular-nums text-sm text-[var(--task-text-muted)]">{tasks.length}</span>
       </button>
 
       <div
