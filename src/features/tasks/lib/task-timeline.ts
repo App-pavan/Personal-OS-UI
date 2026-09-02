@@ -1,4 +1,5 @@
 import type { TaskSummary } from "@/lib/api/types";
+import { isTaskArchived, isTaskCompleted } from "./task-lifecycle";
 import {
   addLocalDays,
   compareDateKeys,
@@ -12,7 +13,7 @@ import {
   startOfLocalDay,
 } from "./task-dates";
 
-export type TimelineFilter = "all" | "today" | "upcoming" | "overdue";
+export type TimelineFilter = "all" | "today" | "upcoming" | "overdue" | "archived";
 
 export type DateSection = {
   key: string;
@@ -31,8 +32,8 @@ export type TimelineSummary = {
   pending: number;
 };
 
-const OPEN = (status: TaskSummary["status"]) =>
-  status !== "completed" && status !== "cancelled" && status !== "archived";
+const OPEN = (task: TaskSummary) =>
+  !isTaskCompleted(task) && !isTaskArchived(task);
 
 export {
   defaultDueForDate,
@@ -95,7 +96,7 @@ export function buildDateTimeline(
   const unscheduled: TaskSummary[] = [];
 
   const overdueTasks = tasks
-    .filter((t) => isOverdue(t, now) && OPEN(t.status))
+    .filter((t) => isOverdue(t, now) && OPEN(t))
     .sort(sortTasksInTimelineSection);
 
   for (const task of tasks) {
@@ -103,7 +104,7 @@ export function buildDateTimeline(
     if (filter === "upcoming" && !isUpcoming(task, now)) continue;
     if (filter === "overdue") continue;
 
-    if (isOverdue(task, now) && OPEN(task.status)) continue;
+    if (isOverdue(task, now) && OPEN(task)) continue;
 
     if (!task.dueAt) {
       if (filter === "all" || filter === "today") unscheduled.push(task);

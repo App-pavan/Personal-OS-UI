@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 import { Can } from "@/features/capabilities/can";
 import { useCapabilities } from "@/features/capabilities/capabilities-context";
@@ -13,7 +14,14 @@ import { TaskProgress } from "@/features/tasks/components/task-progress";
 import { TasksHeader } from "@/features/tasks/components/tasks-header";
 import { TasksWorkspace } from "@/features/tasks/components/tasks-workspace";
 import { buildExecutionHistory } from "@/features/tasks/lib/execution-history";
-import { filterBySearch, partitionTasks } from "@/features/tasks/lib/task-filters";
+import {
+  filterActiveWorkspace,
+  filterArchivedTasks,
+  filterBySearch,
+  filterTimelineTasks,
+  isTaskCompleted,
+  partitionTasks,
+} from "@/features/tasks/lib/task-filters";
 import { TaskThemeProvider } from "@/features/tasks/lib/task-theme-context";
 import {
   defaultDueForDate,
@@ -29,7 +37,7 @@ import type { TaskSummary } from "@/lib/api/types";
 
 const tasksSearchSchema = z.object({
   taskId: z.string().optional(),
-  filter: z.enum(["all", "today", "upcoming", "overdue"]).optional(),
+  filter: z.enum(["all", "today", "upcoming", "overdue", "archived"]).optional(),
 });
 
 export const Route = createFileRoute("/tasks")({
@@ -63,30 +71,33 @@ function TasksPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [composerBump, setComposerBump] = useState(0);
 
-  const filteredTasks = useMemo(
+  const searchedTasks = useMemo(
     () => filterBySearch(tasks, searchQuery),
     [searchQuery, tasks],
   );
 
-  const { active: activeTasks } = useMemo(
-    () => partitionTasks(filteredTasks),
-    [filteredTasks],
-  );
+  const workspaceTasks = useMemo(() => {
+    if (filter === "archived") return filterArchivedTasks(searchedTasks);
+    return filterActiveWorkspace(searchedTasks);
+  }, [filter, searchedTasks]);
 
-  const allCompletedTasks = useMemo(
-    () => partitionTasks(tasks).completed,
+  const timelineTasks = useMemo(
+    () => filterTimelineTasks(tasks),
     [tasks],
   );
 
   const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
   const executionGroups = useMemo(
-    () => buildExecutionHistory(allCompletedTasks),
-    [allCompletedTasks],
+    () => buildExecutionHistory(timelineTasks),
+    [timelineTasks],
   );
 
-  const { active: allActive } = useMemo(() => partitionTasks(tasks), [tasks]);
-  const progressTotal = allActive.length + allCompletedTasks.length;
-  const progressCompleted = allCompletedTasks.length;
+  const { active: activeIncomplete, completed: activeCompleted } = useMemo(
+    () => partitionTasks(tasks),
+    [tasks],
+  );
+  const progressTotal = activeIncomplete.length + activeCompleted.length;
+  const progressCompleted = activeCompleted.length;
 
   const setFilter = useCallback(
     (next: TimelineFilter) => {
@@ -117,8 +128,7 @@ function TasksPage() {
 
   const handleToggleComplete = useCallback(
     (task: TaskSummary) => {
-      const done = task.status === "completed" || Boolean(task.completedAt);
-      if (done) mutations.reopen.mutate([task.id]);
+      if (isTaskCompleted(task)) mutations.reopen.mutate([task.id]);
       else mutations.complete.mutate([task.id]);
     },
     [mutations],
@@ -143,9 +153,25 @@ function TasksPage() {
 
   const handleArchive = useCallback(
     (task: TaskSummary) => {
-      mutations.archive.mutate([task.id]);
+      mutations.archive.mutate([task.id], {
+        onSuccess: () => {
+          toast.success("Task archived", {
+            action: {
+              label: "Undo",
+              onClick: () => mutations.restore.mutate([task.id]),
+            },
+          });
+        },
+      });
     },
-    [mutations.archive],
+    [mutations.archive, mutations.restore],
+  );
+
+  const handleUnarchive = useCallback(
+    (task: TaskSummary) => {
+      mutations.restore.mutate([task.id]);
+    },
+    [mutations.restore],
   );
 
   const handleDelete = useCallback(
@@ -171,31 +197,40 @@ function TasksPage() {
   const rowHandlers = {
     onToggleFavorite: canUpdate ? handleToggleFavorite : undefined,
     onArchive: canUpdate ? handleArchive : undefined,
+    onUnarchive: canUpdate ? handleUnarchive : undefined,
     onDelete: canDelete ? handleDelete : undefined,
     canUpdate,
     canDelete,
   };
 
+  const showComposer = filter !== "archived";
+
   const mainContent = (
     <div className="space-y-7">
-      <TaskProgress completed={progressCompleted} total={progressTotal} />
+      {filter !== "archived" ? (
+        <TaskProgress completed={progressCompleted} total={progressTotal} />
+      ) : null}
 
-      <TaskDateNavigator
-        focusDate={focusDate}
-        onChange={onFocusDateChange}
-        onJumpToday={jumpToToday}
-        onJumpWeek={() => setFilter("upcoming")}
-      />
+      {filter !== "archived" ? (
+        <TaskDateNavigator
+          focusDate={focusDate}
+          onChange={onFocusDateChange}
+          onJumpToday={jumpToToday}
+          onJumpWeek={() => setFilter("upcoming")}
+        />
+      ) : null}
 
-      <div ref={composerRef}>
-        <Can permission={PERM.TASKS_CREATE}>
-          <TaskComposer
-            expandTrigger={composerBump}
-            onSubmit={handleQuickCreate}
-            pending={mutations.create.isPending}
-          />
-        </Can>
-      </div>
+      {showComposer ? (
+        <div ref={composerRef}>
+          <Can permission={PERM.TASKS_CREATE}>
+            <TaskComposer
+              expandTrigger={composerBump}
+              onSubmit={handleQuickCreate}
+              pending={mutations.create.isPending}
+            />
+          </Can>
+        </div>
+      ) : null}
 
       {tasksQuery.isLoading ? (
         <RowsSkeleton rows={8} />
@@ -207,7 +242,7 @@ function TasksPage() {
         />
       ) : (
         <TaskListView
-          tasks={activeTasks}
+          tasks={workspaceTasks}
           filter={filter}
           selectedId={selectedTaskId}
           onOpen={openTask}

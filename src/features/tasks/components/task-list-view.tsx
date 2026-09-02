@@ -10,6 +10,7 @@ interface TaskListViewProps {
   onToggleComplete: (task: TaskSummary) => void;
   onToggleFavorite?: (task: TaskSummary) => void;
   onArchive?: (task: TaskSummary) => void;
+  onUnarchive?: (task: TaskSummary) => void;
   onDelete?: (task: TaskSummary) => void;
   canUpdate?: boolean;
   canDelete?: boolean;
@@ -23,10 +24,41 @@ export function TaskListView({
   onToggleComplete,
   onToggleFavorite,
   onArchive,
+  onUnarchive,
   onDelete,
   canUpdate,
   canDelete,
 }: TaskListViewProps) {
+  if (filter === "archived") {
+    return (
+      <TaskContent
+        sections={[
+          {
+            key: "archived",
+            date: null,
+            headline: "ARCHIVED",
+            subline: `${tasks.length} TASK${tasks.length === 1 ? "" : "S"}`,
+            isToday: false,
+            isOverdueSection: false,
+            tasks,
+          },
+        ]}
+        selectedId={selectedId ?? null}
+        onOpen={onOpen}
+        onToggleComplete={onToggleComplete}
+        onToggleFavorite={onToggleFavorite}
+        onArchive={onArchive}
+        onUnarchive={onUnarchive}
+        onDelete={onDelete}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+        archivedView
+        emptyTitle="No archived tasks"
+        emptySubtitle="Archived tasks will appear here."
+      />
+    );
+  }
+
   const sections = buildDateTimeline(tasks, filter);
 
   return (
@@ -37,6 +69,7 @@ export function TaskListView({
       onToggleComplete={onToggleComplete}
       onToggleFavorite={onToggleFavorite}
       onArchive={onArchive}
+      onUnarchive={onUnarchive}
       onDelete={onDelete}
       canUpdate={canUpdate}
       canDelete={canDelete}
