@@ -7,7 +7,6 @@ import { useCapabilities } from "@/features/capabilities/capabilities-context";
 import { requirePermissions } from "@/features/capabilities/route-guard";
 import { ExecutionHistoryPanel } from "@/features/tasks/components/execution-history-panel";
 import { TaskComposer } from "@/features/tasks/components/task-composer";
-import { TaskDateNavigator } from "@/features/tasks/components/task-controls";
 import { TaskEditorSheet } from "@/features/tasks/components/task-editor-sheet";
 import { TaskDetailPanel } from "@/features/tasks/components/task-detail-panel";
 import { TaskListView } from "@/features/tasks/components/task-list-view";
@@ -16,20 +15,15 @@ import { TasksHeader } from "@/features/tasks/components/tasks-header";
 import { TasksWorkspace } from "@/features/tasks/components/tasks-workspace";
 import { buildExecutionHistory } from "@/features/tasks/lib/execution-history";
 import {
-  filterActiveWorkspace,
-  filterArchivedTasks,
   filterBySearch,
   filterTimelineTasks,
+  filterWorkspaceTasks,
   isTaskCompleted,
+  isTaskNotCompleted,
   partitionTasks,
 } from "@/features/tasks/lib/task-filters";
 import { TaskThemeProvider } from "@/features/tasks/lib/task-theme-context";
-import {
-  defaultDueForDate,
-  startOfDay,
-  summarizeTasks,
-  type TimelineFilter,
-} from "@/features/tasks/lib/task-timeline";
+import { defaultDueForDate, startOfDay, type TaskWorkspaceFilter } from "@/features/tasks/lib/task-timeline";
 import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
 import { useTask, useTaskMutations, useTasks } from "@/hooks/use-tasks";
 import { useSyncTaskTagsFromList } from "@/hooks/use-task-tags";
@@ -38,7 +32,7 @@ import type { TaskSummary } from "@/lib/api/types";
 
 const tasksSearchSchema = z.object({
   taskId: z.string().optional(),
-  filter: z.enum(["all", "today", "upcoming", "overdue", "archived"]).optional(),
+  filter: z.enum(["all", "active", "completed", "archived"]).optional(),
 });
 
 export const Route = createFileRoute("/tasks")({
@@ -60,7 +54,7 @@ function TasksPage() {
   const navigate = useNavigate({ from: Route.fullPath });
   const { can } = useCapabilities();
   const { taskId: selectedTaskId = null, filter: searchFilter } = Route.useSearch();
-  const filter: TimelineFilter = searchFilter ?? "all";
+  const filter: TaskWorkspaceFilter = searchFilter ?? "all";
 
   const tasksQuery = useTasks({ perPage: 200 });
   const tasks = useMemo(() => tasksQuery.data?.items ?? [], [tasksQuery.data]);
@@ -69,7 +63,7 @@ function TasksPage() {
   const detailQuery = useTask(selectedTaskId);
   const composerRef = useRef<HTMLDivElement>(null);
 
-  const [focusDate, setFocusDate] = useState(() => startOfDay());
+  const [focusDate] = useState(() => startOfDay());
   const [searchQuery, setSearchQuery] = useState("");
   const [composerBump, setComposerBump] = useState(0);
 
@@ -78,17 +72,13 @@ function TasksPage() {
     [searchQuery, tasks],
   );
 
-  const workspaceTasks = useMemo(() => {
-    if (filter === "archived") return filterArchivedTasks(searchedTasks);
-    return filterActiveWorkspace(searchedTasks);
-  }, [filter, searchedTasks]);
-
-  const timelineTasks = useMemo(
-    () => filterTimelineTasks(tasks),
-    [tasks],
+  const workspaceTasks = useMemo(
+    () => filterWorkspaceTasks(searchedTasks, filter),
+    [filter, searchedTasks],
   );
 
-  const summary = useMemo(() => summarizeTasks(tasks), [tasks]);
+  const timelineTasks = useMemo(() => filterTimelineTasks(tasks), [tasks]);
+
   const executionGroups = useMemo(
     () => buildExecutionHistory(timelineTasks),
     [timelineTasks],
@@ -102,7 +92,7 @@ function TasksPage() {
   const progressCompleted = activeCompleted.length;
 
   const setFilter = useCallback(
-    (next: TimelineFilter) => {
+    (next: TaskWorkspaceFilter) => {
       navigate({
         search: (prev) => ({ ...prev, filter: next === "all" ? undefined : next }),
         replace: true,
@@ -134,6 +124,19 @@ function TasksPage() {
       else mutations.complete.mutate([task.id]);
     },
     [mutations],
+  );
+
+  const handleMarkNotCompleted = useCallback(
+    (task: TaskSummary) => {
+      if (isTaskNotCompleted(task)) return;
+      mutations.markNotCompleted.mutate([task.id], {
+        onSuccess: () => {
+          toast.success("Task marked not completed");
+          if (selectedTaskId === task.id) closeDetail();
+        },
+      });
+    },
+    [closeDetail, mutations.markNotCompleted, selectedTaskId],
   );
 
   const handleQuickCreate = useCallback(
@@ -176,50 +179,23 @@ function TasksPage() {
     [mutations.restore],
   );
 
-  const handleDelete = useCallback(
-    (task: TaskSummary) => {
-      mutations.remove.mutate([task.id]);
-      if (selectedTaskId === task.id) closeDetail();
-    },
-    [closeDetail, mutations.remove, selectedTaskId],
-  );
-
-  const jumpToToday = useCallback(() => {
-    setFocusDate(startOfDay());
-    setFilter("today");
-  }, [setFilter]);
-
-  const onFocusDateChange = useCallback((date: Date) => {
-    setFocusDate(startOfDay(date));
-  }, []);
-
   const canUpdate = can(PERM.TASKS_UPDATE);
-  const canDelete = can(PERM.TASKS_DELETE);
 
   const rowHandlers = {
     onToggleFavorite: canUpdate ? handleToggleFavorite : undefined,
+    onMarkNotCompleted: canUpdate ? handleMarkNotCompleted : undefined,
     onArchive: canUpdate ? handleArchive : undefined,
     onUnarchive: canUpdate ? handleUnarchive : undefined,
-    onDelete: canDelete ? handleDelete : undefined,
     canUpdate,
-    canDelete,
   };
 
-  const showComposer = filter !== "archived";
+  const showComposer = filter !== "archived" && filter !== "completed";
+  const showProgress = filter !== "archived";
 
   const mainContent = (
     <div className="space-y-7">
-      {filter !== "archived" ? (
+      {showProgress ? (
         <TaskProgress completed={progressCompleted} total={progressTotal} />
-      ) : null}
-
-      {filter !== "archived" ? (
-        <TaskDateNavigator
-          focusDate={focusDate}
-          onChange={onFocusDateChange}
-          onJumpToday={jumpToToday}
-          onJumpWeek={() => setFilter("upcoming")}
-        />
       ) : null}
 
       {showComposer ? (
@@ -264,7 +240,6 @@ function TasksPage() {
             onSearchChange={setSearchQuery}
             filter={filter}
             onFilterChange={setFilter}
-            summary={summary}
           />
         }
         main={mainContent}

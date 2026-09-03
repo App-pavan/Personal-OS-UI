@@ -1,19 +1,17 @@
 import type { TaskSummary } from "@/lib/api/types";
-import { isTaskArchived, isTaskCompleted } from "./task-lifecycle";
 import {
   addLocalDays,
   compareDateKeys,
   dateFromLocalKey,
-  dueDateKey,
-  isDueToday,
-  isOverdue,
-  isUpcoming,
   localDateKey,
-  sortTasksInTimelineSection,
   startOfLocalDay,
 } from "./task-dates";
+import { isActiveIncomplete } from "./task-lifecycle";
 
-export type TimelineFilter = "all" | "today" | "upcoming" | "overdue" | "archived";
+export type TaskWorkspaceFilter = "all" | "active" | "completed" | "archived";
+
+/** @deprecated Use TaskWorkspaceFilter */
+export type TimelineFilter = TaskWorkspaceFilter;
 
 export type DateSection = {
   key: string;
@@ -21,169 +19,146 @@ export type DateSection = {
   headline: string;
   subline: string;
   isToday: boolean;
+  /** @deprecated Overdue sections removed; always false */
   isOverdueSection: boolean;
   tasks: TaskSummary[];
 };
 
-export type TimelineSummary = {
-  today: number;
-  overdue: number;
-  upcoming: number;
-  pending: number;
+export type WorkspaceSummary = {
+  ongoing: number;
+  completed: number;
+  notCompleted: number;
+  archived: number;
 };
-
-const OPEN = (task: TaskSummary) =>
-  !isTaskCompleted(task) && !isTaskArchived(task);
 
 export {
   defaultDueForDate,
   formatTaskTime,
   isDueToday,
-  isOverdue,
-  isUpcoming,
   startOfLocalDay as startOfDay,
   addLocalDays as addDays,
   localDateKey as dateKey,
 } from "./task-dates";
 
-function sectionLabels(key: string, now: Date): { headline: string; subline: string; isToday: boolean } {
+function creationDateLabels(key: string, now: Date): { headline: string; subline: string; isToday: boolean } {
   const todayKey = localDateKey(now);
   const date = dateFromLocalKey(key);
-  const subline = date
-    .toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
-    .toUpperCase();
+  const formatted = date.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
   if (key === todayKey) {
-    return { headline: "TODAY", subline, isToday: true };
-  }
-
-  const tomorrowKey = localDateKey(addLocalDays(startOfLocalDay(now), 1));
-  if (key === tomorrowKey) {
-    return { headline: "TOMORROW", subline, isToday: false };
+    return {
+      headline: "TODAY",
+      subline: formatted.toUpperCase(),
+      isToday: true,
+    };
   }
 
   return {
-    headline: date.toLocaleDateString([], { month: "short", day: "numeric" }).toUpperCase(),
-    subline,
+    headline: formatted.toUpperCase(),
+    subline: "",
     isToday: false,
   };
 }
 
-function makeDateSection(
-  key: string,
-  tasks: TaskSummary[],
-  now: Date,
-  isOverdueSection: boolean,
-): DateSection {
-  const labels = sectionLabels(key, now);
-  return {
-    key,
-    date: dateFromLocalKey(key),
-    ...labels,
-    isOverdueSection,
-    tasks: [...tasks].sort(sortTasksInTimelineSection),
-  };
+function sortByCreatedDesc(a: TaskSummary, b: TaskSummary): number {
+  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 }
 
-/** Group tasks onto calendar dates for the execution timeline. */
-export function buildDateTimeline(
-  tasks: TaskSummary[],
-  filter: TimelineFilter,
-  now = new Date(),
-): DateSection[] {
-  const todayKey = localDateKey(now);
-  const scheduled = new Map<string, TaskSummary[]>();
-  const unscheduled: TaskSummary[] = [];
-
-  const overdueTasks = tasks
-    .filter((t) => isOverdue(t, now) && OPEN(t))
-    .sort(sortTasksInTimelineSection);
+/** Group ongoing tasks by creation date (newest groups first). */
+export function buildCreationDateGroups(tasks: TaskSummary[], now = new Date()): DateSection[] {
+  const grouped = new Map<string, TaskSummary[]>();
 
   for (const task of tasks) {
-    if (filter === "today" && !isDueToday(task, now) && !isOverdue(task, now)) continue;
-    if (filter === "upcoming" && !isUpcoming(task, now)) continue;
-    if (filter === "overdue") continue;
-
-    if (isOverdue(task, now) && OPEN(task)) continue;
-
-    if (!task.dueAt) {
-      if (filter === "all" || filter === "today") unscheduled.push(task);
-      continue;
-    }
-
-    const key = dueDateKey(task.dueAt);
-    const bucket = scheduled.get(key) ?? [];
+    if (!isActiveIncomplete(task)) continue;
+    const key = localDateKey(new Date(task.createdAt));
+    const bucket = grouped.get(key) ?? [];
     bucket.push(task);
-    scheduled.set(key, bucket);
+    grouped.set(key, bucket);
   }
 
-  if (filter === "overdue") {
-    if (!overdueTasks.length) return [];
-    return [
-      {
-        key: "overdue",
-        date: null,
-        headline: "OVERDUE",
-        subline: `${overdueTasks.length} TASK${overdueTasks.length === 1 ? "" : "S"}`,
-        isToday: false,
-        isOverdueSection: true,
-        tasks: overdueTasks,
-      },
-    ];
-  }
-
-  const sections: DateSection[] = [];
-
-  if ((filter === "all" || filter === "today") && overdueTasks.length) {
-    sections.push({
-      key: "overdue",
-      date: null,
-      headline: "OVERDUE",
-      subline: `${overdueTasks.length} TASK${overdueTasks.length === 1 ? "" : "S"}`,
-      isToday: false,
-      isOverdueSection: true,
-      tasks: overdueTasks,
+  return [...grouped.entries()]
+    .sort(([a], [b]) => compareDateKeys(b, a))
+    .map(([key, sectionTasks]) => {
+      const labels = creationDateLabels(key, now);
+      return {
+        key,
+        date: dateFromLocalKey(key),
+        ...labels,
+        isOverdueSection: false,
+        tasks: [...sectionTasks].sort(sortByCreatedDesc),
+      };
     });
-  }
-
-  const datedKeys = [...scheduled.keys()].sort(compareDateKeys);
-  const todayKeys = datedKeys.filter((k) => k === todayKey);
-  const futureKeys = datedKeys.filter((k) => k > todayKey);
-  const pastKeys = datedKeys.filter((k) => k < todayKey);
-
-  for (const key of todayKeys) {
-    sections.push(makeDateSection(key, scheduled.get(key) ?? [], now, false));
-  }
-  for (const key of futureKeys) {
-    sections.push(makeDateSection(key, scheduled.get(key) ?? [], now, false));
-  }
-  for (const key of [...pastKeys].reverse()) {
-    sections.push(makeDateSection(key, scheduled.get(key) ?? [], now, true));
-  }
-
-  if (unscheduled.length && filter !== "upcoming") {
-    sections.push({
-      key: "unscheduled",
-      date: null,
-      headline: "UNSCHEDULED",
-      subline: "NO DATE",
-      isToday: false,
-      isOverdueSection: false,
-      tasks: unscheduled.sort(sortTasksInTimelineSection),
-    });
-  }
-
-  return sections;
 }
 
-export function summarizeTasks(tasks: TaskSummary[], now = new Date()): TimelineSummary {
-  const open = tasks.filter(OPEN);
-  return {
-    today: open.filter((t) => isDueToday(t, now)).length,
-    overdue: open.filter((t) => isOverdue(t, now)).length,
-    upcoming: open.filter((t) => isUpcoming(t, now)).length,
-    pending: open.filter((t) => t.status === "inbox" || t.status === "ready").length,
-  };
+/** Group any task list by creation date (for completed/archived filter views). */
+export function buildCreationDateGroupsForTasks(
+  tasks: TaskSummary[],
+  now = new Date(),
+): DateSection[] {
+  const grouped = new Map<string, TaskSummary[]>();
+
+  for (const task of tasks) {
+    const key = localDateKey(new Date(task.createdAt));
+    const bucket = grouped.get(key) ?? [];
+    bucket.push(task);
+    grouped.set(key, bucket);
+  }
+
+  return [...grouped.entries()]
+    .sort(([a], [b]) => compareDateKeys(b, a))
+    .map(([key, sectionTasks]) => {
+      const labels = creationDateLabels(key, now);
+      return {
+        key,
+        date: dateFromLocalKey(key),
+        ...labels,
+        isOverdueSection: false,
+        tasks: [...sectionTasks].sort(sortByCreatedDesc),
+      };
+    });
+}
+
+/** @deprecated Use buildCreationDateGroups */
+export function buildDateTimeline(
+  tasks: TaskSummary[],
+  _filter: TaskWorkspaceFilter,
+  now = new Date(),
+): DateSection[] {
+  return buildCreationDateGroups(tasks, now);
+}
+
+export function summarizeWorkspace(tasks: TaskSummary[]): WorkspaceSummary {
+  let ongoing = 0;
+  let completed = 0;
+  let notCompleted = 0;
+  let archived = 0;
+
+  for (const task of tasks) {
+    if (task.archived || task.status === "archived") {
+      archived++;
+      continue;
+    }
+    if (task.status === "completed" || task.completedAt) {
+      completed++;
+      continue;
+    }
+    if (task.status === "cancelled" || task.notCompletedAt) {
+      notCompleted++;
+      continue;
+    }
+    ongoing++;
+  }
+
+  return { ongoing, completed, notCompleted, archived };
+}
+
+/** @deprecated Use summarizeWorkspace */
+export function summarizeTasks(tasks: TaskSummary[]): WorkspaceSummary {
+  return summarizeWorkspace(tasks);
 }
 
 export function endOfTodayIso() {

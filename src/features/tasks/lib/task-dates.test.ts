@@ -11,7 +11,8 @@ import {
   localDateKey,
   startOfLocalDay,
 } from "./task-dates";
-import { buildDateTimeline } from "./task-timeline";
+import { buildCreationDateGroups } from "./task-timeline";
+import { localDateKey, startOfLocalDay } from "./task-dates";
 
 const now = new Date(2026, 7, 18, 12, 0, 0); // Aug 18 2026 local
 
@@ -132,41 +133,28 @@ describe("time display", () => {
   });
 });
 
-describe("buildDateTimeline ordering", () => {
-  it("orders overdue → today → future → past → unscheduled", () => {
+describe("buildCreationDateGroups ordering", () => {
+  it("orders creation date groups newest first", () => {
+    const todayKey = localDateKey(now);
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = localDateKey(yesterday);
+
     const tasks = [
       task({
-        id: "past-done",
-        title: "Past done",
-        dueAt: startOfLocalDay(new Date(2026, 7, 16)).toISOString(),
-        status: "completed",
-      }),
-      task({
-        id: "overdue",
-        title: "Overdue",
-        dueAt: startOfLocalDay(new Date(2026, 7, 17)).toISOString(),
-        status: "inbox",
+        id: "yesterday",
+        title: "Yesterday task",
+        createdAt: `${yesterdayKey}T10:00:00.000Z`,
       }),
       task({
         id: "today",
         title: "Today task",
-        dueAt: startOfLocalDay(now).toISOString(),
-        status: "inbox",
+        createdAt: `${todayKey}T10:00:00.000Z`,
       }),
-      task({
-        id: "future",
-        title: "Future",
-        dueAt: startOfLocalDay(new Date(2026, 7, 20)).toISOString(),
-        status: "inbox",
-      }),
-      task({ id: "none", title: "No date", dueAt: undefined }),
     ];
 
-    const sections = buildDateTimeline(tasks, "all", now);
-    expect(sections[0]?.key).toBe("overdue");
-    expect(sections[1]?.key).toBe("2026-08-18");
-    expect(sections[2]?.key).toBe("2026-08-20");
-    expect(sections.at(-2)?.key).toBe("2026-08-16");
-    expect(sections.at(-1)?.key).toBe("unscheduled");
+    const sections = buildCreationDateGroups(tasks, now);
+    expect(sections[0]?.key).toBe(todayKey);
+    expect(sections[1]?.key).toBe(yesterdayKey);
   });
 });

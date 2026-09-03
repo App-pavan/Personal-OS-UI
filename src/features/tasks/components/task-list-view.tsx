@@ -1,19 +1,22 @@
 import type { TaskSummary } from "@/lib/api/types";
-import { buildDateTimeline, type TimelineFilter } from "../lib/task-timeline";
+import {
+  buildCreationDateGroups,
+  buildCreationDateGroupsForTasks,
+  type TaskWorkspaceFilter,
+} from "../lib/task-timeline";
 import { TaskContent } from "./task-content";
 
 interface TaskListViewProps {
   tasks: TaskSummary[];
-  filter: TimelineFilter;
+  filter: TaskWorkspaceFilter;
   selectedId?: string | null;
   onOpen: (id: string) => void;
   onToggleComplete: (task: TaskSummary) => void;
   onToggleFavorite?: (task: TaskSummary) => void;
+  onMarkNotCompleted?: (task: TaskSummary) => void;
   onArchive?: (task: TaskSummary) => void;
   onUnarchive?: (task: TaskSummary) => void;
-  onDelete?: (task: TaskSummary) => void;
   canUpdate?: boolean;
-  canDelete?: boolean;
 }
 
 export function TaskListView({
@@ -23,35 +26,23 @@ export function TaskListView({
   onOpen,
   onToggleComplete,
   onToggleFavorite,
+  onMarkNotCompleted,
   onArchive,
   onUnarchive,
-  onDelete,
   canUpdate,
-  canDelete,
 }: TaskListViewProps) {
   if (filter === "archived") {
     return (
       <TaskContent
-        sections={[
-          {
-            key: "archived",
-            date: null,
-            headline: "ARCHIVED",
-            subline: `${tasks.length} TASK${tasks.length === 1 ? "" : "S"}`,
-            isToday: false,
-            isOverdueSection: false,
-            tasks,
-          },
-        ]}
+        sections={buildCreationDateGroupsForTasks(tasks)}
         selectedId={selectedId ?? null}
         onOpen={onOpen}
         onToggleComplete={onToggleComplete}
         onToggleFavorite={onToggleFavorite}
+        onMarkNotCompleted={onMarkNotCompleted}
         onArchive={onArchive}
         onUnarchive={onUnarchive}
-        onDelete={onDelete}
         canUpdate={canUpdate}
-        canDelete={canDelete}
         archivedView
         emptyTitle="No archived tasks"
         emptySubtitle="Archived tasks will appear here."
@@ -59,7 +50,24 @@ export function TaskListView({
     );
   }
 
-  const sections = buildDateTimeline(tasks, filter);
+  if (filter === "completed") {
+    return (
+      <TaskContent
+        sections={buildCreationDateGroupsForTasks(tasks)}
+        selectedId={selectedId ?? null}
+        onOpen={onOpen}
+        onToggleComplete={onToggleComplete}
+        onToggleFavorite={onToggleFavorite}
+        onArchive={onArchive}
+        canUpdate={canUpdate}
+        completedView
+        emptyTitle="No completed tasks"
+        emptySubtitle="Completed tasks appear in the execution timeline."
+      />
+    );
+  }
+
+  const sections = buildCreationDateGroups(tasks);
 
   return (
     <TaskContent
@@ -68,12 +76,11 @@ export function TaskListView({
       onOpen={onOpen}
       onToggleComplete={onToggleComplete}
       onToggleFavorite={onToggleFavorite}
+      onMarkNotCompleted={onMarkNotCompleted}
       onArchive={onArchive}
       onUnarchive={onUnarchive}
-      onDelete={onDelete}
       canUpdate={canUpdate}
-      canDelete={canDelete}
-      emptyTitle={filter === "today" ? "No tasks for today" : "No active tasks"}
+      emptyTitle="No active tasks"
       emptySubtitle="You're all caught up."
     />
   );

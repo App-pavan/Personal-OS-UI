@@ -1,19 +1,26 @@
 import type { TaskSummary } from "@/lib/api/types";
 import { localDateKey, startOfLocalDay } from "./task-dates";
 import {
+  getNotCompletedTimestamp,
+  getTimelineTerminalState,
   isTaskArchived,
   isTaskCompleted,
+  isTaskNotCompleted,
+  type TimelineTerminalState,
 } from "./task-lifecycle";
 
 export type ExecutionHistoryEntry = {
   task: TaskSummary;
-  metaLabel: string;
-  secondaryMeta?: string;
+  createdAt: string;
+  terminalState: TimelineTerminalState;
+  terminalAt: string;
 };
 
 export type ExecutionHistoryGroup = {
   key: string;
   label: string;
+  dateHeadline: string;
+  isToday: boolean;
   entries: ExecutionHistoryEntry[];
 };
 
@@ -24,12 +31,23 @@ export function getCompletionTimestamp(task: TaskSummary): string | null {
   return null;
 }
 
-/** Event timestamp used to group timeline entries by date. */
+/** Terminal event timestamp used to group timeline entries by date. */
 export function getTimelineEventTimestamp(task: TaskSummary): string | null {
-  if (isTaskArchived(task)) {
+  const state = getTimelineTerminalState(task);
+  if (!state) return null;
+
+  if (state === "completed") {
+    return getCompletionTimestamp(task);
+  }
+  if (state === "not_completed") {
+    return getNotCompletedTimestamp(task);
+  }
+  if (state === "archived") {
+    if (isTaskCompleted(task)) return getCompletionTimestamp(task);
+    if (isTaskNotCompleted(task)) return getNotCompletedTimestamp(task);
     return task.archivedAt ?? task.updatedAt ?? null;
   }
-  return getCompletionTimestamp(task);
+  return null;
 }
 
 function groupLabel(key: string, now: Date): string {
@@ -51,47 +69,39 @@ function groupLabel(key: string, now: Date): string {
     .toUpperCase();
 }
 
+function dateHeadline(key: string, now: Date): string {
+  const todayKey = localDateKey(now);
+  const date = new Date(`${key}T12:00:00`);
+  const formatted = date
+    .toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })
+    .toUpperCase();
+  return key === todayKey ? formatted : formatted;
+}
+
 function hasMeaningfulTime(iso: string): boolean {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return false;
   return date.getHours() !== 0 || date.getMinutes() !== 0 || date.getSeconds() !== 0;
 }
 
-function formatTime(iso: string): string | null {
+export function formatTimelineTime(iso: string): string | null {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
   if (!hasMeaningfulTime(iso)) return null;
   return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
-function buildEntryMeta(task: TaskSummary): Pick<ExecutionHistoryEntry, "metaLabel" | "secondaryMeta"> {
-  const completed = isTaskCompleted(task);
-  const archived = isTaskArchived(task);
+function buildEntry(task: TaskSummary): ExecutionHistoryEntry | null {
+  const terminalState = getTimelineTerminalState(task);
+  const terminalAt = getTimelineEventTimestamp(task);
+  if (!terminalState || !terminalAt) return null;
 
-  if (completed && archived) {
-    const completionIso = task.completedAt ?? getCompletionTimestamp(task);
-    const time = completionIso ? formatTime(completionIso) : null;
-    return {
-      metaLabel: time ? `Completed · ${time}` : "Completed",
-      secondaryMeta: "Archived",
-    };
-  }
-
-  if (completed) {
-    const completionIso = task.completedAt ?? getCompletionTimestamp(task);
-    if (!completionIso) return { metaLabel: "Completed" };
-    const time = formatTime(completionIso);
-    return { metaLabel: time ? `Completed · ${time}` : "Completed" };
-  }
-
-  if (archived) {
-    const archiveIso = task.archivedAt;
-    const time = archiveIso ? formatTime(archiveIso) : null;
-    if (time) return { metaLabel: `Archived · ${time}` };
-    return { metaLabel: "Archived · Not completed" };
-  }
-
-  return { metaLabel: "Completed" };
+  return {
+    task,
+    createdAt: task.createdAt,
+    terminalState,
+    terminalAt,
+  };
 }
 
 /** Group timeline-eligible tasks into chronological execution history. */
@@ -99,25 +109,42 @@ export function buildExecutionHistory(
   timelineTasks: TaskSummary[],
   now = new Date(),
 ): ExecutionHistoryGroup[] {
-  const sorted = [...timelineTasks]
-    .map((task) => ({ task, at: getTimelineEventTimestamp(task) }))
-    .filter((entry): entry is { task: TaskSummary; at: string } => Boolean(entry.at))
-    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  const sorted = timelineTasks
+    .map(buildEntry)
+    .filter((entry): entry is ExecutionHistoryEntry => Boolean(entry))
+    .sort((a, b) => new Date(b.terminalAt).getTime() - new Date(a.terminalAt).getTime());
 
   const groups = new Map<string, ExecutionHistoryEntry[]>();
 
-  for (const { task, at } of sorted) {
-    const key = localDateKey(new Date(at));
+  for (const entry of sorted) {
+    const key = localDateKey(new Date(entry.terminalAt));
     const bucket = groups.get(key) ?? [];
-    bucket.push({ task, ...buildEntryMeta(task) });
+    bucket.push(entry);
     groups.set(key, bucket);
   }
+
+  const todayKey = localDateKey(now);
 
   return [...groups.entries()]
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([key, entries]) => ({
       key,
       label: groupLabel(key, now),
-      entries,
+      dateHeadline: dateHeadline(key, now),
+      isToday: key === todayKey,
+      entries: entries.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
     }));
+}
+
+export function terminalStateLabel(state: TimelineTerminalState): string {
+  switch (state) {
+    case "completed":
+      return "Completed";
+    case "not_completed":
+      return "Not completed";
+    case "archived":
+      return "Archived";
+  }
 }

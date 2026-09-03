@@ -60,6 +60,7 @@ export interface TaskService {
   bulk(op: BulkTaskOperation): Promise<void>;
   complete(id: string): Promise<TaskDetail>;
   reopen(id: string): Promise<TaskDetail>;
+  markNotCompleted(id: string): Promise<TaskDetail>;
   archive(id: string): Promise<TaskDetail>;
   restore(id: string): Promise<TaskDetail>;
   duplicate(id: string): Promise<TaskDetail>;
@@ -141,6 +142,8 @@ class ApiTaskService implements TaskService {
   };
   complete = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/complete`)).data);
   reopen = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/reopen`)).data);
+  markNotCompleted = async (id: string) =>
+    this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/cancel`)).data);
   archive = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/archive`)).data);
   restore = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/restore`)).data);
   duplicate = async (id: string) => this.normalizeDetail((await api.post<TaskDetail>(`/tasks/${id}/duplicate`)).data);
