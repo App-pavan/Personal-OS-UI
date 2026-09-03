@@ -1,9 +1,12 @@
 import type { TaskSummary } from "@/lib/api/types";
+import { localDateKey } from "./task-dates";
 import {
   isActiveCompleted,
   isActiveIncomplete,
   isTaskArchived,
   isTaskCompleted,
+  isTaskNotCompleted,
+  isTimelineEligible,
 } from "./task-lifecycle";
 
 export type TaskListNav = "all" | "starred" | `list:${string}`;
@@ -11,25 +14,43 @@ export type TaskListNav = "all" | "starred" | `list:${string}`;
 export const TASK_CUSTOM_LISTS_KEY = "personal-os-tasks-custom-lists";
 export const TASK_VIEW_MODE_KEY = "personal-os-tasks-view-mode";
 
-export { isTaskCompleted, isTaskArchived } from "./task-lifecycle";
+export {
+  isTaskCompleted,
+  isTaskArchived,
+  isTaskNotCompleted,
+  isActiveIncomplete,
+  isTimelineEligible,
+} from "./task-lifecycle";
 
 export function partitionTasks(tasks: TaskSummary[]) {
   const active: TaskSummary[] = [];
   const completed: TaskSummary[] = [];
+  const notCompleted: TaskSummary[] = [];
   const archived: TaskSummary[] = [];
 
   for (const task of tasks) {
     if (isTaskArchived(task)) archived.push(task);
     else if (isTaskCompleted(task)) completed.push(task);
+    else if (isTaskNotCompleted(task)) notCompleted.push(task);
     else active.push(task);
   }
 
-  return { active, completed, archived };
+  return { active, completed, notCompleted, archived };
 }
 
-/** Active incomplete tasks for the main workspace. */
+/** Ongoing tasks for the main workspace. */
 export function filterActiveWorkspace(tasks: TaskSummary[]): TaskSummary[] {
   return tasks.filter(isActiveIncomplete);
+}
+
+/** Completed tasks (not archived) for the Completed filter tab. */
+export function filterCompletedWorkspace(tasks: TaskSummary[]): TaskSummary[] {
+  return tasks.filter(isActiveCompleted);
+}
+
+/** Not-completed terminal tasks. */
+export function filterNotCompletedTasks(tasks: TaskSummary[]): TaskSummary[] {
+  return tasks.filter((t) => isTaskNotCompleted(t) && !isTaskArchived(t));
 }
 
 /** Archived tasks for the archived filter view. */
@@ -39,7 +60,27 @@ export function filterArchivedTasks(tasks: TaskSummary[]): TaskSummary[] {
 
 /** Tasks eligible for the execution timeline. */
 export function filterTimelineTasks(tasks: TaskSummary[]): TaskSummary[] {
-  return tasks.filter((t) => isActiveCompleted(t) || isTaskArchived(t));
+  return tasks.filter(isTimelineEligible);
+}
+
+export type TaskWorkspaceFilter = "all" | "active" | "completed" | "archived";
+
+/** Main workspace list by filter tab. */
+export function filterWorkspaceTasks(
+  tasks: TaskSummary[],
+  filter: TaskWorkspaceFilter,
+): TaskSummary[] {
+  switch (filter) {
+    case "archived":
+      return filterArchivedTasks(tasks);
+    case "completed":
+      return filterCompletedWorkspace(tasks);
+    case "active":
+      return filterActiveWorkspace(tasks);
+    case "all":
+    default:
+      return filterActiveWorkspace(tasks);
+  }
 }
 
 export function filterByListNav(tasks: TaskSummary[], nav: TaskListNav): TaskSummary[] {

@@ -8,13 +8,11 @@ import {
   Copy,
   MoreHorizontal,
   Star,
-  Trash2,
   X,
 } from "lucide-react";
-import { Can } from "@/features/capabilities/can";
 import { TaskTagPicker } from "@/features/tasks/components/task-tag-picker";
-import { formatDueLabel, isOverdue } from "@/features/tasks/lib/task-dates";
-import { isTaskArchived, isTaskCompleted } from "@/features/tasks/lib/task-filters";
+import { formatDueLabel } from "@/features/tasks/lib/task-dates";
+import { isTaskArchived, isTaskCompleted, isTaskNotCompleted } from "@/features/tasks/lib/task-filters";
 import { getVisibleTaskTagId } from "@/features/tasks/lib/task-tags";
 import {
   taskPanelInput,
@@ -23,7 +21,6 @@ import {
 } from "@/features/tasks/lib/tasks-ui";
 import { useTaskTagAssignment, useTaskTagRegistry } from "@/hooks/use-task-tags";
 import type { useTaskMutations } from "@/hooks/use-tasks";
-import { PERM } from "@/lib/permissions";
 import type { TaskDetail, TaskPriority } from "@/lib/api/types";
 import {
   AlertDialog,
@@ -40,7 +37,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -101,9 +97,10 @@ export function TaskDetailPane({
   const baseline = useMemo(() => draftFromTask(task), [task]);
   const isDirty = !draftsEqual(draft, baseline);
   const done = isTaskCompleted(task);
+  const notCompleted = isTaskNotCompleted(task);
   const archived = isTaskArchived(task);
   const due = formatDueLabel(task.dueAt);
-  const overdue = isOverdue(task) && !done;
+  const ongoing = !done && !notCompleted && !archived;
   const visibleTagId = getVisibleTaskTagId(task);
 
   useEffect(() => {
@@ -201,19 +198,15 @@ export function TaskDetailPane({
                       Archive
                     </DropdownMenuItem>
                   )}
-                  <Can permission={PERM.TASKS_DELETE}>
-                    <DropdownMenuSeparator />
+                  {ongoing ? (
                     <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => {
-                        if (!window.confirm("Delete this task?")) return;
-                        m.remove.mutate([task.id], { onSuccess: () => onClose() });
-                      }}
+                      onClick={() =>
+                        m.markNotCompleted.mutate([task.id], { onSuccess: () => onClose() })
+                      }
                     >
-                      <Trash2 className="mr-2 size-4" />
-                      Delete
+                      Mark not completed
                     </DropdownMenuItem>
-                  </Can>
+                  ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
               <button
@@ -242,8 +235,12 @@ export function TaskDetailPane({
 
           <button
             type="button"
-            onClick={() => (done ? m.reopen.mutate([task.id]) : m.complete.mutate([task.id]))}
-            className="mt-5 inline-flex items-center gap-3 rounded-lg px-1 py-2 text-[15px] text-[var(--task-text-secondary)] transition-colors hover:text-[var(--task-text)]"
+            onClick={() => {
+              if (done) m.reopen.mutate([task.id]);
+              else if (ongoing) m.complete.mutate([task.id]);
+            }}
+            disabled={notCompleted}
+            className="mt-5 inline-flex items-center gap-3 rounded-lg px-1 py-2 text-[15px] text-[var(--task-text-secondary)] transition-colors hover:text-[var(--task-text)] disabled:opacity-60"
           >
             <span
               className={cn(
@@ -255,7 +252,7 @@ export function TaskDetailPane({
             >
               {done ? <Check className="size-3.5" /> : null}
             </span>
-            {done ? "Completed" : "Not completed"}
+            {done ? "Completed" : notCompleted ? "Not completed" : "Mark complete"}
           </button>
         </header>
 
@@ -279,15 +276,7 @@ export function TaskDetailPane({
                 </button>
               </div>
               {due ? (
-                <p
-                  className={cn(
-                    "mt-2 text-[13px]",
-                    overdue ? "font-medium text-[var(--task-overdue)]" : "text-[var(--task-text-muted)]",
-                  )}
-                >
-                  {overdue ? "Overdue · " : ""}
-                  {due}
-                </p>
+                <p className="mt-2 text-[13px] text-[var(--task-text-muted)]">{due}</p>
               ) : null}
             </PanelField>
 

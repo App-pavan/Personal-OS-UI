@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Check, Flag, Loader2, MoreHorizontal, Star } from "lucide-react";
 import { TaskTagPicker } from "@/features/tasks/components/task-tag-picker";
-import { formatDueLabel, isOverdue } from "@/features/tasks/lib/task-dates";
-import { isTaskArchived, isTaskCompleted } from "@/features/tasks/lib/task-filters";
+import { formatDueLabel } from "@/features/tasks/lib/task-dates";
+import { isTaskArchived, isTaskCompleted, isTaskNotCompleted } from "@/features/tasks/lib/task-filters";
 import { getVisibleTaskTagId } from "@/features/tasks/lib/task-tags";
 import { taskRowGrid } from "@/features/tasks/lib/tasks-ui";
 import { useTaskTagAssignment, useTaskTagRegistry } from "@/hooks/use-task-tags";
@@ -11,7 +11,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -35,32 +34,32 @@ export function TaskRow({
   onOpen,
   onToggleComplete,
   onToggleFavorite,
+  onMarkNotCompleted,
   onArchive,
   onUnarchive,
-  onDelete,
   canUpdate,
-  canDelete,
   archivedView,
+  completedView,
 }: {
   task: TaskSummary;
   selected?: boolean;
   onOpen: () => void;
   onToggleComplete: () => void;
   onToggleFavorite?: () => void;
+  onMarkNotCompleted?: () => void;
   onArchive?: () => void;
   onUnarchive?: () => void;
-  onDelete?: () => void;
   canUpdate?: boolean;
-  canDelete?: boolean;
   compact?: boolean;
   archivedView?: boolean;
+  completedView?: boolean;
 }) {
   const [completing, setCompleting] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const done = isTaskCompleted(task);
+  const notCompleted = isTaskNotCompleted(task);
   const archived = isTaskArchived(task);
   const inProgress = task.status === "in_progress";
-  const overdue = isOverdue(task) && !done;
   const due = formatDueLabel(task.dueAt);
   const tags = useTaskTagRegistry();
   const { assignTag, createAndAssign } = useTaskTagAssignment();
@@ -141,11 +140,17 @@ export function TaskRow({
           {archivedView ? (
             archived && done ? (
               "Archived · Completed"
-            ) : archived ? (
+            ) : archived && notCompleted ? (
               "Archived · Not completed"
+            ) : archived ? (
+              "Archived"
             ) : null
-          ) : overdue ? (
-            <span className="font-medium text-[var(--task-overdue)]">Overdue</span>
+          ) : completedView && done ? (
+            due ? (
+              <span>{due}</span>
+            ) : (
+              <span>Completed</span>
+            )
           ) : due ? (
             <span>{due}</span>
           ) : (
@@ -201,7 +206,7 @@ export function TaskRow({
             </button>
           ) : null}
 
-          {(canUpdate || canDelete) ? (
+          {(canUpdate) ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -220,6 +225,9 @@ export function TaskRow({
                     <DropdownMenuItem onClick={onToggleComplete}>Mark as complete</DropdownMenuItem>
                   )
                 ) : null}
+                {canUpdate && onMarkNotCompleted && !done && !notCompleted && !archivedView ? (
+                  <DropdownMenuItem onClick={onMarkNotCompleted}>Mark not completed</DropdownMenuItem>
+                ) : null}
                 {canUpdate && onToggleFavorite && !archivedView ? (
                   <DropdownMenuItem onClick={onToggleFavorite}>
                     {task.favorite ? "Unstar" : "Star"}
@@ -231,14 +239,6 @@ export function TaskRow({
                 ) : null}
                 {canUpdate && !archived && onArchive ? (
                   <DropdownMenuItem onClick={handleArchive}>Archive</DropdownMenuItem>
-                ) : null}
-                {canDelete && onDelete ? (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                      Delete
-                    </DropdownMenuItem>
-                  </>
                 ) : null}
               </DropdownMenuContent>
             </DropdownMenu>

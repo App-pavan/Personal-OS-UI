@@ -1,11 +1,10 @@
-import type { TimelineFilter } from "@/features/tasks/lib/task-timeline";
+import type { TaskWorkspaceFilter } from "@/features/tasks/lib/task-timeline";
 import { taskSegmentItem, taskSegmented } from "@/features/tasks/lib/tasks-ui";
 
-const FILTERS: { key: TimelineFilter; label: string }[] = [
+const FILTERS: { key: TaskWorkspaceFilter; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "today", label: "Today" },
-  { key: "upcoming", label: "Upcoming" },
-  { key: "overdue", label: "Overdue" },
+  { key: "active", label: "Active" },
+  { key: "completed", label: "Completed" },
   { key: "archived", label: "Archived" },
 ];
 
@@ -13,8 +12,8 @@ export function TasksFilterTabs({
   value,
   onChange,
 }: {
-  value: TimelineFilter;
-  onChange: (filter: TimelineFilter) => void;
+  value: TaskWorkspaceFilter;
+  onChange: (filter: TaskWorkspaceFilter) => void;
 }) {
   return (
     <div className={taskSegmented} role="tablist" aria-label="Task filters">

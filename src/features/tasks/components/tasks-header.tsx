@@ -2,9 +2,8 @@ import { MoreHorizontal, Search, X } from "lucide-react";
 import { TaskAppearanceMenu } from "./task-appearance-menu";
 import { TasksFilterTabs } from "./tasks-filter-tabs";
 import { TasksIconButton } from "./tasks-icon-button";
-import { TasksSummaryStats } from "./tasks-summary-stats";
 import { taskEyebrow, taskPageTitle } from "@/features/tasks/lib/tasks-ui";
-import type { TimelineFilter } from "@/features/tasks/lib/task-timeline";
+import type { TaskWorkspaceFilter } from "@/features/tasks/lib/task-timeline";
 import { cn } from "@/lib/utils";
 
 export function TasksHeader({
@@ -12,13 +11,11 @@ export function TasksHeader({
   onSearchChange,
   filter,
   onFilterChange,
-  summary,
 }: {
   searchQuery: string;
   onSearchChange: (q: string) => void;
-  filter: TimelineFilter;
-  onFilterChange: (filter: TimelineFilter) => void;
-  summary: { today: number; overdue: number; upcoming: number };
+  filter: TaskWorkspaceFilter;
+  onFilterChange: (filter: TaskWorkspaceFilter) => void;
 }) {
   return (
     <div className="space-y-8">
@@ -26,11 +23,6 @@ export function TasksHeader({
         <div className="min-w-0">
           <p className={taskEyebrow}>Tasks</p>
           <h1 className={cn(taskPageTitle, "mt-2")}>All tasks</h1>
-          <TasksSummaryStats
-            today={summary.today}
-            overdue={summary.overdue}
-            upcoming={summary.upcoming}
-          />
         </div>
 
         <div className="flex shrink-0 items-center gap-2">

@@ -5,23 +5,32 @@ import { TaskRow } from "./task-row";
 
 function SectionHeader({
   headline,
+  subline,
   count,
-  isOverdue,
+  isToday,
 }: {
   headline: string;
+  subline?: string;
   count: number;
-  isOverdue?: boolean;
+  isToday?: boolean;
 }) {
   return (
-    <header className="mb-4 flex items-center justify-between gap-3">
-      <h3
-        className={cn(
-          "text-sm font-semibold tracking-wide",
-          isOverdue ? "text-[var(--task-overdue)]" : "text-[var(--task-section-header)]",
-        )}
-      >
-        {headline}
-      </h3>
+    <header className="mb-4 flex items-end justify-between gap-3">
+      <div>
+        {isToday ? (
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--task-text-muted)]">
+            Today
+          </p>
+        ) : null}
+        <h3 className="text-sm font-semibold tracking-wide text-[var(--task-section-header)]">
+          {headline}
+        </h3>
+        {subline ? (
+          <p className="mt-0.5 text-[11px] uppercase tracking-wide text-[var(--task-text-muted)]">
+            {subline}
+          </p>
+        ) : null}
+      </div>
       <span className="tabular-nums text-sm text-[var(--task-text-muted)]">{count}</span>
     </header>
   );
@@ -33,42 +42,44 @@ function TaskSectionBlock({
   onOpen,
   onToggleComplete,
   onToggleFavorite,
+  onMarkNotCompleted,
   onArchive,
   onUnarchive,
-  onDelete,
   canUpdate,
-  canDelete,
   archivedView,
+  completedView,
 }: {
   section: DateSection;
   selectedId: string | null;
   onOpen: (id: string) => void;
   onToggleComplete: (task: TaskSummary) => void;
   onToggleFavorite?: (task: TaskSummary) => void;
+  onMarkNotCompleted?: (task: TaskSummary) => void;
   onArchive?: (task: TaskSummary) => void;
   onUnarchive?: (task: TaskSummary) => void;
-  onDelete?: (task: TaskSummary) => void;
   canUpdate?: boolean;
-  canDelete?: boolean;
   archivedView?: boolean;
+  completedView?: boolean;
 }) {
   if (!section.tasks.length) return null;
 
-  const headline = archivedView
-    ? "Archived"
-    : section.isOverdueSection
-    ? "Overdue"
-    : section.isToday
-      ? "Today"
-      : section.key === "unscheduled"
-        ? "No date"
-        : section.headline === "TOMORROW"
-          ? "Tomorrow"
+  const headline =
+    archivedView
+      ? "Archived"
+      : completedView
+        ? section.headline
+        : section.isToday
+          ? section.subline || section.headline
           : section.headline.charAt(0) + section.headline.slice(1).toLowerCase();
 
   return (
     <section className="mb-10">
-      <SectionHeader headline={headline} count={section.tasks.length} isOverdue={section.isOverdueSection} />
+      <SectionHeader
+        headline={headline}
+        subline={section.isToday ? undefined : section.subline || undefined}
+        count={section.tasks.length}
+        isToday={section.isToday && !archivedView && !completedView}
+      />
       <div className="space-y-2">
         {section.tasks.map((task) => (
           <TaskRow
@@ -78,12 +89,12 @@ function TaskSectionBlock({
             onOpen={() => onOpen(task.id)}
             onToggleComplete={() => onToggleComplete(task)}
             onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(task) : undefined}
+            onMarkNotCompleted={onMarkNotCompleted ? () => onMarkNotCompleted(task) : undefined}
             onArchive={onArchive ? () => onArchive(task) : undefined}
             onUnarchive={onUnarchive ? () => onUnarchive(task) : undefined}
-            onDelete={onDelete ? () => onDelete(task) : undefined}
             canUpdate={canUpdate}
-            canDelete={canDelete}
             archivedView={archivedView}
+            completedView={completedView}
           />
         ))}
       </div>
@@ -97,12 +108,12 @@ export function TaskContent({
   onOpen,
   onToggleComplete,
   onToggleFavorite,
+  onMarkNotCompleted,
   onArchive,
   onUnarchive,
-  onDelete,
   canUpdate,
-  canDelete,
   archivedView,
+  completedView,
   emptyTitle = "No tasks",
   emptySubtitle = "You're all caught up.",
 }: {
@@ -111,12 +122,12 @@ export function TaskContent({
   onOpen: (id: string) => void;
   onToggleComplete: (task: TaskSummary) => void;
   onToggleFavorite?: (task: TaskSummary) => void;
+  onMarkNotCompleted?: (task: TaskSummary) => void;
   onArchive?: (task: TaskSummary) => void;
   onUnarchive?: (task: TaskSummary) => void;
-  onDelete?: (task: TaskSummary) => void;
   canUpdate?: boolean;
-  canDelete?: boolean;
   archivedView?: boolean;
+  completedView?: boolean;
   emptyTitle?: string;
   emptySubtitle?: string;
 }) {
@@ -141,12 +152,12 @@ export function TaskContent({
           onOpen={onOpen}
           onToggleComplete={onToggleComplete}
           onToggleFavorite={onToggleFavorite}
+          onMarkNotCompleted={onMarkNotCompleted}
           onArchive={onArchive}
           onUnarchive={onUnarchive}
-          onDelete={onDelete}
           canUpdate={canUpdate}
-          canDelete={canDelete}
           archivedView={archivedView}
+          completedView={completedView}
         />
       ))}
     </div>

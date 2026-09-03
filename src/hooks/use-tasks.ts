@@ -72,6 +72,10 @@ export function useTaskMutations() {
     bulk: wrap((op: BulkTaskOperation) => taskService.bulk(op), "Bulk action could not be applied."),
     complete: wrap((id: string) => taskService.complete(id), "Task could not be completed."),
     reopen: wrap((id: string) => taskService.reopen(id), "Task could not be reopened."),
+    markNotCompleted: wrap(
+      (id: string) => taskService.markNotCompleted(id),
+      "Task could not be marked not completed.",
+    ),
     archive: wrap((id: string) => taskService.archive(id), "Task could not be archived."),
     restore: wrap((id: string) => taskService.restore(id), "Task could not be restored."),
     duplicate: wrap((id: string) => taskService.duplicate(id), "Task could not be duplicated."),
