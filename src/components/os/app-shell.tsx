@@ -8,10 +8,10 @@ import {
   Moon,
   Plus,
   Search,
-  Sparkles,
   Sun,
   X,
 } from "lucide-react";
+import { BrandMark } from "@/components/os/brand-logo";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -48,9 +48,7 @@ function Rail({ onSignOut, navModules }: { onSignOut: () => void; navModules: Mo
       )}
     >
       <Link to="/" className="flex items-center gap-2.5 px-1.5 py-1">
-        <span className="gradient-primary grid size-9 shrink-0 place-items-center angular-clip-sm text-primary-foreground shadow-soft">
-          <Sparkles className="size-4" />
-        </span>
+        <BrandMark className="size-9 shrink-0 angular-clip-sm shadow-soft" />
         <span
           className={cn(
             "min-w-0 transition-opacity duration-300",
@@ -206,9 +204,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (status === "restoring") {
     return (
       <div className="ambient-canvas grid min-h-screen place-items-center">
-        <span className="gradient-primary animate-breathe grid size-11 place-items-center rounded-lg text-primary-foreground">
-          <Sparkles className="size-5" />
-        </span>
+        <BrandMark className="size-11 animate-breathe" />
       </div>
     );
   }
@@ -219,9 +215,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="ambient-canvas grid min-h-screen place-items-center px-4">
         <div className="text-center">
-          <span className="gradient-primary animate-breathe mx-auto grid size-11 place-items-center rounded-lg text-primary-foreground">
-            <Sparkles className="size-5" />
-          </span>
+          <BrandMark className="mx-auto size-11 animate-breathe" />
           <p className="mt-4 text-sm font-medium">Loading Personal OS…</p>
           <p className="mt-1 text-xs text-muted-foreground">Preparing your access</p>
         </div>
@@ -233,9 +227,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="ambient-canvas grid min-h-screen place-items-center px-4">
         <div className="max-w-sm text-center">
-          <span className="gradient-primary mx-auto grid size-11 place-items-center rounded-lg text-primary-foreground">
-            <Sparkles className="size-5" />
-          </span>
+          <BrandMark className="mx-auto size-11" />
           <p className="mt-4 text-sm font-medium">Could not load your access</p>
           <p className="mt-1 text-xs text-muted-foreground">
             We could not reach the permissions service. Check your connection and try again.
@@ -266,9 +258,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Sheet open={mobileNav} onOpenChange={setMobileNav}>
                     <SheetTrigger asChild>
                       <button aria-label="Open navigation" className="flex items-center gap-2">
-                        <span className="gradient-primary grid size-8 place-items-center rounded-lg text-primary-foreground">
-                          <Sparkles className="size-4" />
-                        </span>
+                        <BrandMark className="size-8" />
                       </button>
                     </SheetTrigger>
                     <SheetContent side="left" className="w-[280px] border-hairline bg-sidebar p-4">

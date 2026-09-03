@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Fingerprint, KeyRound, Loader2, Lock, ScanFace } from "lucide-react";
+import { Fingerprint, KeyRound, Loader2, ScanFace } from "lucide-react";
+import { BrandLogo } from "@/components/os/brand-logo";
 import { useAuth } from "@/features/auth/auth-context";
 import { errorMessage } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
@@ -52,17 +53,13 @@ export function SignInScreen() {
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-8 md:px-10">
         <header className="animate-soft-in flex items-center justify-between">
-          <span className="flex items-center gap-2.5">
-            <span className="gradient-primary grid size-8 place-items-center rounded-lg text-primary-foreground">
-              <Lock className="size-3.5" />
-            </span>
-            <span className="text-sm font-semibold tracking-tight">Personal OS</span>
-          </span>
+          <BrandMark className="size-8" />
           <span className="font-mono text-sm text-muted-foreground tabular-nums">{clock}</span>
         </header>
 
         <div className="flex flex-1 flex-col justify-center gap-12 py-16 lg:flex-row lg:items-center lg:gap-20">
           <div className="animate-rise max-w-xl">
+            <BrandLogo variant="full" className="mb-8 max-w-[240px]" />
             <p className="label-eyebrow">Master account</p>
             <h1 className="display-xl mt-4 text-balance">
               Welcome back.
