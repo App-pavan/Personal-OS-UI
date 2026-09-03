@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { BarChart3, LayoutGrid, List, PiggyBank, Tags, Users } from "lucide-react";
+import { useExpenseMonth } from "@/features/expenses/expense-month-context";
 import { expenseTabAccent, navAccentStyle, semanticTextClasses } from "@/lib/design/semantic";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ const tabs = [
 
 export function ExpenseNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { month } = useExpenseMonth();
 
   return (
     <nav className="hud-panel angular-clip p-1.5">
@@ -26,6 +28,7 @@ export function ExpenseNav() {
             <Link
               key={tab.to}
               to={tab.to}
+              search={{ month }}
               className={cn(
                 "group relative flex shrink-0 items-center gap-2 px-3 py-2.5 text-sm transition-all duration-200 angular-clip-sm",
                 active

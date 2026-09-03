@@ -8,7 +8,7 @@ import {
 } from "../lib/budget-utils";
 import { cn } from "@/lib/utils";
 
-export function BudgetMonthSelector({
+export function ExpenseMonthSelector({
   month,
   onChange,
 }: {
@@ -55,3 +55,6 @@ export function BudgetMonthSelector({
     </div>
   );
 }
+
+/** @deprecated Use ExpenseMonthSelector */
+export const BudgetMonthSelector = ExpenseMonthSelector;

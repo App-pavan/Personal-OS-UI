@@ -30,8 +30,6 @@ export function ExpenseFilters({
     query.member,
     query.ownership,
     query.source,
-    query.from,
-    query.to,
     query.minAmount,
     query.maxAmount,
   ].filter(Boolean).length;
@@ -119,28 +117,6 @@ function FilterFields({
         options={[{ value: "", label: "All" }, ...sources.map((s) => ({ value: s, label: s }))]}
         onChange={(v) => onChange(merge({ source: (v as TransactionSource) || undefined }))}
       />
-      <Field label="From">
-        <GlassInput
-          type="datetime-local"
-          value={query.from ? query.from.slice(0, 16) : ""}
-          onChange={(e) =>
-            onChange(
-              merge({ from: e.target.value ? new Date(e.target.value).toISOString() : undefined }),
-            )
-          }
-        />
-      </Field>
-      <Field label="To">
-        <GlassInput
-          type="datetime-local"
-          value={query.to ? query.to.slice(0, 16) : ""}
-          onChange={(e) =>
-            onChange(
-              merge({ to: e.target.value ? new Date(e.target.value).toISOString() : undefined }),
-            )
-          }
-        />
-      </Field>
       <Field label="Min amount (minor)">
         <GlassInput
           type="number"
@@ -162,7 +138,16 @@ function FilterFields({
       {activeFilters(query) > 0 && (
         <GlassButton
           variant="ghost"
-          onClick={() => onChange({ page: 1, limit: query.limit ?? 20 })}
+          onClick={() =>
+            onChange({
+              page: 1,
+              limit: query.limit ?? 20,
+              sort: query.sort,
+              order: query.order,
+              from: query.from,
+              to: query.to,
+            })
+          }
         >
           <X className="size-4" /> Clear filters
         </GlassButton>
@@ -215,8 +200,6 @@ function activeFilters(query: TransactionQuery) {
     query.merchant,
     query.ownership,
     query.source,
-    query.from,
-    query.to,
     query.minAmount,
     query.maxAmount,
   ].filter(Boolean).length;

@@ -1,18 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { InsightPanel, PeriodChip, SectionHeader } from "@/components/future";
+import { InsightPanel, SectionHeader } from "@/components/future";
 import { EmptyState, ErrorState } from "@/components/os/state-views";
 import { CategoryBreakdown } from "@/features/expenses/components/category-breakdown";
 import { RecentTransactions } from "@/features/expenses/components/recent-transactions";
 import { SpendingSummary } from "@/features/expenses/components/spending-summary";
 import { SpendingTrend } from "@/features/expenses/components/spending-trend";
 import { TransactionDetail } from "@/features/expenses/components/transaction-detail";
-import { monthRange, periodLabel, type PeriodKey } from "@/features/expenses/lib/analytics";
+import { GlassButton } from "@/features/expenses/components/glass";
+import { useExpenseMonth } from "@/features/expenses/expense-month-context";
+import { formatMonthLabel } from "@/features/expenses/lib/budget-utils";
 import {
   collapseSmsDuplicates,
   resolveCanonicalTransactionId,
 } from "@/features/expenses/lib/sms-duplicate-matcher";
-import { GlassButton } from "@/features/expenses/components/glass";
 import {
   useCategories,
   useExpenseDashboard,
@@ -31,13 +32,11 @@ export const Route = createFileRoute("/expenses/")({
 });
 
 function ExpenseOverviewPage() {
-  const [period, setPeriod] = useState<PeriodKey>("this_month");
+  const { month } = useExpenseMonth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { from } = monthRange(period);
-  const monthKey = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, "0")}`;
 
-  const dashboard = useExpenseDashboard(monthKey);
-  const cleanupQuery = useSmsDuplicateCleanupPool();
+  const dashboard = useExpenseDashboard(month);
+  const cleanupQuery = useSmsDuplicateCleanupPool(month);
   const categories = useCategories();
   const members = useMembers();
   const detail = useTransaction(selectedId);
@@ -69,34 +68,19 @@ function ExpenseOverviewPage() {
     [dash?.topCategories],
   );
 
+  const loading = dashboard.isLoading || dashboard.isFetching;
+
   return (
     <>
       <SectionHeader
         system="Expense system"
         module="Module 01 / Overview"
         title="Financial command center"
-        subtitle={periodLabel(period)}
+        subtitle={formatMonthLabel(month)}
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex gap-1 border border-hairline/60 p-0.5 angular-clip-sm">
-              {(
-                [
-                  ["this_month", "This month"],
-                  ["last_month", "Last month"],
-                ] as const
-              ).map(([key, label]) => (
-                <PeriodChip
-                  key={key}
-                  label={label}
-                  active={period === key}
-                  onClick={() => setPeriod(key)}
-                />
-              ))}
-            </div>
-            <Link to="/expenses/budgets">
-              <GlassButton variant="ghost">Budget control</GlassButton>
-            </Link>
-          </div>
+          <Link to="/expenses/budgets" search={{ month }}>
+            <GlassButton variant="ghost">Budget control</GlassButton>
+          </Link>
         }
       />
 
@@ -106,7 +90,7 @@ function ExpenseOverviewPage() {
           onRetry={() => dashboard.refetch()}
           title="Couldn't load expense intelligence"
         />
-      ) : dashboard.isLoading ? (
+      ) : loading && !dash ? (
         <div className="mt-6 space-y-4">
           <SpendingSummary
             loading
@@ -125,10 +109,10 @@ function ExpenseOverviewPage() {
         </div>
       ) : !dash || dash.transactionCount === 0 ? (
         <EmptyState
-          title="No financial signals yet"
-          line="Once transactions are recorded, your spending intelligence will appear here."
+          title={`No activity for ${formatMonthLabel(month)}`}
+          line="Once transactions are recorded for this month, your spending intelligence will appear here."
           action={
-            <Link to="/expenses/transactions">
+            <Link to="/expenses/transactions" search={{ month }}>
               <GlassButton>Add transaction</GlassButton>
             </Link>
           }
