@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ExpenseTransaction } from "@/lib/api/expense-types";
+import { monthIsoRange } from "@/features/expenses/lib/month-utils";
 import { pendingSmsClonesToIgnore } from "@/features/expenses/lib/sms-duplicate-matcher";
 import { useTransactionMutations, useTransactions } from "@/hooks/use-expenses";
 
@@ -23,12 +24,15 @@ function rememberIgnoredSessionIds(ids: string[]) {
   sessionStorage.setItem(CLEANUP_SESSION_KEY, JSON.stringify([...existing]));
 }
 
-/** Background fetch wide enough to pair managed/pending SMS clones across pages. */
-export function useSmsDuplicateCleanupPool() {
+/** Background fetch scoped to the selected month for SMS duplicate pairing. */
+export function useSmsDuplicateCleanupPool(month: string) {
+  const { from, to } = monthIsoRange(month);
   return useTransactions({
     limit: 120,
     sort: "occurredAt",
     order: "desc",
+    from,
+    to,
   });
 }
 

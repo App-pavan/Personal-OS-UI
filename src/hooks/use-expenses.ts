@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useCapabilities } from "@/features/capabilities/capabilities-context";
 import { formatMonthLabel } from "@/features/expenses/lib/budget-utils";
+import { monthIsoRange } from "@/features/expenses/lib/month-utils";
 import { expenseApi } from "@/lib/api/expense-service";
 import { errorMessage } from "@/lib/api/errors";
 import { PERM } from "@/lib/permissions";
@@ -48,7 +49,6 @@ export function useTransactions(query: TransactionQuery = {}) {
     queryFn: () => expenseApi.transactions.list(query),
     enabled: isReady && can(PERM.EXPENSES_TRANSACTIONS_VIEW),
     retry: 1,
-    placeholderData: (previous) => previous,
   });
 }
 
@@ -178,12 +178,7 @@ export function useMemberInsights(month: string) {
   });
 }
 
-function monthIsoRange(month: string): { from: string; to: string } {
-  const [y, m] = month.split("-").map(Number);
-  const start = new Date(Date.UTC(y, m - 1, 1));
-  const end = new Date(Date.UTC(y, m, 1));
-  return { from: start.toISOString(), to: end.toISOString() };
-}
+export { monthIsoRange };
 
 export function useBudgetAlerts(month: string) {
   return useQuery({

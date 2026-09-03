@@ -8,6 +8,8 @@ import { ExpenseFilters } from "@/features/expenses/components/expense-filters";
 import { GlassButton, GlassInput } from "@/features/expenses/components/glass";
 import { TransactionCard, TransactionRow } from "@/features/expenses/components/transaction-row";
 import { TransactionDetail } from "@/features/expenses/components/transaction-detail";
+import { useExpenseMonth } from "@/features/expenses/expense-month-context";
+import { formatMonthLabel } from "@/features/expenses/lib/budget-utils";
 import {
   collapseSmsDuplicates,
   resolveCanonicalTransactionId,
@@ -32,12 +34,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 type TransactionsSearch = {
   category?: string;
   merchant?: string;
+  month?: string;
 };
 
 export const Route = createFileRoute("/expenses/transactions")({
   validateSearch: (search: Record<string, unknown>): TransactionsSearch => ({
     category: typeof search.category === "string" ? search.category : undefined,
     merchant: typeof search.merchant === "string" ? search.merchant : undefined,
+    month: typeof search.month === "string" ? search.month : undefined,
   }),
   head: () => ({ meta: [{ title: "Transactions — Personal OS" }] }),
   component: TransactionsPage,
@@ -45,12 +49,15 @@ export const Route = createFileRoute("/expenses/transactions")({
 
 function TransactionsPage() {
   const searchParams = Route.useSearch();
+  const { month, range } = useExpenseMonth();
 
   const [query, setQuery] = useState<TransactionQuery>({
     page: 1,
     limit: 20,
     sort: "occurredAt",
     order: "desc",
+    from: range.from,
+    to: range.to,
     ...(searchParams.category ? { category: searchParams.category } : {}),
     ...(searchParams.merchant ? { merchant: searchParams.merchant } : {}),
   });
@@ -64,10 +71,12 @@ function TransactionsPage() {
     setQuery((q) => ({
       ...q,
       page: 1,
+      from: range.from,
+      to: range.to,
       ...(searchParams.category ? { category: searchParams.category } : {}),
       ...(searchParams.merchant ? { merchant: searchParams.merchant } : {}),
     }));
-  }, [searchParams.category, searchParams.merchant]);
+  }, [range.from, range.to, searchParams.category, searchParams.merchant]);
 
   useEffect(() => {
     setQuery((q) => {
@@ -79,7 +88,7 @@ function TransactionsPage() {
   }, [debouncedSearch]);
 
   const list = useTransactions(query);
-  const cleanupQuery = useSmsDuplicateCleanupPool();
+  const cleanupQuery = useSmsDuplicateCleanupPool(month);
   const categories = useCategories();
   const members = useMembers();
   const detail = useTransaction(selectedId);
@@ -95,6 +104,7 @@ function TransactionsPage() {
   );
   const meta = list.data?.meta;
   const totalPages = meta?.totalPages ?? 1;
+  const loading = list.isLoading || list.isFetching;
 
   const openEditor = (id: string, step?: ManageStep) => {
     const canonicalId = resolveCanonicalTransactionId(id, cleanupPool);
@@ -112,7 +122,7 @@ function TransactionsPage() {
         system="Expense system"
         module="Module 02 / Transactions"
         title="Transaction command center"
-        subtitle="Everything you spend, captured in one place."
+        subtitle={formatMonthLabel(month)}
         actions={
           <GlassButton onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" /> Add transaction
@@ -134,15 +144,15 @@ function TransactionsPage() {
 
       {list.isError ? (
         <ErrorState error={list.error} onRetry={() => list.refetch()} />
-      ) : list.isLoading && !list.data ? (
+      ) : loading && !list.data ? (
         <RowsSkeleton rows={8} />
       ) : items.length === 0 ? (
         <EmptyState
-          title="No transactions found"
+          title={`No transactions for ${formatMonthLabel(month)}`}
           line={
             debouncedSearch
               ? "Try a different search or clear filters."
-              : "Add your first expense to get started."
+              : "Add your first expense for this month to get started."
           }
           action={
             <GlassButton onClick={() => setCreateOpen(true)}>

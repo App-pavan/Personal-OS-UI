@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { InsightPanel, PeriodChip, SectionHeader } from "@/components/future";
+import { useMemo } from "react";
+import { InsightPanel, SectionHeader } from "@/components/future";
 import type { SemanticTone } from "@/lib/design/semantic";
 import { navAccentStyle, semanticTextClasses } from "@/lib/design/semantic";
 import { EmptyState, ErrorState } from "@/components/os/state-views";
@@ -16,11 +16,8 @@ import {
   WeeklyPatternChart,
 } from "@/features/expenses/components/insight-charts";
 import { GlassCard } from "@/features/expenses/components/glass";
-import {
-  currentMonthKey,
-  formatMonthLabel,
-  shiftMonth,
-} from "@/features/expenses/lib/budget-utils";
+import { useExpenseMonth } from "@/features/expenses/expense-month-context";
+import { formatMonthLabel } from "@/features/expenses/lib/budget-utils";
 import { collapseSmsDuplicates } from "@/features/expenses/lib/sms-duplicate-matcher";
 import { enrichMemberAnalytics } from "@/features/expenses/lib/insights-utils";
 import { transactionDisplayName } from "@/features/expenses/lib/labels";
@@ -45,17 +42,21 @@ export const Route = createFileRoute("/expenses/insights")({
 });
 
 function InsightsPage() {
-  const [month, setMonth] = useState(currentMonthKey());
+  const { month } = useExpenseMonth();
 
   const dashboard = useExpenseDashboard(month);
-  const cleanupQuery = useSmsDuplicateCleanupPool();
+  const cleanupQuery = useSmsDuplicateCleanupPool(month);
   const monthly = useMonthlyInsights(month);
   const categories = useCategoryInsights(month);
   const merchants = useMerchantInsights(month);
   const members = useMemberInsights(month);
   const memberDirectory = useMembers();
 
-  const loading = dashboard.isLoading || monthly.isLoading || categories.isLoading;
+  const loading =
+    dashboard.isLoading ||
+    dashboard.isFetching ||
+    monthly.isLoading ||
+    categories.isLoading;
 
   const breakdownItems = useMemo(
     () =>
@@ -99,23 +100,9 @@ function InsightsPage() {
         module="Module 04 / Intelligence"
         title="Spending intelligence"
         subtitle={formatMonthLabel(month)}
-        actions={
-          <div className="flex gap-1 border border-hairline/60 p-0.5 angular-clip-sm">
-            <PeriodChip
-              label="This month"
-              active={month === currentMonthKey()}
-              onClick={() => setMonth(currentMonthKey())}
-            />
-            <PeriodChip
-              label="Last month"
-              active={month === shiftMonth(currentMonthKey(), -1)}
-              onClick={() => setMonth(shiftMonth(currentMonthKey(), -1))}
-            />
-          </div>
-        }
       />
 
-      {loading ? (
+      {loading && !dash ? (
         <div className="glass-panel h-48 animate-pulse rounded-2xl bg-muted/30" />
       ) : dashboard.isError ? (
         <ErrorState
@@ -125,8 +112,8 @@ function InsightsPage() {
         />
       ) : !dash ? (
         <EmptyState
-          title="No insights yet"
-          line="Once you track expenses, your spending picture will appear here."
+          title={`No insights for ${formatMonthLabel(month)}`}
+          line="Once you track expenses for this month, your spending picture will appear here."
         />
       ) : (
         <div className="mt-6 space-y-8 animate-hud-in">
@@ -257,7 +244,7 @@ function InsightsPage() {
                               <td className="py-2.5">
                                 <Link
                                   to="/expenses/transactions"
-                                  search={{ category: c.categoryId }}
+                                  search={{ category: c.categoryId, month }}
                                   className="hover:text-primary"
                                 >
                                   {c.categoryName}

@@ -5,15 +5,14 @@ import { SectionHeader } from "@/components/future";
 import { ErrorState } from "@/components/os/state-views";
 import { BudgetEditorModal } from "@/features/expenses/components/budget-editor-modal";
 import { BudgetEmptyState } from "@/features/expenses/components/budget-empty-state";
-import { BudgetMonthSelector } from "@/features/expenses/components/budget-month-selector";
 import { BudgetProgressBar } from "@/features/expenses/components/budget-progress-bar";
 import { CategoryBudgetCard } from "@/features/expenses/components/category-budget-card";
 import { GlassBadge, GlassButton, GlassCard } from "@/features/expenses/components/glass";
+import { useExpenseMonth } from "@/features/expenses/expense-month-context";
 import {
   budgetBadgeTone,
   budgetHealthLabel,
   budgetStatusTone,
-  currentMonthKey,
   formatMonthLabel,
   isMonthEditable,
 } from "@/features/expenses/lib/budget-utils";
@@ -32,7 +31,7 @@ export const Route = createFileRoute("/expenses/budgets")({
 });
 
 function BudgetsPage() {
-  const [month, setMonth] = useState(currentMonthKey());
+  const { month } = useExpenseMonth();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<"create" | "edit">("create");
 
@@ -119,7 +118,7 @@ function BudgetsPage() {
     setEditorOpen(false);
   };
 
-  const loading = budgets.isLoading || (budget && summary.isLoading);
+  const loading = budgets.isLoading || (budget && (summary.isLoading || summary.isFetching));
   const currency = summary.data?.budget.currency ?? budget?.currency ?? "INR";
 
   return (
@@ -129,7 +128,6 @@ function BudgetsPage() {
         module="Module 03 / Budget control"
         title="Budget control center"
         subtitle={`Plan and track spending for ${formatMonthLabel(month)}`}
-        actions={<BudgetMonthSelector month={month} onChange={setMonth} />}
       />
 
       {budgets.isError ? (
