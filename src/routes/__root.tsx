@@ -10,6 +10,11 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import {
+  clearChunkReloadGuard,
+  isChunkLoadError,
+  reloadForStaleChunk,
+} from "@/lib/client-recovery";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/components/os/theme-provider";
 import { UniversalEditorProvider } from "@/components/editor/create-surface";
@@ -44,16 +49,21 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const chunkError = isChunkLoadError(error);
+
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+    if (chunkError) reloadForStaleChunk();
+  }, [error, chunkError]);
 
   return (
     <div className="ambient-canvas flex min-h-screen items-center justify-center px-4">
       <div className="surface-raised max-w-md p-10 text-center">
         <h1 className="text-xl font-semibold tracking-tight">This screen didn't load</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong. Try again or head back to your dashboard.
+          {chunkError
+            ? "A newer version of Personal OS is available. Reloading once to pick up the latest files…"
+            : "Something went wrong on this screen. You can try again without leaving your current page."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -65,12 +75,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           >
             Try again
           </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-2xl border border-hairline px-5 py-2.5 text-sm font-semibold"
-          >
-            Go home
-          </a>
+          {chunkError ? (
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center justify-center rounded-2xl border border-hairline px-5 py-2.5 text-sm font-semibold"
+            >
+              Reload page
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -130,6 +143,10 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    clearChunkReloadGuard();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

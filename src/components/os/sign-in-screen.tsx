@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Fingerprint, KeyRound, Loader2, ScanFace } from "lucide-react";
-import { BrandLogo } from "@/components/os/brand-logo";
+import { BrandLogo, BrandMark } from "@/components/os/brand-logo";
 import { useAuth } from "@/features/auth/auth-context";
 import { errorMessage } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
