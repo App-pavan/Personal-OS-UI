@@ -144,10 +144,13 @@ export function useBudgetMutations() {
   };
 }
 
-export function useMonthlyInsights(month: string) {
+export function useMonthlyInsights(month: string, options: { enabled?: boolean } = {}) {
+  const { can, isReady } = useCapabilities();
+  const enabled = (options.enabled ?? true) && isReady && can(PERM.EXPENSES_TRANSACTIONS_VIEW);
   return useQuery({
     queryKey: expenseKeys.monthlyInsights(month),
     queryFn: () => expenseApi.insights.monthly(month),
+    enabled,
     retry: 1,
   });
 }
