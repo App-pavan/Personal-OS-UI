@@ -15,6 +15,7 @@ import { Route as ChecklistsRouteImport } from './routes/checklists'
 import { Route as ExpensesRouteRouteImport } from './routes/expenses/route'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as VehiclesRouteRouteImport } from './routes/vehicles/route'
 import { Route as DevicesIndexRouteImport } from './routes/devices/index'
 import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
 import { Route as ExpensesBudgetsRouteImport } from './routes/expenses/budgets'
@@ -25,11 +26,18 @@ import { Route as ExpensesTransactionsRouteImport } from './routes/expenses/tran
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsAccessRouteRouteImport } from './routes/settings/access/route'
 import { Route as SystemActivityRouteImport } from './routes/system/activity'
+import { Route as VehiclesIndexRouteImport } from './routes/vehicles/index'
+import { Route as VehiclesVehicleIdRouteRouteImport } from './routes/vehicles/$vehicleId/route'
 import { Route as WealthIndexRouteImport } from './routes/wealth/index'
 import { Route as SettingsAccessIndexRouteImport } from './routes/settings/access/index'
 import { Route as SettingsAccessPermissionsRouteImport } from './routes/settings/access/permissions'
 import { Route as SettingsAccessRolesRouteImport } from './routes/settings/access/roles'
 import { Route as SettingsAccessUsersRouteImport } from './routes/settings/access/users'
+import { Route as VehiclesVehicleIdIndexRouteImport } from './routes/vehicles/$vehicleId/index'
+import { Route as VehiclesVehicleIdDocumentsRouteImport } from './routes/vehicles/$vehicleId/documents'
+import { Route as VehiclesVehicleIdExpensesRouteImport } from './routes/vehicles/$vehicleId/expenses'
+import { Route as VehiclesVehicleIdFuelRouteImport } from './routes/vehicles/$vehicleId/fuel'
+import { Route as VehiclesVehicleIdServiceRouteImport } from './routes/vehicles/$vehicleId/service'
 import { Route as WealthOauthCallbackRouteImport } from './routes/wealth/oauth/callback'
 import { Route as SettingsAccessRolesIndexRouteImport } from './routes/settings/access/roles.index'
 import { Route as SettingsAccessRolesRoleKeyRouteImport } from './routes/settings/access/roles.$roleKey'
@@ -64,6 +72,11 @@ const SettingsRouteRoute = SettingsRouteRouteImport.update({
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VehiclesRouteRoute = VehiclesRouteRouteImport.update({
+  id: '/vehicles',
+  path: '/vehicles',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevicesIndexRoute = DevicesIndexRouteImport.update({
@@ -116,6 +129,16 @@ const SystemActivityRoute = SystemActivityRouteImport.update({
   path: '/system/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VehiclesIndexRoute = VehiclesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => VehiclesRouteRoute,
+} as any)
+const VehiclesVehicleIdRouteRoute = VehiclesVehicleIdRouteRouteImport.update({
+  id: '/$vehicleId',
+  path: '/$vehicleId',
+  getParentRoute: () => VehiclesRouteRoute,
+} as any)
 const WealthIndexRoute = WealthIndexRouteImport.update({
   id: '/wealth/',
   path: '/wealth/',
@@ -142,6 +165,34 @@ const SettingsAccessUsersRoute = SettingsAccessUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => SettingsAccessRouteRoute,
 } as any)
+const VehiclesVehicleIdIndexRoute = VehiclesVehicleIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => VehiclesVehicleIdRouteRoute,
+} as any)
+const VehiclesVehicleIdDocumentsRoute =
+  VehiclesVehicleIdDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => VehiclesVehicleIdRouteRoute,
+  } as any)
+const VehiclesVehicleIdExpensesRoute =
+  VehiclesVehicleIdExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => VehiclesVehicleIdRouteRoute,
+  } as any)
+const VehiclesVehicleIdFuelRoute = VehiclesVehicleIdFuelRouteImport.update({
+  id: '/fuel',
+  path: '/fuel',
+  getParentRoute: () => VehiclesVehicleIdRouteRoute,
+} as any)
+const VehiclesVehicleIdServiceRoute =
+  VehiclesVehicleIdServiceRouteImport.update({
+    id: '/service',
+    path: '/service',
+    getParentRoute: () => VehiclesVehicleIdRouteRoute,
+  } as any)
 const WealthOauthCallbackRoute = WealthOauthCallbackRouteImport.update({
   id: '/wealth/oauth/callback',
   path: '/wealth/oauth/callback',
@@ -175,10 +226,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/expenses': typeof ExpensesRouteRouteWithChildren
   '/settings': typeof SettingsRouteRouteWithChildren
+  '/vehicles': typeof VehiclesRouteRouteWithChildren
   '/access-restricted': typeof AccessRestrictedRoute
   '/checklists': typeof ChecklistsRoute
   '/tasks': typeof TasksRoute
   '/settings/access': typeof SettingsAccessRouteRouteWithChildren
+  '/vehicles/$vehicleId': typeof VehiclesVehicleIdRouteRouteWithChildren
   '/expenses/budgets': typeof ExpensesBudgetsRoute
   '/expenses/categories': typeof ExpensesCategoriesRoute
   '/expenses/insights': typeof ExpensesInsightsRoute
@@ -188,12 +241,18 @@ export interface FileRoutesByFullPath {
   '/devices/': typeof DevicesIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/vehicles/': typeof VehiclesIndexRoute
   '/wealth/': typeof WealthIndexRoute
   '/settings/access/permissions': typeof SettingsAccessPermissionsRoute
   '/settings/access/roles': typeof SettingsAccessRolesRouteWithChildren
   '/settings/access/users': typeof SettingsAccessUsersRouteWithChildren
+  '/vehicles/$vehicleId/documents': typeof VehiclesVehicleIdDocumentsRoute
+  '/vehicles/$vehicleId/expenses': typeof VehiclesVehicleIdExpensesRoute
+  '/vehicles/$vehicleId/fuel': typeof VehiclesVehicleIdFuelRoute
+  '/vehicles/$vehicleId/service': typeof VehiclesVehicleIdServiceRoute
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
   '/settings/access/': typeof SettingsAccessIndexRoute
+  '/vehicles/$vehicleId/': typeof VehiclesVehicleIdIndexRoute
   '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
   '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
   '/settings/access/roles/': typeof SettingsAccessRolesIndexRoute
@@ -213,10 +272,16 @@ export interface FileRoutesByTo {
   '/devices': typeof DevicesIndexRoute
   '/expenses': typeof ExpensesIndexRoute
   '/settings': typeof SettingsIndexRoute
+  '/vehicles': typeof VehiclesIndexRoute
   '/wealth': typeof WealthIndexRoute
   '/settings/access/permissions': typeof SettingsAccessPermissionsRoute
+  '/vehicles/$vehicleId/documents': typeof VehiclesVehicleIdDocumentsRoute
+  '/vehicles/$vehicleId/expenses': typeof VehiclesVehicleIdExpensesRoute
+  '/vehicles/$vehicleId/fuel': typeof VehiclesVehicleIdFuelRoute
+  '/vehicles/$vehicleId/service': typeof VehiclesVehicleIdServiceRoute
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
   '/settings/access': typeof SettingsAccessIndexRoute
+  '/vehicles/$vehicleId': typeof VehiclesVehicleIdIndexRoute
   '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
   '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
   '/settings/access/roles': typeof SettingsAccessRolesIndexRoute
@@ -227,10 +292,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/expenses': typeof ExpensesRouteRouteWithChildren
   '/settings': typeof SettingsRouteRouteWithChildren
+  '/vehicles': typeof VehiclesRouteRouteWithChildren
   '/access-restricted': typeof AccessRestrictedRoute
   '/checklists': typeof ChecklistsRoute
   '/tasks': typeof TasksRoute
   '/settings/access': typeof SettingsAccessRouteRouteWithChildren
+  '/vehicles/$vehicleId': typeof VehiclesVehicleIdRouteRouteWithChildren
   '/expenses/budgets': typeof ExpensesBudgetsRoute
   '/expenses/categories': typeof ExpensesCategoriesRoute
   '/expenses/insights': typeof ExpensesInsightsRoute
@@ -240,12 +307,18 @@ export interface FileRoutesById {
   '/devices/': typeof DevicesIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/settings/': typeof SettingsIndexRoute
+  '/vehicles/': typeof VehiclesIndexRoute
   '/wealth/': typeof WealthIndexRoute
   '/settings/access/permissions': typeof SettingsAccessPermissionsRoute
   '/settings/access/roles': typeof SettingsAccessRolesRouteWithChildren
   '/settings/access/users': typeof SettingsAccessUsersRouteWithChildren
+  '/vehicles/$vehicleId/documents': typeof VehiclesVehicleIdDocumentsRoute
+  '/vehicles/$vehicleId/expenses': typeof VehiclesVehicleIdExpensesRoute
+  '/vehicles/$vehicleId/fuel': typeof VehiclesVehicleIdFuelRoute
+  '/vehicles/$vehicleId/service': typeof VehiclesVehicleIdServiceRoute
   '/wealth/oauth/callback': typeof WealthOauthCallbackRoute
   '/settings/access/': typeof SettingsAccessIndexRoute
+  '/vehicles/$vehicleId/': typeof VehiclesVehicleIdIndexRoute
   '/settings/access/roles/$roleKey': typeof SettingsAccessRolesRoleKeyRoute
   '/settings/access/users/$id': typeof SettingsAccessUsersIdRoute
   '/settings/access/roles/': typeof SettingsAccessRolesIndexRoute
@@ -257,10 +330,12 @@ export interface FileRouteTypes {
     | '/'
     | '/expenses'
     | '/settings'
+    | '/vehicles'
     | '/access-restricted'
     | '/checklists'
     | '/tasks'
     | '/settings/access'
+    | '/vehicles/$vehicleId'
     | '/expenses/budgets'
     | '/expenses/categories'
     | '/expenses/insights'
@@ -270,12 +345,18 @@ export interface FileRouteTypes {
     | '/devices/'
     | '/expenses/'
     | '/settings/'
+    | '/vehicles/'
     | '/wealth/'
     | '/settings/access/permissions'
     | '/settings/access/roles'
     | '/settings/access/users'
+    | '/vehicles/$vehicleId/documents'
+    | '/vehicles/$vehicleId/expenses'
+    | '/vehicles/$vehicleId/fuel'
+    | '/vehicles/$vehicleId/service'
     | '/wealth/oauth/callback'
     | '/settings/access/'
+    | '/vehicles/$vehicleId/'
     | '/settings/access/roles/$roleKey'
     | '/settings/access/users/$id'
     | '/settings/access/roles/'
@@ -295,10 +376,16 @@ export interface FileRouteTypes {
     | '/devices'
     | '/expenses'
     | '/settings'
+    | '/vehicles'
     | '/wealth'
     | '/settings/access/permissions'
+    | '/vehicles/$vehicleId/documents'
+    | '/vehicles/$vehicleId/expenses'
+    | '/vehicles/$vehicleId/fuel'
+    | '/vehicles/$vehicleId/service'
     | '/wealth/oauth/callback'
     | '/settings/access'
+    | '/vehicles/$vehicleId'
     | '/settings/access/roles/$roleKey'
     | '/settings/access/users/$id'
     | '/settings/access/roles'
@@ -308,10 +395,12 @@ export interface FileRouteTypes {
     | '/'
     | '/expenses'
     | '/settings'
+    | '/vehicles'
     | '/access-restricted'
     | '/checklists'
     | '/tasks'
     | '/settings/access'
+    | '/vehicles/$vehicleId'
     | '/expenses/budgets'
     | '/expenses/categories'
     | '/expenses/insights'
@@ -321,12 +410,18 @@ export interface FileRouteTypes {
     | '/devices/'
     | '/expenses/'
     | '/settings/'
+    | '/vehicles/'
     | '/wealth/'
     | '/settings/access/permissions'
     | '/settings/access/roles'
     | '/settings/access/users'
+    | '/vehicles/$vehicleId/documents'
+    | '/vehicles/$vehicleId/expenses'
+    | '/vehicles/$vehicleId/fuel'
+    | '/vehicles/$vehicleId/service'
     | '/wealth/oauth/callback'
     | '/settings/access/'
+    | '/vehicles/$vehicleId/'
     | '/settings/access/roles/$roleKey'
     | '/settings/access/users/$id'
     | '/settings/access/roles/'
@@ -337,6 +432,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExpensesRouteRoute: typeof ExpensesRouteRouteWithChildren
   SettingsRouteRoute: typeof SettingsRouteRouteWithChildren
+  VehiclesRouteRoute: typeof VehiclesRouteRouteWithChildren
   AccessRestrictedRoute: typeof AccessRestrictedRoute
   ChecklistsRoute: typeof ChecklistsRoute
   TasksRoute: typeof TasksRoute
@@ -388,6 +484,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vehicles': {
+      id: '/vehicles'
+      path: '/vehicles'
+      fullPath: '/vehicles'
+      preLoaderRoute: typeof VehiclesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/devices/': {
@@ -460,6 +563,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SystemActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vehicles/': {
+      id: '/vehicles/'
+      path: '/'
+      fullPath: '/vehicles/'
+      preLoaderRoute: typeof VehiclesIndexRouteImport
+      parentRoute: typeof VehiclesRouteRoute
+    }
+    '/vehicles/$vehicleId': {
+      id: '/vehicles/$vehicleId'
+      path: '/$vehicleId'
+      fullPath: '/vehicles/$vehicleId'
+      preLoaderRoute: typeof VehiclesVehicleIdRouteRouteImport
+      parentRoute: typeof VehiclesRouteRoute
+    }
     '/wealth/': {
       id: '/wealth/'
       path: '/wealth'
@@ -494,6 +611,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/access/users'
       preLoaderRoute: typeof SettingsAccessUsersRouteImport
       parentRoute: typeof SettingsAccessRouteRoute
+    }
+    '/vehicles/$vehicleId/': {
+      id: '/vehicles/$vehicleId/'
+      path: '/'
+      fullPath: '/vehicles/$vehicleId/'
+      preLoaderRoute: typeof VehiclesVehicleIdIndexRouteImport
+      parentRoute: typeof VehiclesVehicleIdRouteRoute
+    }
+    '/vehicles/$vehicleId/documents': {
+      id: '/vehicles/$vehicleId/documents'
+      path: '/documents'
+      fullPath: '/vehicles/$vehicleId/documents'
+      preLoaderRoute: typeof VehiclesVehicleIdDocumentsRouteImport
+      parentRoute: typeof VehiclesVehicleIdRouteRoute
+    }
+    '/vehicles/$vehicleId/expenses': {
+      id: '/vehicles/$vehicleId/expenses'
+      path: '/expenses'
+      fullPath: '/vehicles/$vehicleId/expenses'
+      preLoaderRoute: typeof VehiclesVehicleIdExpensesRouteImport
+      parentRoute: typeof VehiclesVehicleIdRouteRoute
+    }
+    '/vehicles/$vehicleId/fuel': {
+      id: '/vehicles/$vehicleId/fuel'
+      path: '/fuel'
+      fullPath: '/vehicles/$vehicleId/fuel'
+      preLoaderRoute: typeof VehiclesVehicleIdFuelRouteImport
+      parentRoute: typeof VehiclesVehicleIdRouteRoute
+    }
+    '/vehicles/$vehicleId/service': {
+      id: '/vehicles/$vehicleId/service'
+      path: '/service'
+      fullPath: '/vehicles/$vehicleId/service'
+      preLoaderRoute: typeof VehiclesVehicleIdServiceRouteImport
+      parentRoute: typeof VehiclesVehicleIdRouteRoute
     }
     '/wealth/oauth/callback': {
       id: '/wealth/oauth/callback'
@@ -612,10 +764,47 @@ const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
   SettingsRouteRouteChildren,
 )
 
+interface VehiclesVehicleIdRouteRouteChildren {
+  VehiclesVehicleIdDocumentsRoute: typeof VehiclesVehicleIdDocumentsRoute
+  VehiclesVehicleIdExpensesRoute: typeof VehiclesVehicleIdExpensesRoute
+  VehiclesVehicleIdFuelRoute: typeof VehiclesVehicleIdFuelRoute
+  VehiclesVehicleIdServiceRoute: typeof VehiclesVehicleIdServiceRoute
+  VehiclesVehicleIdIndexRoute: typeof VehiclesVehicleIdIndexRoute
+}
+
+const VehiclesVehicleIdRouteRouteChildren: VehiclesVehicleIdRouteRouteChildren =
+  {
+    VehiclesVehicleIdDocumentsRoute: VehiclesVehicleIdDocumentsRoute,
+    VehiclesVehicleIdExpensesRoute: VehiclesVehicleIdExpensesRoute,
+    VehiclesVehicleIdFuelRoute: VehiclesVehicleIdFuelRoute,
+    VehiclesVehicleIdServiceRoute: VehiclesVehicleIdServiceRoute,
+    VehiclesVehicleIdIndexRoute: VehiclesVehicleIdIndexRoute,
+  }
+
+const VehiclesVehicleIdRouteRouteWithChildren =
+  VehiclesVehicleIdRouteRoute._addFileChildren(
+    VehiclesVehicleIdRouteRouteChildren,
+  )
+
+interface VehiclesRouteRouteChildren {
+  VehiclesVehicleIdRouteRoute: typeof VehiclesVehicleIdRouteRouteWithChildren
+  VehiclesIndexRoute: typeof VehiclesIndexRoute
+}
+
+const VehiclesRouteRouteChildren: VehiclesRouteRouteChildren = {
+  VehiclesVehicleIdRouteRoute: VehiclesVehicleIdRouteRouteWithChildren,
+  VehiclesIndexRoute: VehiclesIndexRoute,
+}
+
+const VehiclesRouteRouteWithChildren = VehiclesRouteRoute._addFileChildren(
+  VehiclesRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExpensesRouteRoute: ExpensesRouteRouteWithChildren,
   SettingsRouteRoute: SettingsRouteRouteWithChildren,
+  VehiclesRouteRoute: VehiclesRouteRouteWithChildren,
   AccessRestrictedRoute: AccessRestrictedRoute,
   ChecklistsRoute: ChecklistsRoute,
   TasksRoute: TasksRoute,

@@ -51,6 +51,9 @@ export const PERM = {
   DEVICE_AWARENESS_DEVICES_VIEW: "device_awareness.devices.view",
   DEVICE_AWARENESS_DEVICES_MANAGE: "device_awareness.devices.manage",
   DEVICE_AWARENESS_CALL_STATUS_VIEW: "device_awareness.call_status.view",
+
+  VEHICLES_VIEW: "vehicles.view",
+  VEHICLES_MANAGE: "vehicles.manage",
 } as const;
 
 export type PermissionKey = (typeof PERM)[keyof typeof PERM];
