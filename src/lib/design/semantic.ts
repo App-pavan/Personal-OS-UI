@@ -130,6 +130,7 @@ export const moduleAccent: Record<
   | "/expenses"
   | "/wealth"
   | "/devices"
+  | "/vehicles"
   | "/settings"
   | "/system/activity",
   SemanticTone
@@ -140,11 +141,20 @@ export const moduleAccent: Record<
   "/expenses": "aqua",
   "/wealth": "purple",
   "/devices": "aqua",
+  "/vehicles": "secondary",
   "/settings": "muted",
   "/system/activity": "info",
 };
 
 /** Expense sub-nav tab accents */
+export const vehicleTabAccent: Record<string, SemanticTone> = {
+  overview: "primary",
+  service: "aqua",
+  fuel: "orange",
+  expenses: "purple",
+  documents: "info",
+};
+
 export const expenseTabAccent: Record<string, SemanticTone> = {
   "/expenses": "primary",
   "/expenses/transactions": "aqua",

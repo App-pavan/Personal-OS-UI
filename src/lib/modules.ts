@@ -8,6 +8,7 @@ import {
   Smartphone,
   TrendingUp,
   Wallet,
+  Car,
 } from "lucide-react";
 import type { CapabilitiesResponse } from "@/lib/api/rbac-types";
 import { grantedPermissions } from "@/lib/api/rbac-normalize";
@@ -21,7 +22,8 @@ export type AppRoute =
   | "/wealth"
   | "/settings"
   | "/system/activity"
-  | "/devices";
+  | "/devices"
+  | "/vehicles";
 
 export type ModuleDef = {
   key: string;
@@ -97,6 +99,15 @@ export const MODULE_REGISTRY: ModuleDef[] = [
     group: "core",
     blurb: "Family devices and presence",
     requiredPermission: PERM.DEVICE_AWARENESS_DEVICES_VIEW,
+  },
+  {
+    key: "vehicles",
+    label: "Vehicles",
+    to: "/vehicles",
+    icon: Car,
+    group: "core",
+    blurb: "Service, fuel, and ownership",
+    requiredPermission: PERM.VEHICLES_VIEW,
   },
   {
     key: "settings",
