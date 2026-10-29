@@ -53,6 +53,7 @@ function VehicleFuelPage() {
         currency: "INR",
         fullTank,
         syncExpense,
+        allowOdometerCorrection: true,
       },
       { onSuccess: () => setOpen(false) },
     );
