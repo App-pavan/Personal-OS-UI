@@ -45,6 +45,7 @@ function VehicleServicePage() {
         amountMinor: Math.trunc(amt * 100),
         currency: "INR",
         syncExpense,
+        allowOdometerCorrection: true,
       },
       { onSuccess: () => setOpen(false) },
     );
