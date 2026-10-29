@@ -3,7 +3,7 @@ import { useCapabilities } from "@/features/capabilities/capabilities-context";
 import { vehicleApi } from "@/lib/api/vehicle-service";
 import { errorMessage } from "@/lib/api/errors";
 import { PERM } from "@/lib/permissions";
-import type { VehicleWriteInput } from "@/lib/api/vehicle-types";
+import type { VehicleUpdateInput, VehicleWriteInput } from "@/lib/api/vehicle-types";
 import { toast } from "sonner";
 
 export const vehicleKeys = {
@@ -99,8 +99,7 @@ export function useVehicleMutations() {
       onError: (e) => toast.error(errorMessage(e, "Could not save vehicle")),
     }),
     update: useMutation({
-      mutationFn: ({ id, input }: { id: string; input: Partial<VehicleWriteInput> & { allowOdometerCorrection?: boolean } }) =>
-        vehicleApi.update(id, input),
+      mutationFn: ({ id, input }: { id: string; input: VehicleUpdateInput }) => vehicleApi.update(id, input),
       onSuccess: (_, { id }) => {
         invalidateVehicle(qc, id);
         toast.success("Vehicle updated");

@@ -57,6 +57,11 @@ export type VehicleWriteInput = {
   currency?: string;
 };
 
+/** Full PATCH body for edit — includes odometer correction flag. */
+export type VehicleUpdateInput = VehicleWriteInput & {
+  allowOdometerCorrection?: boolean;
+};
+
 export type ServiceRecord = {
   id: string;
   vehicleId: string;

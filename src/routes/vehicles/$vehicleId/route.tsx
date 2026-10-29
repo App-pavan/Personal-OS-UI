@@ -1,8 +1,13 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { useState } from "react";
+import { ArrowLeft, Pencil } from "lucide-react";
+import { Can } from "@/features/capabilities/can";
+import { VehicleFormSheet } from "@/features/vehicles/components/vehicle-form-sheet";
 import { VehicleNav } from "@/features/vehicles/components/vehicle-nav";
-import { useVehicle } from "@/hooks/use-vehicles";
+import { GlassButton } from "@/features/expenses/components/glass";
+import { useVehicle, useVehicleMutations } from "@/hooks/use-vehicles";
 import { ErrorState, RowsSkeleton } from "@/components/os/state-views";
-import { ArrowLeft } from "lucide-react";
+import { PERM } from "@/lib/permissions";
 
 export const Route = createFileRoute("/vehicles/$vehicleId")({
   component: VehicleDetailLayout,
@@ -11,6 +16,8 @@ export const Route = createFileRoute("/vehicles/$vehicleId")({
 function VehicleDetailLayout() {
   const { vehicleId } = Route.useParams();
   const vehicle = useVehicle(vehicleId);
+  const m = useVehicleMutations();
+  const [editOpen, setEditOpen] = useState(false);
 
   if (vehicle.isLoading) return <RowsSkeleton rows={3} />;
   if (vehicle.isError || !vehicle.data) {
@@ -31,9 +38,25 @@ function VehicleDetailLayout() {
             {v.make} {v.model} · {v.vehicleType}
           </p>
         </div>
+        <Can permission={PERM.VEHICLES_MANAGE}>
+          <GlassButton onClick={() => setEditOpen(true)}>
+            <Pencil className="size-4" /> Edit vehicle
+          </GlassButton>
+        </Can>
       </div>
       <VehicleNav />
       <Outlet />
+
+      <VehicleFormSheet
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        mode="edit"
+        initial={v}
+        pending={m.update.isPending}
+        onSubmit={(input) =>
+          m.update.mutate({ id: v.id, input }, { onSuccess: () => setEditOpen(false) })
+        }
+      />
     </div>
   );
 }

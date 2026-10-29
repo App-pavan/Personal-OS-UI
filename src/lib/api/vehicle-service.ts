@@ -7,6 +7,7 @@ import type {
   VehicleDocument,
   VehicleListItem,
   VehicleOverview,
+  VehicleUpdateInput,
   VehicleWriteInput,
 } from "./vehicle-types";
 
@@ -16,7 +17,7 @@ export const vehicleApi = {
   list: () => api.get<VehicleListItem[]>(BASE).then((r) => r.data ?? []),
   get: (id: string) => api.get<Vehicle>(`${BASE}/${id}`).then((r) => r.data),
   create: (input: VehicleWriteInput) => api.post<Vehicle>(BASE, input).then((r) => r.data),
-  update: (id: string, input: Partial<VehicleWriteInput> & { allowOdometerCorrection?: boolean }) =>
+  update: (id: string, input: VehicleUpdateInput) =>
     api.patch<Vehicle>(`${BASE}/${id}`, input).then((r) => r.data),
   remove: (id: string) => api.delete(`${BASE}/${id}`),
   overview: (id: string) => api.get<VehicleOverview>(`${BASE}/${id}/overview`).then((r) => r.data),
