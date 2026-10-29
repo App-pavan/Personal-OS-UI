@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
-import type { Vehicle, VehicleType, VehicleWriteInput, FuelType } from "@/lib/api/vehicle-types";
+import type {
+  Vehicle,
+  VehicleType,
+  VehicleUpdateInput,
+  VehicleWriteInput,
+  FuelType,
+} from "@/lib/api/vehicle-types";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { GlassButton, GlassInput } from "@/features/expenses/components/glass";
+import { toast } from "sonner";
 
 const vehicleTypes: { value: VehicleType; label: string }[] = [
   { value: "car", label: "Car" },
@@ -20,19 +27,24 @@ const fuelTypes: { value: FuelType; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+export type VehicleFormMode = "create" | "edit";
+
 export function VehicleFormSheet({
   open,
   onOpenChange,
+  mode,
   initial,
   onSubmit,
   pending,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode?: VehicleFormMode;
   initial?: Vehicle | null;
-  onSubmit: (input: VehicleWriteInput & { allowOdometerCorrection?: boolean }) => void;
+  onSubmit: (input: VehicleWriteInput | VehicleUpdateInput) => void;
   pending?: boolean;
 }) {
+  const formMode: VehicleFormMode = mode ?? (initial ? "edit" : "create");
   const [name, setName] = useState("");
   const [vehicleType, setVehicleType] = useState<VehicleType>("car");
   const [make, setMake] = useState("");
@@ -82,27 +94,56 @@ export function VehicleFormSheet({
 
   const save = () => {
     const km = Number(odometer);
-    if (!name.trim() || !make.trim() || !model.trim() || !Number.isFinite(km)) return;
-    const year = modelYear.trim() ? Number(modelYear) : undefined;
+    if (!name.trim() || !make.trim() || !model.trim() || !Number.isFinite(km) || km < 0) {
+      toast.error("Fill in required fields with valid values.");
+      return;
+    }
+
+    const yearRaw = modelYear.trim();
+    const year = yearRaw ? Number(yearRaw) : undefined;
     const priceRupees = purchasePrice.trim() ? Number(purchasePrice) : undefined;
     const purchaseKm = purchaseOdometer.trim() ? Number(purchaseOdometer) : undefined;
     const intervalKm = serviceIntervalKm.trim() ? Number(serviceIntervalKm) : undefined;
     const intervalMonths = serviceIntervalMonths.trim() ? Number(serviceIntervalMonths) : undefined;
-    onSubmit({
+
+    if (yearRaw && (!Number.isFinite(year!) || year! < 0)) {
+      toast.error("Model year must be a valid number.");
+      return;
+    }
+    if (priceRupees != null && (!Number.isFinite(priceRupees) || priceRupees < 0)) {
+      toast.error("Purchase price cannot be negative.");
+      return;
+    }
+    if (purchaseKm != null && (!Number.isFinite(purchaseKm) || purchaseKm < 0)) {
+      toast.error("Purchase odometer cannot be negative.");
+      return;
+    }
+    if (intervalKm != null && (!Number.isFinite(intervalKm) || intervalKm < 0)) {
+      toast.error("Service interval (km) cannot be negative.");
+      return;
+    }
+    if (intervalMonths != null && (!Number.isFinite(intervalMonths) || intervalMonths < 0)) {
+      toast.error("Service interval (months) cannot be negative.");
+      return;
+    }
+
+    const optionalString = (value: string) =>
+      formMode === "edit" ? value.trim() : value.trim() || undefined;
+
+    const payload: VehicleWriteInput | VehicleUpdateInput = {
       name: name.trim(),
       vehicleType,
       make: make.trim(),
       model: model.trim(),
       currentOdometerKm: Math.trunc(km),
-      registrationNumber: registration.trim() || undefined,
-      chassisNumber: chassis.trim() || undefined,
-      engineNumber: engine.trim() || undefined,
-      modelYear: year != null && Number.isFinite(year) ? Math.trunc(year) : undefined,
-      purchaseDate: purchaseDate.trim() || undefined,
+      registrationNumber: optionalString(registration),
+      chassisNumber: optionalString(chassis),
+      engineNumber: optionalString(engine),
+      modelYear: yearRaw && year != null && Number.isFinite(year) ? Math.trunc(year) : undefined,
+      purchaseDate:
+        formMode === "edit" ? purchaseDate.trim() || undefined : purchaseDate.trim() || undefined,
       purchasePriceMinor:
-        priceRupees != null && Number.isFinite(priceRupees)
-          ? Math.round(priceRupees * 100)
-          : undefined,
+        priceRupees != null && Number.isFinite(priceRupees) ? Math.round(priceRupees * 100) : undefined,
       purchaseOdometerKm:
         purchaseKm != null && Number.isFinite(purchaseKm) ? Math.trunc(purchaseKm) : undefined,
       fuelType,
@@ -112,16 +153,18 @@ export function VehicleFormSheet({
         intervalMonths != null && Number.isFinite(intervalMonths)
           ? Math.trunc(intervalMonths)
           : undefined,
-      notes: notes.trim() || undefined,
-      ...(initial && allowCorrection ? { allowOdometerCorrection: true } : {}),
-    });
+      notes: optionalString(notes),
+      ...(formMode === "edit" && allowCorrection ? { allowOdometerCorrection: true } : {}),
+    };
+
+    onSubmit(payload);
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto rounded-t-2xl">
         <SheetHeader>
-          <SheetTitle>{initial ? "Edit vehicle" : "Add vehicle"}</SheetTitle>
+          <SheetTitle>{formMode === "edit" ? "Edit vehicle" : "Add vehicle"}</SheetTitle>
         </SheetHeader>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="space-y-1 sm:col-span-2">
@@ -220,7 +263,7 @@ export function VehicleFormSheet({
             <span className="text-xs text-muted-foreground">Notes</span>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
           </label>
-          {initial ? (
+          {formMode === "edit" ? (
             <label className="flex items-center gap-2 sm:col-span-2 text-xs text-muted-foreground">
               <input type="checkbox" checked={allowCorrection} onChange={(e) => setAllowCorrection(e.target.checked)} />
               Allow odometer correction below previous readings
@@ -232,7 +275,7 @@ export function VehicleFormSheet({
             Cancel
           </GlassButton>
           <GlassButton onClick={save} disabled={pending}>
-            {initial ? "Save" : "Create"}
+            {formMode === "edit" ? "Save changes" : "Create"}
           </GlassButton>
         </div>
       </SheetContent>
