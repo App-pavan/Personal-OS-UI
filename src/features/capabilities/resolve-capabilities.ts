@@ -4,6 +4,7 @@ import { getCapabilityStore } from "@/features/capabilities/capability-store";
 import { rbacApi } from "@/lib/api/rbac-service";
 import type { CapabilitiesResponse } from "@/lib/api/rbac-types";
 import { grantedPermissions } from "@/lib/api/rbac-normalize";
+import { tokenStore } from "@/lib/api/token-store";
 import type { PermissionKey } from "@/lib/permissions";
 
 const CAPABILITIES_STALE_MS = 60_000;
@@ -23,11 +24,19 @@ async function fetchCapabilities(): Promise<CapabilitiesResponse> {
 export async function resolveCapabilitiesForGuard(
   queryClient: QueryClient,
 ): Promise<CapabilitiesResponse> {
+  if (typeof window !== "undefined") {
+    tokenStore.hydrate();
+  }
+
   const queryCached = readQueryCache(queryClient);
   if (queryCached) return queryCached;
 
   const storeCached = getCapabilityStore();
   if (storeCached) return storeCached;
+
+  if (typeof window !== "undefined" && !tokenStore.accessToken()) {
+    throw new Error("auth_not_ready");
+  }
 
   try {
     return await queryClient.ensureQueryData({

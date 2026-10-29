@@ -37,9 +37,16 @@ const writeCachedUser = (user: SessionUser | null) => {
   }
 };
 
+function initialAuthStatus(): AuthStatus {
+  if (typeof window === "undefined") return "restoring";
+  return tokenStore.hydrate() ? "signed_in" : "signed_out";
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>("restoring");
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [status, setStatus] = useState<AuthStatus>(initialAuthStatus);
+  const [user, setUser] = useState<SessionUser | null>(() =>
+    typeof window === "undefined" ? null : readCachedUser(),
+  );
   const [sessionExpired, setSessionExpired] = useState(false);
 
   // Session restoration: tokens are persisted, then verified in the background.
