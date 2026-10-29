@@ -1,6 +1,6 @@
 import { isRedirect } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { capabilityKeys } from "@/features/capabilities/capabilities-context";
 import { clearCapabilityStore } from "@/features/capabilities/capability-store";
 import { requirePermissions } from "@/features/capabilities/route-guard";
@@ -26,6 +26,13 @@ vi.mock("@/lib/api/rbac-service", () => ({
   },
 }));
 
+vi.mock("@/lib/api/token-store", () => ({
+  tokenStore: {
+    hydrate: vi.fn(),
+    accessToken: () => "test-access-token",
+  },
+}));
+
 import { rbacApi } from "@/lib/api/rbac-service";
 
 function runGuard(permissions: string | string[], queryClient: QueryClient) {
@@ -40,9 +47,14 @@ describe("requirePermissions", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
+    vi.stubGlobal("window", globalThis);
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     clearCapabilityStore();
     vi.mocked(rbacApi.capabilities).mockReset();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("allows navigation when cached permissions include the requirement", async () => {
@@ -69,14 +81,14 @@ describe("requirePermissions", () => {
     });
   });
 
-  it("propagates 401 instead of redirecting to access-restricted", async () => {
+  it("redirects home on 401 instead of crashing the route error boundary", async () => {
     vi.mocked(rbacApi.capabilities).mockRejectedValue(
       new ApiRequestError("unauthorized", "Session expired", 401),
     );
 
-    await expect(runGuard(PERM.TASKS_VIEW, queryClient)).rejects.toMatchObject({
-      status: 401,
-    });
+    await expect(runGuard(PERM.TASKS_VIEW, queryClient)).rejects.toSatisfy((error: unknown) =>
+      isRedirect(error),
+    );
   });
 
   it("redirects on confirmed 403 from capabilities fetch", async () => {

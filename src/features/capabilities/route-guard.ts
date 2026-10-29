@@ -30,6 +30,11 @@ export function requirePermissions(permissions: PermissionKey | PermissionKey[])
   }) => {
     const route = location.pathname;
 
+    // SSR has no access to persisted tokens; AppShell enforces access after client hydrate.
+    if (typeof window === "undefined") {
+      return;
+    }
+
     try {
       const caps = await resolveCapabilitiesForGuard(context.queryClient);
       const allowed = hasRequiredPermission(caps, keys);
@@ -49,6 +54,10 @@ export function requirePermissions(permissions: PermissionKey | PermissionKey[])
     } catch (error) {
       if (isRedirect(error)) throw error;
 
+      if (error instanceof Error && error.message === "auth_not_ready") {
+        throw redirect({ to: "/" });
+      }
+
       if (error instanceof ApiRequestError) {
         logAuthDecision({
           route,
@@ -65,7 +74,7 @@ export function requirePermissions(permissions: PermissionKey | PermissionKey[])
                 : "transport_error",
         });
 
-        if (error.status === 401) throw error;
+        if (error.status === 401) throw redirect({ to: "/" });
         if (error.status === 403) throw redirect({ to: "/access-restricted" });
         if (isAuthTransportError(error)) throw error;
         throw error;

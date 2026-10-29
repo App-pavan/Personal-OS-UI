@@ -60,3 +60,8 @@ export const tokenStore = {
     }
   },
 };
+
+/** Restore persisted session before router loaders or API calls on the client. */
+if (typeof window !== "undefined") {
+  tokenStore.hydrate();
+}
